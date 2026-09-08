@@ -1,0 +1,9 @@
+{
+  "name": "HomePilot V7 Cloud",
+  "short_name": "HomePilot",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f6f1",
+  "theme_color": "#356f68",
+  "description": "HomePilot V7 connecté à Supabase"
+}
