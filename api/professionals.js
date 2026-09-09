@@ -18,15 +18,24 @@ export default async function handler(req,res){
   url.searchParams.set('select','id,business_name,category,phone,email,website,verification_status,listing_tier,regions,municipalities,postal_prefixes,serves_all_quebec,description,service_categories');
   url.searchParams.set('active','eq.true');
   if(category&&category!=='general')url.searchParams.set('category',`eq.${category}`);
+  if(service)url.searchParams.set('service_categories',`cs.{${service}}`);
+  url.searchParams.set('limit','120');
   try{
-    const r=await fetch(url,{headers:{apikey:SUPABASE_KEY,Authorization:auth}});
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),5000);
+    let r;
+    try{r=await fetch(url,{headers:{apikey:SUPABASE_KEY,Authorization:auth},signal:controller.signal})}
+    finally{clearTimeout(timer)}
     const text=await r.text();let data=null;try{data=text?JSON.parse(text):null}catch{}
     if(!r.ok)return res.status(r.status).json({error:data?.message||data?.hint||`Erreur Supabase ${r.status}`});
     const rows=(Array.isArray(data)?data:[])
       .filter(p=>/[A-Za-zÀ-ÿ]/.test(p.business_name||''))
       .filter(p=>locationMatch(p,{city,postal,region}))
-      .filter(p=>!service||(p.service_categories||[]).includes(service))
       .sort((a,b)=>tierRank(b.listing_tier)-tierRank(a.listing_tier));
+    res.setHeader('Cache-Control','private, max-age=30, stale-while-revalidate=120');
     return res.status(200).json({ok:true,rows,service:service||null});
-  }catch(e){console.error('professionals proxy',e);return res.status(502).json({error:'Impossible de charger le répertoire.'})}
+  }catch(e){
+    if(e?.name==='AbortError')return res.status(504).json({error:'La recherche prend trop de temps. Réessaie.'});
+    console.error('professionals proxy',e);return res.status(502).json({error:'Impossible de charger le répertoire.'})
+  }
 }
