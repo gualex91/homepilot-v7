@@ -5,6 +5,15 @@
  function currentHouseholdId(){try{if(typeof h!=='undefined'&&h?.id)return h.id}catch(e){}return null}
  function withTimeout(p,ms,msg){return Promise.race([p,new Promise((_,reject)=>setTimeout(()=>reject(new Error(msg||'La connexion prend trop de temps.')),ms))])}
  async function accessToken(){const c=client();if(!c)throw new Error('Connexion à HomePilot indisponible.');const r=await withTimeout(c.auth.getSession(),5000,'Impossible de lire la session HomePilot.');if(r.error)throw r.error;const token=r.data?.session?.access_token;if(!token)throw new Error('Session expirée. Reconnecte-toi.');return token}
+ function keepBudgetVisible(){
+   const budget=$('budget');
+   if(!budget)return;
+   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+   budget.classList.remove('hidden');
+   budget.classList.add('on');
+   document.body.style.display='';
+   document.documentElement.style.display='';
+ }
  async function save(){
    const btn=$('hpBudgetSave'),status=$('hpBudgetStatus');
    if(status)status.textContent='';
@@ -24,15 +33,19 @@
      if($('hpBudgetAmount'))$('hpBudgetAmount').value='';
      if($('hpBudgetDescription'))$('hpBudgetDescription').value='';
      if($('hpBudgetProperty'))$('hpBudgetProperty').value='';
-     if(status)status.textContent='✓ Entrée ajoutée.';
      const form=$('hpBudgetForm');if(form){form.classList.add('hidden');form.style.display=''}
-     window.dispatchEvent(new CustomEvent('hp-budget-updated'));
-     setTimeout(()=>{try{if(typeof window.hpLoadBudget==='function')window.hpLoadBudget()}catch(e){console.error(e)}},0);
+     keepBudgetVisible();
+     if(typeof window.hpLoadBudget==='function'){
+       try{await withTimeout(Promise.resolve(window.hpLoadBudget()),12000,'Le budget a été enregistré, mais le rafraîchissement prend trop de temps.')}catch(e){console.error('HomePilot budget refresh after save',e)}
+     }
+     keepBudgetVisible();
+     if(status)status.textContent='✓ Entrée ajoutée.';
    }catch(e){
      console.error('HomePilot budget save error',e);
      const msg=e?.message||'Erreur inconnue';
      if(status)status.textContent='Erreur : '+msg;
      alert(msg);
+     keepBudgetVisible();
    }finally{
      if(btn){btn.disabled=false;btn.textContent='Ajouter au budget'}
    }
