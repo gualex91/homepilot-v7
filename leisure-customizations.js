@@ -1,22 +1,20 @@
 (function(){
  const $=id=>document.getElementById(id);
- const client=()=>window.supabaseClient||window.sb||window.client||null;
- const norm=s=>(s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
- const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const VR_EXPERT={name:'VR Expert',phone:'418-590-3300',website:'https://vrexpertjonquiere.ca/',address:'3320 Rue Gallichan, Jonquière, QC G7X 0P1'};
- function addTrailerOption(){const s=$('hpLeisureType');if(s&&!s.querySelector('option[value="utility_trailer"]')){const o=document.createElement('option');o.value='utility_trailer';o.textContent='🛻 Remorque';const other=s.querySelector('option[value="other"]');s.insertBefore(o,other||null)}}
- async function location(){const c=client();if(!c)return {region:'',city:''};try{const {data:{user}}=await c.auth.getUser();if(!user)return {region:'',city:''};const {data:m}=await c.from('household_members').select('household_id').eq('user_id',user.id).eq('status','active').limit(1).maybeSingle();if(!m)return {region:'',city:''};const {data:p}=await c.from('properties').select('city,region,administrative_region,postal_code').eq('household_id',m.household_id).limit(1).maybeSingle();return {region:p?.region||p?.administrative_region||'',city:p?.city||'',postal:p?.postal_code||''}}catch{return {region:'',city:''}}}
- function isSagLac(loc){const t=norm([loc.region,loc.city,loc.postal].filter(Boolean).join(' '));return /saguenay|jonquiere|chicoutimi|la baie|alma|dolbeau|roberval|saint-felicien|lac-saint-jean|lac saint jean/.test(t)}
- function modal(){return {modal:$('hpLeisureTaskModal'),title:$('hpLtmTitle'),body:$('hpLtmBody')}}
- function showVrExpert(){const m=modal();if(!m.modal||!m.body)return;m.title.textContent='👷 Professionnel VR';m.body.innerHTML=`<div class="card"><div class="row"><div><b>${VR_EXPERT.name}</b><div class="muted">Spécialiste VR sélectionné par HomePilot pour le Saguenay–Lac-Saint-Jean.</div></div><span class="pill">Partenaire HomePilot</span></div><div class="muted">✓ Commerce vérifié</div><p>📍 ${VR_EXPERT.address}</p><p>📞 <a href="tel:+14185903300">${VR_EXPERT.phone}</a></p><p><a href="${VR_EXPERT.website}" target="_blank" rel="noopener">Visiter le site web</a></p></div>`;m.modal.classList.remove('hidden')}
- function category(key){const k=String(key||'');if(k.includes('utility_trailer'))return 'utility_trailer';if(k.includes('travel_trailer'))return 'travel_trailer';if(k==='rv'||k.includes('rv_'))return 'rv';if(k.includes('boat'))return 'boat';if(k.includes('pwc')||k.includes('personal_watercraft'))return 'personal_watercraft';if(k.includes('snowmobile'))return 'snowmobile';if(k.includes('side_by_side')||k.includes('sxs'))return 'side_by_side';if(k.includes('atv'))return 'atv';if(k.includes('motorcycle'))return 'motorcycle';return k}
- function geoMatch(p,loc){if(!p.service_area?.length&&!p.region&&!p.city)return true;return p.service_area?.some(r=>norm(r)===norm(loc.region))||norm(p.region)===norm(loc.region)||norm(p.city)===norm(loc.city)}
- function score(p,loc){let s=Number(p.priority_weight||0);if(p.sponsored)s+=1000;if(p.partner)s+=500;if(norm(p.city)===norm(loc.city)&&loc.city)s+=180;if(norm(p.region)===norm(loc.region)&&loc.region)s+=120;if(p.service_area?.some(r=>norm(r)===norm(loc.region)))s+=90;if(p.online_store)s+=20;if(p.verified)s+=10;return s}
- function pills(arr){return (arr||[]).slice(0,4).map(x=>`<span class="pill" style="margin:3px 4px 0 0;display:inline-block">${esc(x)}</span>`).join('')}
- async function showDirectory(key){const c=client(),m=modal();if(!c||!m.body)return;const cat=category(key),loc=await location();m.title.textContent='👷 Professionnels loisirs';m.body.innerHTML='<p class="muted">Recherche des commerces qui desservent ta région…</p>';m.modal.classList.remove('hidden');const {data,error}=await c.from('leisure_professionals').select('id,business_name,categories,city,region,phone,website,online_store,service_area,partner,sponsored,active,services,brands,verified,priority_weight').eq('active',true).contains('categories',[cat]);if(error){m.body.innerHTML='<div class="notice">Impossible de charger le répertoire loisirs.</div>';return}let rows=(data||[]).filter(p=>geoMatch(p,loc));if(!rows.length&&isSagLac(loc))rows=(data||[]).filter(p=>norm(p.region).includes('saguenay'));rows.sort((a,b)=>score(b,loc)-score(a,loc)||String(a.business_name).localeCompare(String(b.business_name),'fr'));
- m.body.innerHTML=rows.length?`<p class="muted">Résultats classés selon ta région, la pertinence du service et le statut HomePilot.</p>`+rows.map(p=>`<div class="card"><div class="row"><b>${esc(p.business_name)}</b>${p.sponsored?'<span class="pill">Commandité</span>':p.partner?'<span class="pill">Partenaire HomePilot</span>':''}</div>${p.verified?'<div class="muted">✓ Commerce vérifié</div>':''}<div class="muted">${esc(p.city||'')} ${p.region?'• '+esc(p.region):''}</div>${p.services?.length?`<div style="margin-top:7px">${pills(p.services)}</div>`:''}${p.brands?.length?`<p class="muted"><b>Marques :</b> ${esc(p.brands.join(', '))}</p>`:''}${p.phone?`<p>📞 <a href="tel:${esc(p.phone)}">${esc(p.phone)}</a></p>`:''}<div class="taskactions">${p.website?`<a href="${esc(p.website)}" target="_blank" rel="noopener"><button class="alt">Site web</button></a>`:''}${p.online_store&&p.website?`<a href="${esc(p.website)}" target="_blank" rel="noopener"><button>🛒 Boutique en ligne</button></a>`:''}</div></div>`).join(''):'<div class="card"><b>Aucun commerce Loisirs vérifié pour cette catégorie dans ta région.</b><p class="muted">HomePilot ajoute progressivement des entreprises avec un vrai nom commercial et des coordonnées vérifiables.</p></div>'}
- function patchFinder(){if(window.__hpLeisureFinderPatched||typeof window.hpFindLeisurePro!=='function')return;window.__hpLeisureFinderPatched=true;window.hpFindLeisurePro=async key=>{const k=String(key||''),loc=await location();if((k==='rv'||k==='travel_trailer'||k.includes('rv_')||k.includes('trailer_winterize')||k.includes('trailer_spring'))&&isSagLac(loc)){showVrExpert();return}return showDirectory(k)}}
- async function relabelTrailerCards(){const c=client(),list=$('hpLeisureList');if(!c||!list)return;try{const {data:{user}}=await c.auth.getUser();if(!user)return;const {data}=await c.from('leisure_equipment').select('name,equipment_type').eq('user_id',user.id).eq('equipment_type','utility_trailer');for(const x of data||[]){[...list.querySelectorAll('.card b')].forEach(b=>{if(b.textContent.includes(x.name)&&b.textContent.includes('🎯 Équipement'))b.textContent=b.textContent.replace('🎯 Équipement','🛻 Remorque')})}}catch{}}
- function init(){addTrailerOption();patchFinder();relabelTrailerCards();new MutationObserver(()=>{addTrailerOption();patchFinder();relabelTrailerCards()}).observe(document.body,{childList:true,subtree:true});setInterval(()=>{addTrailerOption();patchFinder();relabelTrailerCards()},1500)}
+ function addTrailerOption(){
+   const s=$('hpLeisureType');
+   if(!s||s.querySelector('option[value="utility_trailer"]')) return;
+   const o=document.createElement('option');
+   o.value='utility_trailer';
+   o.textContent='🛻 Remorque';
+   const other=s.querySelector('option[value="other"]');
+   s.insertBefore(o,other||null);
+ }
+ function refresh(){addTrailerOption()}
+ function init(){
+   refresh();
+   setTimeout(refresh,700);
+   setTimeout(refresh,1800);
+   window.addEventListener('hp-leisure-updated',refresh);
+ }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
