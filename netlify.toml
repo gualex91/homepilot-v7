@@ -1,3 +1,2 @@
 [build]
-  command = "cat deploy_parts/part1.txt deploy_parts/part2.txt deploy_parts/part3.txt deploy_parts/part4.txt > index.html"
   publish = "."
