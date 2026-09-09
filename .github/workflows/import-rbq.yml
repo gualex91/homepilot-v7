@@ -1,0 +1,97 @@
+name: Import RBQ professionals
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/import-rbq.yml'
+
+jobs:
+  import-rbq:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Download, curate and import RBQ professionals
+        env:
+          SUPABASE_URL: https://vkfvjwxajgeafzyphjvh.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: sb_publishable_pGyXnrUDdLiT6BAAME--VA_kLP_gEAR
+        run: |
+          python - <<'PY'
+          import csv, io, json, os, urllib.request, zipfile
+
+          SOURCE='https://www.donneesquebec.ca/recherche/dataset/755b45d6-7aee-46df-a216-748a0191c79f/resource/32f6ec46-85fd-45e9-945b-965d9235840a/download/rdl01_extractiondonneesouvertes.zip'
+          HVAC={'15.1','15.2','15.3','15.4','15.7','15.8','15.9','15.10'}
+          CHIMNEY={'4.1','10'}
+          PRIORITY=['chimney','electrical','septic','hvac','plumbing']
+
+          print('Downloading official RBQ open-data file...')
+          urllib.request.urlretrieve(SOURCE, '/tmp/rbq.zip')
+          profiles={}
+          rows_seen=0
+          with zipfile.ZipFile('/tmp/rbq.zip') as z:
+              name=next(n for n in z.namelist() if n.lower().endswith('.csv'))
+              with z.open(name) as raw:
+                  f=io.TextIOWrapper(raw, encoding='utf-8-sig', newline='')
+                  for r in csv.DictReader(f):
+                      rows_seen += 1
+                      neq=(r.get('NEQ') or '').strip()
+                      business=(r.get("Nom de l'intervenant") or r.get('Autre nom') or '').strip()
+                      sub=(r.get('Sous-catégories') or '').strip()
+                      if not neq or not business or not sub:
+                          continue
+                      cats=set()
+                      if sub=='16': cats.add('electrical')
+                      if sub=='15.5': cats.add('plumbing')
+                      if sub=='2.4': cats.add('septic')
+                      if sub in HVAC: cats.add('hvac')
+                      if sub in CHIMNEY: cats.add('chimney')
+                      if not cats:
+                          continue
+                      p=profiles.setdefault(neq, {
+                          'business_name':business,
+                          'phone':(r.get('Numéro de téléphone') or '').strip() or None,
+                          'email':(r.get('Courriel') or '').strip() or None,
+                          'neq':neq,
+                          'regions':[(r.get('Région administrative') or '').strip()] if (r.get('Région administrative') or '').strip() else [],
+                          'municipalities':[(r.get('Municipalité') or '').strip()] if (r.get('Municipalité') or '').strip() else [],
+                          'licenses':set(), 'subs':set(), 'cats':set()
+                      })
+                      lic=(r.get('Numéro de licence') or '').strip()
+                      if lic: p['licenses'].add(lic)
+                      p['subs'].add(sub)
+                      p['cats'].update(cats)
+
+          out=[]
+          for p in profiles.values():
+              category=next(c for c in PRIORITY if c in p['cats'])
+              first_license=next(iter(sorted(p['licenses'])), None)
+              out.append({
+                  'business_name':p['business_name'],
+                  'category':category,
+                  'service_categories':sorted(p['cats']),
+                  'phone':p['phone'], 'email':p['email'], 'neq':p['neq'],
+                  'regions':p['regions'], 'municipalities':p['municipalities'],
+                  'source_reference':first_license,
+                  'rbq_license':first_license,
+                  'rbq_subcategories':sorted(p['subs'])
+              })
+
+          print(f'RBQ rows read: {rows_seen:,}; curated unique profiles: {len(out):,}')
+          endpoint=os.environ['SUPABASE_URL'] + '/rest/v1/rpc/import_rbq_batch'
+          key=os.environ['SUPABASE_PUBLISHABLE_KEY']
+          imported=0
+          for i in range(0, len(out), 250):
+              batch=out[i:i+250]
+              data=json.dumps({'rows':batch}, ensure_ascii=False).encode('utf-8')
+              req=urllib.request.Request(endpoint, data=data, method='POST', headers={
+                  'apikey':key,
+                  'Content-Type':'application/json'
+              })
+              with urllib.request.urlopen(req, timeout=60) as resp:
+                  body=resp.read().decode('utf-8').strip()
+                  n=int(body) if body else len(batch)
+                  imported += n
+              print(f'Imported {min(i+250,len(out)):,}/{len(out):,}')
+          print(f'IMPORT_COMPLETE profiles={imported:,}')
+          PY
