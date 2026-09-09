@@ -3,23 +3,24 @@
  function client(){return window.supabaseClient||window.sb||window.client||null}
  function currentUser(){try{if(typeof u!=='undefined'&&u?.id)return u}catch(e){}return null}
  function currentHouseholdId(){try{if(typeof h!=='undefined'&&h?.id)return h.id}catch(e){}return null}
- function withTimeout(p,ms){return Promise.race([p,new Promise((_,reject)=>setTimeout(()=>reject(new Error('La connexion au budget prend trop de temps. Réessaie.')),ms))])}
+ function withTimeout(p,ms,msg){return Promise.race([p,new Promise((_,reject)=>setTimeout(()=>reject(new Error(msg||'La connexion prend trop de temps.')),ms))])}
+ async function accessToken(){const c=client();if(!c)throw new Error('Connexion à HomePilot indisponible.');const r=await withTimeout(c.auth.getSession(),5000,'Impossible de lire la session HomePilot.');if(r.error)throw r.error;const token=r.data?.session?.access_token;if(!token)throw new Error('Session expirée. Reconnecte-toi.');return token}
  async function save(){
    const btn=$('hpBudgetSave'),status=$('hpBudgetStatus');
    if(status)status.textContent='';
    if(btn){btn.disabled=true;btn.textContent='Enregistrement…'}
    try{
-     const c=client();
-     if(!c)throw new Error('Connexion à HomePilot indisponible.');
      const user=currentUser();
      if(!user)throw new Error('Session introuvable. Ferme puis rouvre HomePilot.');
      const amount=Number($('hpBudgetAmount')?.value||0),entryDate=$('hpBudgetDate')?.value||'';
      if(!(amount>0))throw new Error('Entre un montant supérieur à 0.');
      if(!entryDate)throw new Error('Choisis une date.');
+     const token=await accessToken();
      const payload={user_id:user.id,household_id:currentHouseholdId(),property_id:$('hpBudgetProperty')?.value||null,entry_type:$('hpBudgetType')?.value||'expense',category:$('hpBudgetCategory')?.value||'Autre',amount,entry_date:entryDate,description:$('hpBudgetDescription')?.value?.trim()||null};
-     const result=await withTimeout(c.from('budget_entries').insert(payload).select('id').single(),10000);
-     if(result.error)throw result.error;
-     if(!result.data?.id)throw new Error('HomePilot n’a pas reçu la confirmation de sauvegarde.');
+     const r=await withTimeout(fetch('/api/budget-entry',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(payload)}),12000,'Le serveur HomePilot ne répond pas.');
+     let body=null;try{body=await r.json()}catch{}
+     if(!r.ok)throw new Error(body?.error||('Erreur serveur '+r.status));
+     if(!body?.ok)throw new Error('HomePilot n’a pas confirmé la sauvegarde.');
      if($('hpBudgetAmount'))$('hpBudgetAmount').value='';
      if($('hpBudgetDescription'))$('hpBudgetDescription').value='';
      if($('hpBudgetProperty'))$('hpBudgetProperty').value='';
