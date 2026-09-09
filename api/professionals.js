@@ -12,9 +12,10 @@ export default async function handler(req,res){
   const auth=req.headers.authorization||'';
   if(!auth.startsWith('Bearer '))return res.status(401).json({error:'Session manquante'});
   const category=String(req.query.category||'general');
+  const service=String(req.query.service||'');
   const city=String(req.query.city||''),postal=String(req.query.postal||''),region=String(req.query.region||'');
   const url=new URL(`${SUPABASE_URL}/rest/v1/professional_profiles`);
-  url.searchParams.set('select','id,business_name,category,phone,email,website,verification_status,listing_tier,regions,municipalities,postal_prefixes,serves_all_quebec,description');
+  url.searchParams.set('select','id,business_name,category,phone,email,website,verification_status,listing_tier,regions,municipalities,postal_prefixes,serves_all_quebec,description,service_categories');
   url.searchParams.set('active','eq.true');
   if(category&&category!=='general')url.searchParams.set('category',`eq.${category}`);
   try{
@@ -24,7 +25,8 @@ export default async function handler(req,res){
     const rows=(Array.isArray(data)?data:[])
       .filter(p=>/[A-Za-zÀ-ÿ]/.test(p.business_name||''))
       .filter(p=>locationMatch(p,{city,postal,region}))
+      .filter(p=>!service||(p.service_categories||[]).includes(service))
       .sort((a,b)=>tierRank(b.listing_tier)-tierRank(a.listing_tier));
-    return res.status(200).json({ok:true,rows});
+    return res.status(200).json({ok:true,rows,service:service||null});
   }catch(e){console.error('professionals proxy',e);return res.status(502).json({error:'Impossible de charger le répertoire.'})}
 }
