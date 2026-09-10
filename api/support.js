@@ -1,3 +1,4 @@
+import analytics from '../lib/app-analytics-api.js';
 import {randomUUID} from 'node:crypto';
 import {stableId} from '../lib/safe-write.js';
 import {admin,db,fail,text,email,uuid,triage,configuration,bodyJSON,fetchJSON,aiInput,categories,priorities,statuses} from '../lib/support-core.js';
@@ -50,6 +51,7 @@ async function deliver(reply,auth){
   return {reply:saved[0]};
 }
 export default async function handler(req,res){
+  if(new URL(req.url,'https://nuvabri.invalid').searchParams.get('resource')==='analytics')return analytics(req,res);
   res.setHeader('Cache-Control','private, no-store');
   if(!['GET','POST'].includes(req.method))return res.status(405).json({error:'Méthode non permise.'});
   try{

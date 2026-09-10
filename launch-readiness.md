@@ -8,6 +8,10 @@ Implémenté : quatre onglets, démarrage guidé, présentation avant inscriptio
 
 Non implémenté / non activé : suppression de compte, politique officielle et gouvernance, correctifs des avertissements de sécurité, envois et rappels externes, mesure des affichages/clics, facturation, recrutement des partenaires, recette sur iPhone et avec deux comptes réels. Aucun paiement, envoi réel ou déploiement n’a eu lieu dans ce lot.
 
+## Mise à jour — statistiques en préversion
+
+Le lot de statistiques ajoute les mesures d’utilisation des membres connectés, les clics instrumentés et des signaux d’installation partiels. Le tableau admin sépare préversion et production, exclut les administrateurs par défaut et montre les limites de couverture. Les mesures n’ont pas d’historique avant activation et ne constituent pas une preuve d’achat, d’appel ou de livraison. Le détail et les vérifications figurent dans le README. Le suivi des livraisons, les impressions de fiches, l’acquisition de visiteurs anonymes et la facturation restent des travaux distincts.
+
 ## 1. Une expérience simple et utile
 
 - Quatre destinations principales : Accueil, Mes biens, Finances, Plus.

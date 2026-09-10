@@ -22,10 +22,11 @@
   }
   const issueLabels={numbered_company:'Compagnie à numéro',missing_business_name:'Nom commercial manquant',invalid_phone:'Téléphone manquant ou format invalide',missing_reference:'Référence consultable manquante'};
   const issueText=profile=>(profile.directory_issues||[]).map(issue=>issueLabels[issue]||'Fiche à revoir').join(' · ');
-  function card(profile,canQuote=false){
+  function card(profile,canQuote=false,kind='property'){
     if(profile.active===false||profile.directory_issues?.length)return '';
+    const measure=action=>`data-analytics-business="${esc(profile.id)}" data-analytics-kind="${kind==='leisure'?'leisure':'property'}" data-analytics-action="${action}"`;
     const url=safeWebsite(profile.website),rawPhone=String(profile.phone||''),extension=rawPhone.match(/(?:ext\.?|extension|poste|x|#)\s*(\d+)\s*$/i),phone=rawPhone.replace(/(?:ext\.?|extension|poste|x|#)\s*\d+\s*$/i,'').replace(/[^+\d]/g,'')+(extension?';ext='+extension[1]:'');
-    return `<article class="card"><h3>${esc(profile.business_name)}</h3><div class="hp-listing-badge">${listingLabel(profile)}</div>${evidence(profile)}${profile.description?`<p class="muted">${esc(profile.description)}</p>`:''}<div class="hp-pro-contact">${phone?`<a href="tel:${esc(phone)}">Appeler ${esc(profile.phone)}</a>`:''}${url?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">Site ou fiche du commerce</a>`:''}</div>${canQuote?`<button type="button" class="hpQuote" data-pro-id="${esc(profile.id)}">Préparer une demande</button>`:''}</article>`;
+    return `<article class="card"><h3>${esc(profile.business_name)}</h3><div class="hp-listing-badge">${listingLabel(profile)}</div>${evidence(profile)}${profile.description?`<p class="muted">${esc(profile.description)}</p>`:''}<div class="hp-pro-contact">${phone?`<a ${measure('phone')} href="tel:${esc(phone)}">Appeler ${esc(profile.phone)}</a>`:''}${url?`<a ${measure('website')} href="${esc(url)}" target="_blank" rel="noopener noreferrer">Site ou fiche du commerce</a>`:''}</div>${canQuote?`<button type="button" class="hpQuote" ${measure('request')} data-pro-id="${esc(profile.id)}">Préparer une demande</button>`:''}</article>`;
   }
   function validateLead(payload){
     if(!payload.consent_to_share)return 'Ton consentement est requis pour partager cette demande avec le commerce choisi.';
@@ -38,13 +39,13 @@
   const api={esc,safeWebsite,listingLabel,sortRows,card,disclosure,evidence,issueText,validateLead};root.hpProfessionalPresentation=api;
   if(!root.document)return;
   let current=null;
-  function render(rows,{subtitle='',property=null,task=null,category='general',allowQuote=false}={}){
+  function render(rows,{subtitle='',property=null,task=null,category='general',allowQuote=false,kind='property'}={}){
     const body=document.getElementById('hpProBody');if(!body)return;
-    current={rows,subtitle,property,task,category,allowQuote};
+    current={rows,subtitle,property,task,category,allowQuote,kind};
     body.innerHTML=`<p class="muted">${esc(subtitle)}</p><p class="hp-commercial-disclosure">${disclosure}</p><label for="hpProSort">Ordre des résultats</label><select id="hpProSort"><option value="directory">Ordre du répertoire, incluant les mises en avant</option><option value="alphabetical">Alphabétique, sans mise en avant</option></select><div id="hpProResults"></div>`;
     const draw=()=>{
       const list=document.getElementById('hpProResults');if(!list)return;
-      list.innerHTML=sortRows(rows,document.getElementById('hpProSort').value).map(p=>card(p,allowQuote&&!!property?.id)).join('');
+      list.innerHTML=sortRows(rows,document.getElementById('hpProSort').value).map(p=>card(p,allowQuote&&!!property?.id,kind)).join('');
       list.querySelectorAll('[data-pro-id]').forEach(button=>button.onclick=()=>quote(rows.find(p=>String(p.id)===button.dataset.proId),{property,task,category}));
     };
     document.getElementById('hpProSort').onchange=draw;draw();
