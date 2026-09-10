@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
-// A DOM/event harness executes the three shipped scripts in their real load order.
+// A DOM/event harness executes the shipped scripts in their real load order.
 // External navigation is inspected, never followed; no user data is written.
 const source=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8');
+const hrefs=node=>node.querySelectorAll('a').map(a=>a.getAttribute('href')).join('\n');
 const decode=s=>s.replace(/&(amp|lt|gt|quot|#39);/g,(_,key)=>({amp:'&',lt:'<',gt:'>',quot:'"','#39':"'"}[key]));
 class Element{
  constructor(tag='div'){this.tagName=tag.toLowerCase();this.nodeType=1;this.children=[];this.parentElement=null;this.attributes={};this.dataset={};this.style={};this.hidden=false;this.value='';this._text='';this.classes=new Set();this.classList={add:x=>this.classes.add(x),remove:x=>this.classes.delete(x),contains:x=>this.classes.has(x)}}
@@ -30,7 +31,8 @@ class Element{
  querySelector(s){return this.querySelectorAll(s)[0]||null}
 }
 function harness(){
- const body=new Element('body'),listeners=[],requests=[];
+ const body=new Element('body'),listeners=[],requests=[],intervals=[];
+ const leisure=body.appendChild(new Element());leisure.id='hpLeisureList';
  const home=body.appendChild(new Element());home.id='tl';
  const calendar=body.appendChild(new Element());calendar.id='at';
  const titles=['Nettoyer les filtres de la thermopompe','Vérifier le détecteur de fumée','Nettoyer le filtre du spa'];
@@ -39,13 +41,13 @@ function harness(){
  const calendarCard=calendar.appendChild(new Element());calendarCard.className='card';calendarCard.setAttribute('data-task-id','task-0');calendarCard.appendChild(new Element('b')).textContent=titles[0];
  const props=[{id:'house',name:'Maison',city:'Jonquière',postal_code:'G7X1A1',address:'Adresse privée'},{id:'chalet',name:'Chalet',city:'Québec',postal_code:'G1R1A1'}];
  const document={readyState:'complete',body,createElement:tag=>new Element(tag),getElementById:id=>body.querySelector('#'+id),addEventListener:(event,callback)=>{if(event==='click')listeners.push(callback)},querySelectorAll:s=>s.includes(' > *')?s.split(',').flatMap(selector=>document.getElementById(selector.trim().split(' ')[0].slice(1))?.children||[]):body.querySelectorAll(s)};
- const context={document,props,tasks,ap:props[0],eq:tasks.map((t,i)=>({id:t.equipment_id,property_id:'house',brand:'Marque'+i,model:'Modèle'+i,serial_number:'SERIAL-SECRET'})),URL,URLSearchParams,AbortController,Date,console,setTimeout:()=>0,clearTimeout(){},setInterval(){},MutationObserver:class{observe(){}},hpStability:{token:async()=> 'session-fixture'},fetch:async(url)=>{
+ const context={document,props,tasks,ap:props[0],eq:tasks.map((t,i)=>({id:t.equipment_id,property_id:'house',brand:'Marque'+i,model:'Modèle'+i,serial_number:'SERIAL-SECRET'})),URL,URLSearchParams,AbortController,Date,console,setTimeout:()=>0,clearTimeout(){},setInterval:callback=>intervals.push(callback),clearInterval(){},MutationObserver:class{observe(){}},hpStability:{token:async()=> 'session-fixture'},fetch:async(url)=>{
   requests.push(new URL(url,'https://homepilot.test'));
   return {ok:true,json:async()=>({rows:[{id:'professional',business_name:'Commerce local',active:true,directory_issues:[],phone:'4182346789'}]})};
  }};context.window=context;const ctx=vm.createContext(context);
- for(const file of ['professional-presentation.js','diy-guides.js','professional-directory-cloud.js','professional-task-router.js'])vm.runInContext(source(file),ctx,{filename:file});
+ for(const file of ['professional-presentation.js','vr-expert-shop.js','diy-guides.js','professional-directory-cloud.js','leisure-tasks.js','professional-task-router.js'])vm.runInContext(source(file),ctx,{filename:file});
  const click=async button=>{assert.ok(button,'button exists');const event={target:button,stopped:false,preventDefault(){},stopImmediatePropagation(){this.stopped=true}};for(const listener of listeners){await listener(event);if(event.stopped)return}await button.onclick?.(event)};
- return {ctx,cards,calendarCard,requests,get:document.getElementById,click};
+ return {ctx,cards,calendarCard,requests,intervals,get:document.getElementById,click};
 }
 
 test('home and DIY clicks send exactly the same professional search and render the result',async()=>{
@@ -86,4 +88,77 @@ test('spa filters keep the spa guide and reopening a different guide resets prod
 test('a task whose property is unavailable cannot silently search another property',async()=>{
  const h=harness();h.ctx.tasks[0].property_id='missing';await h.click(h.cards[0].querySelector('.hpFindPro'));
  assert.equal(h.requests.length,0);assert.match(h.get('hpProBody').textContent,/propriété associée/);
+});
+
+test('household materials link to the actual cloth, preserving battery, filter and spa product searches',async()=>{
+ const h=harness();
+ for(const card of h.cards){
+  await h.click(card.querySelector('.hpDiyBtn'));await h.click(h.get('hpDiyProductsToggle'));
+  const links=h.get('hpDiyProducts').querySelectorAll('a');
+  const local=links.filter(a=>new URL(a.getAttribute('href')).hostname==='vrexpertjonquiere.ca');
+  assert.equal(local.length,1);assert.match(local[0].textContent,/VR Expert Jonquière/);
+  assert.equal(new URL(local[0].getAttribute('href')).pathname,'/produit/linges-a-polir-en-microfibre-pqt3/');
+  for(const a of links.filter(a=>a!==local[0]))assert.equal(new URL(a.getAttribute('href')).hostname,'www.google.com');
+  assert.doesNotMatch(hrefs(h.get('hpDiyProducts')),/antigel|aquapods|boite-a-batterie/);
+ }
+ h.ctx.hpOpenDiy('Entretien courant de la piscine');
+ assert.ok(h.get('hpDiyProducts').querySelectorAll('a').every(a=>new URL(a.getAttribute('href')).hostname==='www.google.com'));
+});
+
+test('leisure DIY shows contextual product pages and retains the professional action',async()=>{
+ const h=harness();h.ctx.hpShowLeisureDiy('rv_winterize');
+ let body=h.get('hpLtmBody'),panel=body.querySelector('.hpVrSuggestions');
+ assert.ok(panel);assert.equal(panel.hasAttribute('open'),false);assert.match(panel.textContent,/Trouver les produits/);
+ assert.ok(panel.querySelectorAll('a').some(a=>a.getAttribute('href').endsWith('/produit/antigel-de-plomberie/')));
+ assert.match(body.querySelector('button').getAttribute('onclick'),/hpFindLeisurePro\('rv_winterize'\)/);
+ await h.ctx.hpFindLeisurePro('rv_winterize');assert.match(h.get('hpProResults').textContent,/Commerce local/);
+ for(const key of ['boat_winterize','boat_spring','pwc_winterize','motorcycle_storage','snowmobile_storage']){
+  h.ctx.hpShowLeisureDiy(key);panel=h.get('hpLtmBody').querySelector('.hpVrSuggestions');assert.ok(panel);
+  assert.doesNotMatch(hrefs(panel),/antigel-de-plomberie|aquapods|dicor-pour-toit|surge-30/);
+ }
+ h.ctx.hpShowLeisureDiy('boat_spring');assert.match(h.get('hpLtmBody').textContent,/application à la machine/);
+ h.ctx.hpShowLeisureDiy('unknown');assert.equal(h.get('hpLtmBody').querySelector('.hpVrSuggestions'),null);
+ // Missing merchant script must not prevent a guide or its professional button from opening.
+ delete h.ctx.HomePilotVrShop;h.ctx.hpShowLeisureDiy('rv_winterize');assert.match(h.get('hpLtmBody').textContent,/Hivernisation du VR/);
+});
+
+test('saved equipment renders the catalog in the actual leisure list with types kept separate',async()=>{
+ const h=harness(),equipment=[{id:'rv1',equipment_type:'rv',name:'Mon VR'},{id:'boat1',equipment_type:'boat',name:'Mon bateau'},{id:'atv1',equipment_type:'atv',name:'VTT'}];
+ h.ctx.supabaseClient={auth:{getUser:async()=>({data:{user:{id:'fixture'}}})},from:table=>({select(){return this},eq(){return this},order:async()=>({data:table==='leisure_equipment'?equipment:[],error:null})})};
+ h.ctx.hpLoadLeisure=()=>{};
+ // The last registered interval installs the shipped leisure renderer.
+ h.intervals.at(-1)();await h.ctx.hpLoadLeisure();
+ const [rv,boat,atv]=h.get('hpLeisureList').children;
+ assert.match(rv.textContent,/Hivernisation et remisage/);assert.match(rv.textContent,/Confort et cuisine en camping/);
+ assert.match(rv.textContent,/Sur commande/);assert.doesNotMatch(hrefs(rv),/nettoyant-quille-de-ponton/);
+ assert.match(hrefs(boat),/nettoyant-quille-de-ponton/);assert.doesNotMatch(hrefs(boat),/antigel-de-plomberie/);
+ assert.equal(atv.querySelector('.hpVrSuggestions'),null);
+ assert.equal(rv.querySelectorAll('.hpVrSuggestions').length,1);
+ await h.ctx.hpLoadLeisure();assert.equal(h.get('hpLeisureList').children[0].querySelectorAll('.hpVrSuggestions').length,1);
+});
+
+test('all curated product and category links are reachable through a supported equipment context and are read-only',()=>{
+ const h=harness(),shop=h.ctx.HomePilotVrShop;
+ const html=Object.keys(shop.equipmentGroups).map(type=>shop.renderForEquipment(type)).join('');
+ const rows=[...shop.products,...shop.categories];
+ assert.equal(new Set(shop.products.map(p=>p.id)).size,shop.products.length);
+ for(const row of rows){
+  const url=new URL(row.url);assert.equal(url.origin,'https://vrexpertjonquiere.ca');assert.equal(url.search,'');
+  assert.match(url.pathname,/^\/(produit|categorie-de-produit)\//);assert.ok(html.includes(row.url),row.id+' has a visible placement');
+  assert.equal(row.checkedAt,'2026-09-10');
+ }
+ const node=new Element();node.innerHTML=html;
+ for(const a of node.querySelectorAll('a')){assert.equal(a.getAttribute('target'),'_blank');assert.equal(a.getAttribute('rel'),'noopener noreferrer')}
+ assert.match(node.textContent,/stock non synchronisé/);assert.match(node.textContent,/non rémunérés/);
+ assert.doesNotMatch(html,/add-to-cart|en stock|\d+\.\d+\s*\$/);
+ assert.equal(shop.renderForEquipment('<img src=x onerror=alert(1)>'),'');
+ assert.equal(shop.renderForGuide('__proto__'),'');
+ assert.equal(shop.forMaterial('Batterie compatible avec le détecteur'),null);
+});
+
+test('both entry shells load the merchant catalog before consumers with identical versions',()=>{
+ const index=source('index.html');assert.equal(index,source('seasonal-shell.html'));
+ assert.match(index,/vr-products-v1-20260910/);
+ assert.ok(index.indexOf('/vr-expert-shop.js?v=2')<index.indexOf('/diy-guides.js?v=13'));
+ assert.ok(index.indexOf('/vr-expert-shop.js?v=2')<index.indexOf('/leisure-tasks.js?v=3'));
 });
