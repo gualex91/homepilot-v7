@@ -25,12 +25,11 @@ export default async function handler(req,res){
   const category=String(req.query.category||'general');
   const service=String(req.query.service||'');
   const city=String(req.query.city||''),postal=String(req.query.postal||''),region=String(req.query.region||'');
-  const url=new URL(`${SUPABASE_URL}/rest/v1/professional_profiles`);
-  url.searchParams.set('select','id,business_name,category,phone,email,website,verification_status,listing_tier,regions,municipalities,postal_prefixes,serves_all_quebec,description,service_categories');
+  const url=new URL(`${SUPABASE_URL}/rest/v1/rpc/search_directory_professionals`);
+  url.searchParams.set('select','id,business_name,category,phone,email,website,listing_tier,regions,municipalities,postal_prefixes,serves_all_quebec,description,service_categories,source,source_reference,rbq_license,imported_at,directory_issues,active');
+  for(const [key,value] of Object.entries({p_category:category,p_service:service,p_city:city,p_postal:postal,p_region:region}))url.searchParams.set(key,value);
   url.searchParams.set('active','eq.true');
-  if(category&&category!=='general')url.searchParams.set('category',`eq.${category}`);
-  if(service)url.searchParams.set('service_categories',`cs.{${service}}`);
-  url.searchParams.set('limit','120');
+  url.searchParams.set('directory_issues','eq.{}');
   try{
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),5000);
@@ -39,7 +38,7 @@ export default async function handler(req,res){
     finally{clearTimeout(timer)}
     const text=await r.text();let data=null;try{data=text?JSON.parse(text):null}catch{}
     if(!r.ok)return res.status(r.status).json({error:data?.message||data?.hint||`Erreur Supabase ${r.status}`});
-    const all=(Array.isArray(data)?data:[]).filter(p=>/[A-Za-zÀ-ÿ]/.test(p.business_name||''));
+    const all=(Array.isArray(data)?data:[]).filter(p=>p.active===true&&Array.isArray(p.directory_issues)&&p.directory_issues.length===0);
     const rows=all.filter(p=>locationMatch(p,{city,postal,region})).sort((a,b)=>tierRank(b.listing_tier)-tierRank(a.listing_tier));
     res.setHeader('Cache-Control','no-store');
     return res.status(200).json({ok:true,rows,service:service||null,city,region:inferredRegion(city,region)});

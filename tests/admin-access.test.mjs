@@ -8,7 +8,7 @@ const tick=()=>new Promise(resolve=>setImmediate(resolve));
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve}};
 const owner={id:'owner',user_metadata:{admin:true}};
 function harness({user=owner,authorized=['owner'],authError=false}={}){
- const state={user,authorized:new Set(authorized),authError,recovering:false,roleResult:null,dataResult:null,reads:[]},timers=[],listeners={};let authChange;
+ const state={user,authorized:new Set(authorized),authError,recovering:false,roleResult:null,dataResult:null,reads:[],queries:[]},timers=[],listeners={};let authChange;
  class Element{
   constructor(tag='div'){this.tagName=tag;this.children=[];this.parentElement=null;this.id='';this.attributes={};this.classes=new Set();this.textContent='';this._html='';this.classList={add:x=>this.classes.add(x),remove:x=>this.classes.delete(x),contains:x=>this.classes.has(x)}}
   set className(value){this.classes=new Set(value.split(/\s+/).filter(Boolean))}
@@ -25,15 +25,15 @@ function harness({user=owner,authorized=['owner'],authError=false}={}){
  const get=id=>body.querySelector('#'+id),client={auth:{
   getUser:async()=>state.authError?{data:{user:null},error:Error('Session expired')}:{data:{user:state.user}},
   onAuthStateChange(fn){authChange=fn}
- },from(table){let uid;const query={
-  select(){return query},eq(key,value){if(key==='user_id')uid=value;return query},order(){return query},limit(){return query},
+ },from(table){let uid;const record={table,filters:[]};state.queries.push(record);const query={
+  select(){return query},eq(key,value){record.filters.push(['eq',key,value]);if(key==='user_id')uid=value;return query},order(){return query},limit(){return query},range(a,b){record.range=[a,b];return query},neq(key,value){record.filters.push(['neq',key,value]);return query},ilike(key,value){record.filters.push(['ilike',key,value]);return query},
   async maybeSingle(){state.reads.push(table);if(state.roleResult)return state.roleResult(uid);return {data:state.authorized.has(uid)?{user_id:uid}:null,error:null}},
   then(resolve,reject){state.reads.push(table);return (state.dataResult?state.dataResult(table):Promise.resolve({data:[],error:null})).then(resolve,reject)}
  };return query}};
  const context={document:{readyState:'complete',body,getElementById:get,createElement:tag=>new Element(tag),querySelector:selector=>selector==='main.app > .row'?header:null},
   supabaseClient:client,u:owner,user:owner,hpAccountAccess:{isRecovering:()=>state.recovering},
   setTimeout(fn,ms){timers.push({fn,ms});return timers.length},setInterval(){},addEventListener(type,fn){listeners[type]=fn},dispatchEvent(){},Event:class{constructor(type){this.type=type}},console};
- context.window=context;vm.runInContext(source,vm.createContext(context));
+ context.window=context;const ctx=vm.createContext(context);vm.runInContext(readFileSync(new URL('../professional-presentation.js',import.meta.url),'utf8'),ctx);vm.runInContext(source,ctx);
  return {state,get,header,more,listeners,async emit(event,next){state.user=next;authChange(event,next?{user:next}:null);const pending=timers.splice(0);for(const timer of pending)if(timer.ms===0)timer.fn();await tick()}};
 }
 
@@ -70,4 +70,13 @@ test('late private data cannot repopulate the workspace after the session change
 test('password recovery hides the administrator entry until normal sign-in resumes',async()=>{
  const h=harness();await tick();h.state.recovering=true;await h.emit('PASSWORD_RECOVERY',owner);h.listeners.focus();await tick();assert.equal(h.get('hpAdminBtn'),null);
  h.state.recovering=false;await h.emit('SIGNED_IN',owner);assert.ok(h.get('hpAdminBtn'));
+});
+
+
+test('admin review shows removal reasons, exact totals and pages without losing linked lead names',async()=>{
+ const h=harness();await tick();h.state.dataResult=async table=>table==='professional_profiles'?{data:[{id:'pro',business_name:'1234-5678 Québec inc.',active:false,directory_issues:['numbered_company']}],count:4212}:{data:[{professional:{business_name:'Commerce hors de cette page'},created_at:'2026-09-10'}]};
+ await h.get('hpAdminBtn').onclick();h.get('hpDirectoryFilter').onchange({target:{value:'review'}});await tick();
+ assert.match(h.get('hpAdminBody').innerHTML,/Compagnie à numéro/);assert.match(h.get('hpAdminBody').innerHTML,/<b>4212<\/b>/);assert.match(h.get('hpAdminBody').innerHTML,/Commerce hors de cette page/);
+ const review=h.state.queries.filter(q=>q.table==='professional_profiles').at(-1);assert.deepEqual(review.filters,[['neq','directory_issues','{}']]);assert.deepEqual(review.range,[0,49]);
+ h.get('hpDirectoryNext').onclick();await tick();assert.deepEqual(h.state.queries.filter(q=>q.table==='professional_profiles').at(-1).range,[50,99]);
 });

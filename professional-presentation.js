@@ -11,9 +11,21 @@
   }
   function sortRows(rows,order){return order==='alphabetical'?[...rows].sort((a,b)=>String(a.business_name).localeCompare(String(b.business_name),'fr')):[...rows]}
   const disclosure='Les commandites et partenariats peuvent influencer l’ordre d’affichage. Ils ne garantissent ni la qualité ni la disponibilité. La vérification est distincte du statut commercial.';
+  function evidence(profile){
+    const license=String(profile.rbq_license||profile.source_reference||'').replace(/^Licence RBQ\s+/i,'');
+    if(['rbq_open_data','RBQ_CC_BY_4_0'].includes(profile.source)&&/^\d{4}-\d{4}-\d{2}$/.test(license)){
+      const imported=new Date(profile.imported_at),date=Number.isNaN(imported.getTime())||!profile.imported_at?'':` · Données importées le ${imported.toLocaleDateString('fr-CA',{timeZone:'UTC'})}`;
+      return `<p class="muted">Licence RBQ : ${esc(license)}${esc(date)} · <a href="https://www.rbq.gouv.qc.ca/vous-etes/citoyen/verifier-la-licence-dun-entrepreneur/" target="_blank" rel="noopener noreferrer">Vérifier au registre RBQ</a></p>`;
+    }
+    const url=safeWebsite(profile.source_reference)||safeWebsite(profile.website);
+    return url?`<p class="muted"><a href="${esc(url)}" target="_blank" rel="noopener noreferrer">Consulter la référence du commerce</a></p>`:'';
+  }
+  const issueLabels={numbered_company:'Compagnie à numéro',missing_business_name:'Nom commercial manquant',invalid_phone:'Téléphone manquant ou format invalide',missing_reference:'Référence consultable manquante'};
+  const issueText=profile=>(profile.directory_issues||[]).map(issue=>issueLabels[issue]||'Fiche à revoir').join(' · ');
   function card(profile,canQuote=false){
-    const url=safeWebsite(profile.website),phone=String(profile.phone||'').replace(/[^+\d]/g,'');
-    return `<article class="card"><h3>${esc(profile.business_name)}</h3><div class="hp-listing-badge">${listingLabel(profile)}</div>${profile.verification_status==='verified'||profile.verified?'<p class="muted">Vérification indiquée au répertoire</p>':''}${profile.description?`<p class="muted">${esc(profile.description)}</p>`:''}<div class="hp-pro-contact">${phone?`<a href="tel:${esc(phone)}">Appeler ${esc(profile.phone)}</a>`:''}${url?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">Site du commerce</a>`:''}</div>${canQuote?`<button type="button" class="hpQuote" data-pro-id="${esc(profile.id)}">Préparer une demande</button>`:''}</article>`;
+    if(profile.active===false||profile.directory_issues?.length)return '';
+    const url=safeWebsite(profile.website),rawPhone=String(profile.phone||''),extension=rawPhone.match(/(?:ext\.?|extension|poste|x|#)\s*(\d+)\s*$/i),phone=rawPhone.replace(/(?:ext\.?|extension|poste|x|#)\s*\d+\s*$/i,'').replace(/[^+\d]/g,'')+(extension?';ext='+extension[1]:'');
+    return `<article class="card"><h3>${esc(profile.business_name)}</h3><div class="hp-listing-badge">${listingLabel(profile)}</div>${evidence(profile)}${profile.description?`<p class="muted">${esc(profile.description)}</p>`:''}<div class="hp-pro-contact">${phone?`<a href="tel:${esc(phone)}">Appeler ${esc(profile.phone)}</a>`:''}${url?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">Site ou fiche du commerce</a>`:''}</div>${canQuote?`<button type="button" class="hpQuote" data-pro-id="${esc(profile.id)}">Préparer une demande</button>`:''}</article>`;
   }
   function validateLead(payload){
     if(!payload.consent_to_share)return 'Ton consentement est requis pour partager cette demande avec le commerce choisi.';
@@ -23,7 +35,7 @@
     if(payload.message.length<10||payload.message.length>3000)return 'Décris ton besoin en 10 à 3 000 caractères, sans données financières ou sensibles.';
     return null;
   }
-  const api={esc,safeWebsite,listingLabel,sortRows,card,disclosure,validateLead};root.hpProfessionalPresentation=api;
+  const api={esc,safeWebsite,listingLabel,sortRows,card,disclosure,evidence,issueText,validateLead};root.hpProfessionalPresentation=api;
   if(!root.document)return;
   let current=null;
   function render(rows,{subtitle='',property=null,task=null,category='general',allowQuote=false}={}){

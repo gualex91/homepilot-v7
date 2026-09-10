@@ -126,6 +126,6 @@ test('lead submission uses one ID for a double click and retry after uncertain i
 });
 test('regional spelling and blank postal prefixes cannot distort local recommendations',async()=>{
   const real=globalThis.fetch;
-  globalThis.fetch=async()=>Response.json([{id:'local',business_name:'Local',regions:['Saguenay–Lac-Saint-Jean']},{id:'wrong',business_name:'Ailleurs',regions:['Montréal'],postal_prefixes:[''],listing_tier:'sponsored'}]);
+  globalThis.fetch=async()=>Response.json([{id:'local',business_name:'Local',active:true,directory_issues:[],regions:['Saguenay–Lac-Saint-Jean']},{id:'wrong',business_name:'Ailleurs',active:true,directory_issues:[],regions:['Montréal'],postal_prefixes:[''],listing_tier:'sponsored'}]);
   try{const res={status(n){this.code=n;return this},setHeader(){},json(data){this.data=data;return this}};await professionals({method:'GET',headers:{authorization:'Bearer test'},query:{city:'Jonquière',postal:'G7X1A1'}},res);assert.deepEqual(res.data.rows.map(p=>p.id),['local'])}finally{globalThis.fetch=real}
 });
