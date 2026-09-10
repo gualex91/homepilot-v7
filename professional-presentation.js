@@ -7,10 +7,10 @@
   function listingLabel(profile){
     if(profile.listing_tier==='sponsored'||profile.sponsored)return 'Publicité · Commandité';
     if(profile.listing_tier==='partner'||profile.partner)return 'Partenaire commercial';
-    return 'Fiche non commanditée';
+    return profile.homepilot_featured===true?'Mis en avant par HomePilot · Fiche non commanditée':'Fiche non commanditée';
   }
   function sortRows(rows,order){return order==='alphabetical'?[...rows].sort((a,b)=>String(a.business_name).localeCompare(String(b.business_name),'fr')):[...rows]}
-  const disclosure='Les commandites et partenariats peuvent influencer l’ordre d’affichage. Ils ne garantissent ni la qualité ni la disponibilité. La vérification est distincte du statut commercial.';
+  const disclosure='Les mises en avant choisies par HomePilot, les commandites et les partenariats peuvent influencer l’ordre d’affichage. Ils ne garantissent ni la qualité ni la disponibilité. La vérification est distincte de la mise en avant et du statut commercial.';
   function evidence(profile){
     const license=String(profile.rbq_license||profile.source_reference||'').replace(/^Licence RBQ\s+/i,'');
     if(['rbq_open_data','RBQ_CC_BY_4_0'].includes(profile.source)&&/^\d{4}-\d{4}-\d{2}$/.test(license)){
@@ -41,7 +41,7 @@
   function render(rows,{subtitle='',property=null,task=null,category='general',allowQuote=false}={}){
     const body=document.getElementById('hpProBody');if(!body)return;
     current={rows,subtitle,property,task,category,allowQuote};
-    body.innerHTML=`<p class="muted">${esc(subtitle)}</p><p class="hp-commercial-disclosure">${disclosure}</p><label for="hpProSort">Ordre des résultats</label><select id="hpProSort"><option value="directory">Ordre du répertoire, incluant les partenaires</option><option value="alphabetical">Alphabétique, sans priorité commerciale</option></select><div id="hpProResults"></div>`;
+    body.innerHTML=`<p class="muted">${esc(subtitle)}</p><p class="hp-commercial-disclosure">${disclosure}</p><label for="hpProSort">Ordre des résultats</label><select id="hpProSort"><option value="directory">Ordre du répertoire, incluant les mises en avant</option><option value="alphabetical">Alphabétique, sans mise en avant</option></select><div id="hpProResults"></div>`;
     const draw=()=>{
       const list=document.getElementById('hpProResults');if(!list)return;
       list.innerHTML=sortRows(rows,document.getElementById('hpProSort').value).map(p=>card(p,allowQuote&&!!property?.id)).join('');

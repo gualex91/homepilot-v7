@@ -158,7 +158,7 @@ test('all curated product and category links are reachable through a supported e
 
 test('both entry shells load the merchant catalog before consumers with identical versions',()=>{
  const index=source('index.html');assert.equal(index,source('seasonal-shell.html'));
- assert.match(index,/vr-products-v1-20260910/);
+ assert.match(index,/regional-electrician-v1-20260910/);
  assert.ok(index.indexOf('/vr-expert-shop.js?v=2')<index.indexOf('/diy-guides.js?v=13'));
  assert.ok(index.indexOf('/vr-expert-shop.js?v=2')<index.indexOf('/leisure-tasks.js?v=3'));
 });
