@@ -44,4 +44,6 @@
 #hpBudgetPlanner .finance-action p{font-size:.9rem}
 #hpBudgetPlanner textarea{font:inherit;font-size:.875rem;width:100%;min-height:230px;padding:.8rem;color:var(--txt);background:var(--card);border:1px solid var(--navborder,#ccd6cf);border-radius:8px}
 #hpBudgetPlanner .finance-date{font-size:.875rem;color:var(--mut)}
+#hpBudgetPlanner .finance-project-funding{padding:.85rem;border-left:4px solid var(--b);background:var(--soft);border-radius:8px;font-weight:600}
+#hpBudgetPlanner [id^=hpFinanceProject-]{scroll-margin-top:1rem}
 @media(max-width:380px){#hpBudgetPlanner .finance-grid{grid-template-columns:1fr}#hpBudgetPlanner .finance-stat strong{font-size:1.4rem}#hpBudgetPlanner .finance-heading{display:block}}

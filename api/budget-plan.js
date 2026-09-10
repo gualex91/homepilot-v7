@@ -3,6 +3,8 @@ import {URL_BASE,PUBLIC_KEY,verifiedUser,requestId} from '../lib/safe-write.js';
 import '../budget-engine.js';
 const engine=globalThis.hpBudgetEngine;
 const stable=value=>Array.isArray(value)?'['+value.map(stable).join(',')+']':value&&typeof value==='object'?'{'+Object.keys(value).sort().map(k=>JSON.stringify(k)+':'+stable(value[k])).join(',')+'}':JSON.stringify(value);
+// Store the addition separately: an older client updating config cannot erase it.
+const present=row=>row?{config:{...row.config,projects:row.maintenance_projects||[]},revision:row.revision,updated_at:row.updated_at}:null;
 
 export default async function handler(req,res){
   const started=Date.now(),trace=randomUUID();
@@ -21,22 +23,23 @@ export default async function handler(req,res){
       const data=await response.json();if(!response.ok)throw Object.assign(new Error('Base de données indisponible.'),{status:response.status});return data;
     }
     const own=[['user_id','eq.'+user.id]];
-    const current=(await query('budget_plans',[...own,['select','config,revision,updated_at']]))[0]||null;
+    const current=present((await query('budget_plans',[...own,['select','config,maintenance_projects,revision,updated_at']]))[0]);
     if(req.method==='PUT'){
       let config;
-      try{config=engine.validate(req.body?.config)}catch(error){return res.status(400).json({error:error.message})}
+      try{const input=req.body?.config;config=engine.validate({...input,projects:input&&Object.hasOwn(input,'projects')?input.projects:current?.config.projects||[]})}catch(error){return res.status(400).json({error:error.message})}
       const expected=req.body?.expected_revision??null,id=req.body?.request_id;
       if(!requestId(id)||(expected!==null&&!requestId(expected)))return res.status(400).json({error:'Identifiant de sauvegarde invalide.'});
       if(current?.revision===id&&stable(current.config)===stable(config))return res.status(200).json({ok:true,...current});
       if((current?.revision??null)!==expected)return res.status(409).json({error:'Ton budget a changé sur un autre appareil. Recharge la version enregistrée avant de refaire tes modifications.'});
-      const payload={config,revision:id,updated_at:new Date().toISOString()};
+      const {projects,...baseConfig}=config;
+      const payload={config:baseConfig,maintenance_projects:projects,revision:id,updated_at:new Date().toISOString()};
       const rows=current?await query('budget_plans',[...own,['revision','eq.'+expected]],{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)}):await query('budget_plans',[['on_conflict','user_id']],{method:'POST',headers:{Prefer:'resolution=ignore-duplicates,return=representation'},body:JSON.stringify({...payload,user_id:user.id})});
       if(!rows.length){
-        const latest=(await query('budget_plans',own))[0];
+        const latest=present((await query('budget_plans',own))[0]);
         if(latest?.revision===id&&stable(latest.config)===stable(config))return res.status(200).json({ok:true,config:latest.config,revision:latest.revision,updated_at:latest.updated_at});
         return res.status(409).json({error:'Une autre sauvegarde a été effectuée. Recharge le budget.'});
       }
-      return res.status(200).json({ok:true,config:rows[0].config,revision:rows[0].revision,updated_at:rows[0].updated_at});
+      return res.status(200).json({ok:true,...present(rows[0])});
     }
     const month=new URL(req.url,'https://nuvabri.invalid').searchParams.get('month')||'';
     if(!/^20\d{2}-(0[1-9]|1[0-2])$/.test(month))return res.status(400).json({error:'Mois invalide.'});

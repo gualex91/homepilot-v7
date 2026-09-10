@@ -115,3 +115,61 @@ test('API atomic compare-and-swap detects a race after reading the old revision'
 test('API paginates actual entries and flags the hard cap instead of claiming complete totals',async()=>{
   for(const [entryCount,complete] of [[501,true],[10001,false]]){const db=fakeDB({entryCount});await usingDB(db,async()=>{const r=response();await handler(request(),r);assert.equal(r.code,200);assert.equal(r.body.entries.length,Math.min(entryCount,10000));assert.equal(r.body.entries_complete,complete)})}
 });
+
+const project=(changes={})=>({id:'maintenance-a',taskKey:'property:task-a:2026-12-01',propertyName:'Maison',label:'Remplacer le chauffe-eau',category:'Maison',essential:false,totalAmount:900,savedAmount:300,dueDate:'2026-12-01',costSource:'estimate',confirmed:true,active:true,...changes});
+test('maintenance savings use the remaining cost and months to deadline, with no annual floor',()=>{
+  const p=plan();p.projects=[project()];const r=analyze(p);
+  assert.equal(r.projects[0].remaining,60000);assert.equal(r.projects[0].months,4);assert.equal(r.projects[0].monthly,15000);
+  assert.equal(r.totals.projects,15000);assert.equal(r.totals.provisions,0);assert.equal(r.projectedMargin,385000);
+  p.projects=[project({dueDate:'2028-12-01',savedAmount:899})];assert.equal(analyze(p).projects[0].monthly,4);
+  p.projects=[project({totalAmount:1,savedAmount:0,dueDate:'2026-11-01'})];assert.equal(analyze(p).projects[0].monthly,34);
+});
+test('one-off projects stop after their deadline and never renew in the next year',()=>{
+  const p=plan();p.projects=[project()];const normalized=E.validate(p);
+  assert.equal(E.events(normalized,'2026-12-01','2026-12-31').filter(x=>x.kind==='project').length,1);
+  assert.equal(E.events(normalized,'2027-01-01','2027-12-31').filter(x=>x.kind==='project').length,0);
+  assert.equal(E.analyze(normalized,[],'2027-01','2026-09-10').totals.projects,0);
+  assert.equal(E.analyze(normalized,[],'2026-08','2026-09-10').totals.projects,0);
+});
+test('funded or closed projects require no new savings; reopening restores the unfunded amount',()=>{
+  const p=plan();p.projects=[project({savedAmount:900})];assert.equal(analyze(p).totals.projects,0);
+  p.projects=[project({active:false,dueDate:'2026-09-12'})];assert.equal(analyze(p).totals.projects,0);assert.equal(analyze(p).calendar.some(x=>x.kind==='project'),false);
+  p.projects[0].active=true;assert.equal(analyze(p).totals.projects,60000);
+});
+test('a project due before payday deducts its unfunded cost once, without inventing a transaction',()=>{
+  const p=plan();p.cash={balance:1000,asOf:'2026-09-10',todaySettled:true};p.projects=[project({dueDate:'2026-09-15'})];
+  const r=analyze(p);assert.equal(r.cash.bills,60000);assert.equal(r.cash.reserve,0);assert.equal(r.cash.available,40000);
+  assert.equal(r.actual.expense,0);assert.equal(r.totals.bills,0);assert.equal(r.calendar.find(x=>x.kind==='project').amount,90000);
+});
+test('future project reserves affect cash; a due or overdue unfunded project blocks a reassuring estimate',()=>{
+  const p=plan();p.cash={balance:1000,asOf:'2026-09-10',todaySettled:true};p.projects=[project()];
+  assert.equal(analyze(p).cash.reserve,2500);assert.equal(analyze(p).cash.available,97500);
+  for(const dueDate of ['2026-09-10','2026-09-09']){p.projects=[project({dueDate})];const r=analyze(p);assert.equal(r.cash,null);assert.match(r.actions[0].title,/échéance/)}
+});
+test('project amounts, dates, confirmation and duplicate source occurrences are validated',()=>{
+  for(const change of [{totalAmount:null},{totalAmount:-1},{totalAmount:0.001},{savedAmount:901},{dueDate:'2026-02-30'},{confirmed:false},{costSource:'verified-by-Nuvabri'},{taskKey:'x'.repeat(201)}]){
+    const p=plan();p.projects=[project(change)];assert.throws(()=>E.validate(p));
+  }
+  const p=plan();p.projects=[project(),project({id:'maintenance-b'})];assert.throws(()=>E.validate(p),/déjà prévue/);
+  p.projects[1].taskKey='property:task-a:2027-12-01';assert.equal(E.validate(p).projects.length,2);
+  p.projects=[project({totalAmount:0,savedAmount:0})];assert.equal(analyze(p).totals.projects,0);
+});
+test('legacy plans load with no projects, while missing projects in an old client save preserve stored projects',async()=>{
+  const old=plan();delete old.projects;assert.deepEqual(E.validate(old).projects,[]);
+  const db=fakeDB();await usingDB(db,async()=>{
+    const first=payload();first.config.projects=[project()];const a=response();await handler(request('PUT',first),a);assert.equal(a.code,200);
+    assert.equal(db.current.config.projects,undefined);assert.equal(db.current.maintenance_projects.length,1);
+    const b=response();await handler(request(),b);assert.equal(b.body.config.projects[0].label,project().label);
+    const legacy=payload(first.request_id);delete legacy.config.projects;legacy.config.incomes[0].amount=2200;
+    const c=response();await handler(request('PUT',legacy),c);assert.equal(c.code,200);assert.equal(c.body.config.projects.length,1);
+    assert.equal(db.current.maintenance_projects.length,1);assert.equal(db.current.config.incomes[0].amount,2200);
+  });
+});
+test('project save retries and stale revisions cannot duplicate or overwrite a project',async()=>{
+  const db=fakeDB();await usingDB(db,async()=>{
+    const b=payload();b.config.projects=[project()];const first=response();await handler(request('PUT',b),first);assert.equal(first.code,200);
+    const retry=response();await handler(request('PUT',b),retry);assert.equal(retry.code,200);assert.equal(db.writes,1);
+    const stale=payload();stale.config.projects=[project({totalAmount:1000})];const conflict=response();await handler(request('PUT',stale),conflict);assert.equal(conflict.code,409);assert.equal(db.current.maintenance_projects[0].totalAmount,900);
+    const clear=payload(b.request_id),removed=response();await handler(request('PUT',clear),removed);assert.equal(removed.code,200);assert.deepEqual(db.current.maintenance_projects,[]);
+  });
+});

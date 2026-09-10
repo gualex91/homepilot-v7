@@ -147,3 +147,22 @@ node --test tests/stability.test.mjs tests/budget-plan.test.mjs tests/financial-
 - Livraison effective, reprises/échecs, traçabilité et accord des commerces destinataires, puis mesures d’audience et facturation.
 - Avertissements Supabase préexistants toujours présents, pas de changement automatique des privilèges : [fonctions privilégiées accessibles sans connexion](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable), [fonctions privilégiées accessibles aux membres](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable), [protection des mots de passe compromis](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection). Leur présence n’établit pas à elle seule une fuite ou une exploitation.
 - Autorisation de publication avant d’envoyer cette version vers un environnement hébergé.
+
+
+## Entretien → coût prévu → réserve personnelle — septembre 2026
+
+Les tâches non terminées de la propriété et des équipements de loisir proposent **Prévoir le coût**. Le bouton prépare un brouillon dans **Finances → Mon plan → Entretiens et remplacements**. L’utilisateur saisit le coût total taxes incluses, son origine (estimation personnelle ou soumission), le montant déjà réservé et la date. Il confirme ces données et l’absence de double comptage, puis enregistre explicitement son plan. Un projet peut aussi être ajouté directement dans Finances.
+
+Le calcul répartit le coût restant sur les mois calendaires restants, mois actuel et mois d’échéance inclus, en arrondissant au cent supérieur. Exemple : 1 200 $ prévus, 400 $ déjà réservés et quatre mois donnent 200 $/mois. Aucun prix, rendement, inflation ou financement n’est inventé. Le montant réservé doit être actualisé par l’utilisateur. Un projet est ponctuel : il ne renouvelle pas sa dépense chaque année. Une échéance dépassée et non financée demande une révision et suspend l’estimation du disponible. Décoche « Ce projet est encore à préparer ou à payer » après paiement ou annulation pour le clôturer.
+
+Les réserves mensuelles réduisent la marge prévue; le paiement ponctuel ne devient pas une deuxième charge mensuelle. Pour le disponible avant la prochaine rentrée d’argent, le coût non couvert d’un projet exigible est déduit une seule fois. Aucun virement, transaction réelle, soumission commerciale ou paiement n’est créé.
+
+Le lien à la tâche est un instantané de son identifiant et de son échéance. Une seconde sélection de la même occurrence ouvre le projet existant; une nouvelle occurrence peut créer un nouveau projet. Les changements de tâche ou de propriété ne modifient pas automatiquement le budget personnel.
+
+La migration distante `private_maintenance_projects_v1` ajoute `budget_plans.maintenance_projects`, un tableau JSONB borné à 100 projets et 200 000 octets. Le schéma courant est documenté dans `db/budget-plans.sql`. Ce champ reste séparé de `config` : les anciennes versions qui sauvegardent seulement leur configuration conservent les projets. L’API existante assemble les deux champs et conserve ses contrôles de révision, de reprise et de propriétaire. Aucun rôle ni partage de données n’est ajouté.
+
+Vérification : calculs, échéances ponctuelles, arrondis, double comptage, clôture, validation et reprise API; parcours des gestionnaires d’interface avec requêtes simulées (confirmation, nouvelle occurrence, erreurs et changement de compte). Les accès propriétaire et autre compte ainsi que la compatibilité des anciennes sauvegardes ont aussi été vérifiés dans une transaction distante annulée. Aucun compte de test conservé; aucun nouvel avertissement Supabase par rapport à l’état précédent. Les avertissements préexistants et leurs liens de remédiation figurent plus haut. Ces contrôles ne constituent pas un essai visuel sur iPhone.
+
+```sh
+node --test tests/*.test.mjs
+```
