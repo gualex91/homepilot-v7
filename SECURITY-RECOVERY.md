@@ -49,22 +49,31 @@ security-definer function. This is targeted verification, not a full security au
 The shared database correction takes effect for every deployment using that
 database; a Vercel deployment is not needed to activate it.
 
-## Backup verification still required
+## Backup status — free plan retained
+
+The owner supplied dashboard screenshots confirming the Free plan has no
+included automatic backups, and explicitly declined a paid plan. No upgrade
+was performed. A free-plan export package is prepared in `ops/backups/`, with
+encrypted exports, integrity checks, a private-repository workflow template and
+a restoration runbook. It is **not active**: the source database connection and
+private backup destination still need configuration. No real database export or
+restoration has been performed. See `ops/backups/README.md` for setup and limits.
+
+## Restoration verification still required
 
 The available Supabase connection does not expose backup inventory or restoration
 management. Backup dates, retention and restoration success have **not** been
 verified. A healthy database, a successful SQL rollback, a Git commit or a new
 schema-only branch is not proof of a recoverable data backup.
 
-1. Open Database → Backups in the Supabase project dashboard. Record the actual
-   plan, available backups or PITR window, newest successful recovery point and
-   configured retention. A screenshot without secrets is enough for this check.
-2. If backups are unavailable, choose and configure a backup method before
+1. The Free plan has been confirmed from the owner's screenshot. Configure the
+   prepared export method, then record the newest successful encrypted archive.
+2. Establish a working backup method before
    accepting external users' data. Keep exports encrypted and access restricted;
    never place them in this repository or attach them to an issue.
-3. Prepare an isolated restoration target. For eligible paid projects, review
-   the **Restore to a New Project** option and its displayed additional cost
-   before creating it. Do not restore over the live application for a test.
+3. Prepare an isolated, empty local Supabase instance or an available free project
+   for a logical restore. No paid project, add-on or upgrade is authorized.
+   Do not restore over the live application for a test.
 4. A restored database may contain Auth records, secrets and scheduled jobs.
    Restrict access to the copy, disable copied external integrations/jobs before
    testing, and do not connect live email, payments or the public application.

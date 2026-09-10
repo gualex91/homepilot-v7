@@ -1,0 +1,91 @@
+# Template for a PRIVATE backup repository only.
+# Install as .github/workflows/backup.yml on that repository's default branch.
+name: Nuvabri encrypted backup
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 5 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nuvabri-database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    if: github.event.repository.private == true && vars.NUVABRI_ZERO_SPEND_CONFIRMED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Check configuration
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          NUVABRI_BACKUP_PASSPHRASE: ${{ secrets.NUVABRI_BACKUP_PASSPHRASE }}
+        run: |
+          python3 - <<'PY'
+          import os, sys
+          sys.path.insert(0, 'ops/backups')
+          from backup import BackupError, connection_env, secret_phrase
+          try:
+              secret_phrase(os.environ.get('NUVABRI_BACKUP_PASSPHRASE'))
+              connection_env(os.environ.get('SUPABASE_DB_URL', ''))
+          except BackupError as exc:
+              print(str(exc), file=sys.stderr)
+              raise SystemExit(1)
+          PY
+
+      - uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1
+        with:
+          version: 2.117.0
+
+      - name: Install SQL client and encryption tool
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends postgresql-client gnupg
+
+      - name: Export and verify encrypted archive
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          NUVABRI_BACKUP_PASSPHRASE: ${{ secrets.NUVABRI_BACKUP_PASSPHRASE }}
+          NUVABRI_PRIVATE_REPOSITORY: ${{ github.event.repository.private }}
+        run: python3 ops/backups/backup.py export --output "$RUNNER_TEMP/nuvabri-encrypted"
+
+      - name: Keep encrypted files for seven days
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: nuvabri-backup-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/nuvabri-encrypted/backup.tar.gz.gpg
+            ${{ runner.temp }}/nuvabri-encrypted/backup.sha256
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: Record result
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'TEXT'
+          Encrypted database export saved. Decryption and file checksums passed.
+          This result does not mean a database restoration has been tested.
+          Download a recent archive before the seven-day expiry and keep its
+          recovery passphrase separately in your password manager.
+          TEXT
+
+      - name: Remove runner copy
+        if: always()
+        run: rm -rf -- "$RUNNER_TEMP/nuvabri-encrypted"
+
+  configuration-required:
+    if: github.event.repository.private != true || vars.NUVABRI_ZERO_SPEND_CONFIRMED != 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - run: |
+          echo 'Backup is inactive. Use a private repository and configure zero paid overages before setting NUVABRI_ZERO_SPEND_CONFIRMED=true.'
+          exit 1

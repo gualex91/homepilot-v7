@@ -2,3 +2,10 @@
 .env.*.local
 node_modules/
 .sites-runtime/
+__pycache__/
+*.pyc
+# Backups contain private data. Keep archives and decrypted copies outside Git.
+backup-output/
+backup-restored/
+*.tar.gz.gpg
+*.pgdump
