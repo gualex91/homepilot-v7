@@ -34,7 +34,8 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var
 #auth #ab,#auth #hpSavePassword{width:100%;font-size:1rem}
 #am{min-height:1.5em;font-size:.875rem;line-height:1.5}
 #hpForgotPassword{margin-top:12px;font-size:.875rem}
-#hpAdminBtn{position:static!important;box-shadow:none!important;margin-top:12px;font-size:.875rem}
+.app>.row:first-child{flex-wrap:wrap}
+#hpAdminBtn{position:static!important;box-shadow:none!important;flex:0 0 100%;margin-top:4px;min-height:44px;font-size:.9375rem;text-align:left}
 .hp-commercial-disclosure{font-size:.875rem;line-height:1.5;padding:12px;border:1px solid var(--navborder);border-radius:12px;background:var(--soft)}
 .hp-listing-badge{display:inline-block;font-size:.875rem;line-height:1.35;margin:8px 0 4px;font-weight:750;color:var(--b)}
 .hp-pro-contact{display:flex;gap:14px;flex-wrap:wrap;margin:12px 0}

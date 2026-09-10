@@ -29,7 +29,6 @@
     const hc=$('hc');if(hc&&hc.previousElementSibling!==setup)setup.after(hc);
     const fact=$('hpHomeFinancialFact');if(fact&&hc&&fact.previousElementSibling!==hc)hc.after(fact);
     if(hc&&!$('hpHomeCalendar')){const links=document.createElement('div');links.id='hpHomeCalendar';links.className='hp-launch-actions';links.innerHTML='<button type="button" class="alt" data-screen="tasks">Tout mon calendrier</button><button type="button" class="alt" data-screen="budget">Mon budget</button>';hc.appendChild(links)}
-    const admin=$('hpAdminBtn'),entry=$('hpAdminEntry');if(admin&&entry&&admin.parentElement!==entry)entry.appendChild(admin);
   }
   function state(){return {household:typeof h!=='undefined'?h:null,properties:typeof props!=='undefined'?props:[],equipment:typeof eq!=='undefined'?eq:[],tasks:typeof tasks!=='undefined'?tasks:[]}}
   function refresh(){
