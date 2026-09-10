@@ -1,0 +1,9 @@
+#hpHomeFinancialFact{border:1px solid var(--navborder);border-left:4px solid var(--b);padding:1.1rem;overflow-wrap:anywhere}
+#hpHomeFinancialFact[hidden]{display:none!important}
+#hpHomeFinancialFact .hp-home-fact-kicker{color:var(--b);font-size:.875rem;font-weight:700}
+#hpHomeFinancialFact h2{font-size:1.2rem;line-height:1.35;margin:.65rem 0}
+#hpHomeFinancialFact p{font-size:1rem;line-height:1.55;margin:.65rem 0;color:var(--txt)}
+#hpHomeFinancialFact .hp-home-fact-footer{display:flex;flex-direction:column;align-items:flex-start;gap:.2rem}
+#hpHomeFinancialFact a{font-size:.875rem;line-height:1.45;color:var(--b);text-decoration:underline;text-underline-offset:3px;padding:.6rem 0;min-height:44px}
+#hpHomeFinancialFact a:focus-visible{outline:2px solid var(--b);outline-offset:3px;border-radius:3px}
+#hpHomeFinancialFact #hpHomeFactDate,#hpHomeFinancialFact .hp-home-fact-note{font-size:.8125rem;line-height:1.45;color:var(--mut)}

@@ -73,3 +73,15 @@ node --test tests/stability.test.mjs tests/budget-plan.test.mjs
 Vérification initiale : 32 tests unitaires/API réussis; scénario navigateur non exécuté pour cette version. Les politiques de la nouvelle table ont été testées dans une transaction annulée : lecture/écriture du propriétaire autorisées, changement de propriétaire et lecture/écriture/suppression par une autre identité bloqués. Aucune donnée de test conservée. Une validation visuelle sur iPhone et un essai connecté de bout en bout restent à faire.
 
 Les avertissements Supabase préexistants sur certaines fonctions `SECURITY DEFINER` et la protection contre les mots de passe compromis n’ont pas été modifiés par cette version. Ce module ne constitue pas une validation réglementaire de l’offre de services du conseiller.
+
+## Capsule financière sur l’accueil
+
+`financial-facts.js` ajoute une carte « Le savais-tu? » sous le message de bienvenue, même sans propriété ou budget configuré. Douze capsules couvrent le budget, l’épargne, les imprévus et les dettes; deux sont des exemples de calcul clairement identifiés, pas des statistiques de population. Les sources ACFC ont été consultées le 10 septembre 2026 et sont liées directement dans chaque carte.
+
+Une nouvelle connexion ou un nouveau chargement de HomePilot avec une session existante tire la prochaine capsule d’une série mélangée. Les douze passent avant de recommencer, sans répéter la dernière au changement de série. Les événements de connexion répétés lors du retour dans un onglet, le renouvellement du jeton et la navigation interne ne changent pas le texte en cours de lecture.
+
+L’ordre est une préférence locale du navigateur (`hp.home-financial-facts.v1`), sans identifiant de membre, jeton ni données financières. Il n’est pas synchronisé entre appareils. Si le stockage est indisponible, la rotation continue en mémoire; l’historique ne peut pas être conservé après fermeture. Aucun appel à la base ni génération automatique de conseil n’est ajouté. Les capsules documentaires sont retirées à leur date de révision (`reviewBy`, initialement le 10 mars 2027) tant que les sources n’ont pas été revérifiées; les exemples de calcul restent disponibles.
+
+```sh
+node --test tests/financial-facts.test.mjs tests/stability.test.mjs tests/budget-plan.test.mjs
+```
