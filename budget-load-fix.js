@@ -4,15 +4,7 @@
  function money(n){return new Intl.NumberFormat('fr-CA',{style:'currency',currency:'CAD',maximumFractionDigits:2}).format(n)}
  function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
  function withTimeout(p,ms,msg){return Promise.race([p,new Promise((_,reject)=>setTimeout(()=>reject(new Error(msg||'Le chargement du budget prend trop de temps.')),ms))])}
- function localToken(){
-   try{
-     const exact=localStorage.getItem('sb-vkfvjwxajgeafzyphjvh-auth-token');
-     const candidates=exact?[exact]:Object.keys(localStorage).filter(k=>k.startsWith('sb-')&&k.endsWith('-auth-token')).map(k=>localStorage.getItem(k));
-     for(const raw of candidates){if(!raw)continue;const parsed=JSON.parse(raw);const t=parsed?.access_token||parsed?.currentSession?.access_token||parsed?.session?.access_token;if(t)return t}
-   }catch(e){console.warn('HomePilot budget token cache',e)}
-   return null;
- }
- async function token(){const cached=localToken();if(cached)return cached;const c=client();if(!c)throw new Error('Connexion HomePilot indisponible.');const r=await withTimeout(c.auth.getSession(),4000,'Impossible de lire la session HomePilot.');if(r.error)throw r.error;const t=r.data?.session?.access_token;if(!t)throw new Error('Session expirée.');return t}
+ async function token(){return hpStability.token()}
  async function load(){
    try{
      const now=new Date();

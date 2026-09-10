@@ -11,7 +11,7 @@
  async function load(){ensure();const c=client(),u=await user();if(!c||!u||!$('hpSavingsList'))return;const {data,error}=await c.from('budget_savings_goals').select('*').eq('user_id',u.id).eq('active',true).order('created_at',{ascending:false});if(error)return;$('hpSavingsList').innerHTML=(data||[]).length?(data||[]).map(card).join(''):'<div class="card muted">Aucun objectif d’épargne pour le moment.</div>'}
  window.hpSavingsAdd=async(id,current)=>{const raw=prompt('Montant à ajouter à cet objectif :');if(raw===null)return;const amount=Number(String(raw).replace(',','.'));if(!(amount>0))return alert('Entre un montant supérieur à 0.');const c=client();if(!c)return;const {error}=await c.from('budget_savings_goals').update({current_amount:Number(current)+amount,updated_at:new Date().toISOString()}).eq('id',id);if(error)return alert(error.message);load()};
  window.hpSavingsDelete=async id=>{if(!confirm('Supprimer cet objectif?'))return;const c=client();if(c){await c.from('budget_savings_goals').delete().eq('id',id);load()}};
- function patchBudget(){if(window.__hpSavingsBudgetPatched||typeof window.hpLoadBudget!=='function')return;window.__hpSavingsBudgetPatched=true;const orig=window.hpLoadBudget;window.hpLoadBudget=async function(){const r=await orig.apply(this,arguments);ensure();await load();return r}}
- function init(){ensure();patchBudget();setTimeout(load,1800);new MutationObserver(()=>{ensure();patchBudget()}).observe(document.body,{childList:true,subtree:true})}
+ window.addEventListener('hp-budget-loaded',()=>{load().catch(console.error)});
+ function init(){ensure();setTimeout(load,1800);new MutationObserver(()=>{ensure()}).observe(document.body,{childList:true,subtree:true})}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();

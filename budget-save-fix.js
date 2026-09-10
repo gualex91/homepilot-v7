@@ -2,19 +2,7 @@
  const $=id=>document.getElementById(id);
  function currentUser(){try{if(typeof u!=='undefined'&&u?.id)return u}catch(e){}return null}
  function currentHouseholdId(){try{if(typeof h!=='undefined'&&h?.id)return h.id}catch(e){}return null}
- function localToken(){
-   try{
-     const exact=localStorage.getItem('sb-vkfvjwxajgeafzyphjvh-auth-token');
-     const candidates=exact?[exact]:Object.keys(localStorage).filter(k=>k.startsWith('sb-')&&k.endsWith('-auth-token')).map(k=>localStorage.getItem(k));
-     for(const raw of candidates){
-       if(!raw)continue;
-       const parsed=JSON.parse(raw);
-       const token=parsed?.access_token||parsed?.currentSession?.access_token||parsed?.session?.access_token;
-       if(token)return token;
-     }
-   }catch(e){console.warn('HomePilot local token read',e)}
-   return null;
- }
+ async function localToken(){return hpStability.token()}
  function resetButton(btn){if(btn){btn.disabled=false;btn.textContent='Ajouter au budget';btn.dataset.hpSaving='0'}}
  async function save(){
    const btn=$('hpBudgetSave'),status=$('hpBudgetStatus');
@@ -22,18 +10,19 @@
    if(!btn)return;
    btn.disabled=true;btn.textContent='Enregistrement…';btn.dataset.hpSaving='1';
    let watchdog=setTimeout(()=>{
-     resetButton(btn);
-     if(status)status.textContent='Erreur : la sauvegarde a pris trop de temps. Réessaie.';
+     if(status)status.textContent='Sauvegarde en cours de vérification…';
    },15000);
    try{
      const user=currentUser();
      if(!user)throw new Error('Session introuvable. Ferme puis rouvre HomePilot.');
-     const token=localToken();
+     const token=await localToken();
      if(!token)throw new Error('Session expirée. Reconnecte-toi à HomePilot.');
      const amount=Number($('hpBudgetAmount')?.value||0),entryDate=$('hpBudgetDate')?.value||'';
      if(!(amount>0))throw new Error('Entre un montant supérieur à 0.');
      if(!entryDate)throw new Error('Choisis une date.');
      const payload={user_id:user.id,household_id:currentHouseholdId(),property_id:$('hpBudgetProperty')?.value||null,entry_type:$('hpBudgetType')?.value||'expense',category:$('hpBudgetCategory')?.value||'Autre',amount,entry_date:entryDate,description:$('hpBudgetDescription')?.value?.trim()||null};
+     const operationKey='budget:'+user.id;
+     payload.request_id=hpStability.operation(operationKey,payload);
      const controller=new AbortController();
      const abortTimer=setTimeout(()=>controller.abort(),10000);
      let r;
@@ -43,6 +32,7 @@
      let body=null;try{body=await r.json()}catch{}
      if(!r.ok)throw new Error(body?.error||('Erreur serveur '+r.status));
      if(!body?.ok||!body?.id)throw new Error('HomePilot n’a pas confirmé la sauvegarde dans la base de données.');
+     hpStability.complete(operationKey);
      clearTimeout(watchdog);watchdog=null;
      resetButton(btn);
      if($('hpBudgetAmount'))$('hpBudgetAmount').value='';

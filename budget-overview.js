@@ -21,7 +21,7 @@
  $('hpOverviewGrid').innerHTML=tile('💵','Revenus',money(income))+tile('🧾','Dépenses',money(expense))+tile(balance>=0?'✅':'⚠️','Solde du mois',money(balance),balance>=0?'Positif':'Négatif')+tile('🎯','Épargne',money(saved),target>0?`${Math.round(saved/target*100)} % des objectifs`:'Aucun objectif cible')+tile('💳','Dettes totales',money(totalDebt),mortgage>0?'Hypothèque incluse':'Hors hypothèque non renseignée')+tile('🔁','À payer bientôt',money(upcoming),`${recurring.length} paiement${recurring.length===1?'':'s'} dans les 30 jours`);
  $('hpOverviewNote').textContent='La vue d’ensemble utilise uniquement les montants enregistrés dans HomePilot. Les paiements automatiques et transactions bancaires ne sont pas importés automatiquement.';
  }
- function patchBudget(){if(window.__hpOverviewPatched||typeof window.hpLoadBudget!=='function')return;window.__hpOverviewPatched=true;const orig=window.hpLoadBudget;window.hpLoadBudget=async function(){const r=await orig.apply(this,arguments);await load();return r}}
- function init(){ensureUI();patchBudget();setTimeout(load,2400);new MutationObserver(()=>{ensureUI();patchBudget()}).observe(document.body,{childList:true,subtree:true});window.addEventListener('hp-mortgage-updated',load);setInterval(load,180000)}
+ window.addEventListener('hp-budget-loaded',()=>{load().catch(console.error)});
+ function init(){ensureUI();setTimeout(load,2400);new MutationObserver(()=>{ensureUI()}).observe(document.body,{childList:true,subtree:true});window.addEventListener('hp-mortgage-updated',load);setInterval(load,180000)}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();

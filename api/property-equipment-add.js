@@ -1,3 +1,4 @@
+import {stableId, requestId, insertOnce} from '../lib/safe-write.js';
 const SUPABASE_URL='https://vkfvjwxajgeafzyphjvh.supabase.co';
 const SUPABASE_KEY='sb_publishable_pGyXnrUDdLiT6BAAME--VA_kLP_gEAR';
 
@@ -18,8 +19,8 @@ const TASK_RULES={
 
 function isoIn(days){
   const d=new Date();
-  d.setHours(12,0,0,0);
-  d.setDate(d.getDate()+days);
+  d.setUTCHours(12,0,0,0);
+  d.setUTCDate(d.getUTCDate()+days);
   return d.toISOString().slice(0,10);
 }
 
@@ -35,6 +36,7 @@ export default async function handler(req,res){
   const auth=req.headers.authorization||'';
   if(!auth.startsWith('Bearer '))return res.status(401).json({error:'Session manquante'});
   const b=req.body||{};
+  if(!requestId(b.request_id))return res.status(400).json({error:'Actualise HomePilot avant de réessayer.'});
   const propertyId=String(b.property_id||'').trim();
   const equipmentType=String(b.equipment_type||'').trim();
   const name=String(b.name||'').trim();
@@ -54,53 +56,45 @@ export default async function handler(req,res){
     if(!Array.isArray(checkData)||!checkData.length)return res.status(404).json({error:'Propriété introuvable ou non autorisée.'});
 
     const payload={
-      property_id:propertyId,
-      equipment_type:equipmentType,
-      name,
-      brand:String(b.brand||'').trim()||null,
-      model:String(b.model||'').trim()||null,
-      details:b.details&&typeof b.details==='object'?b.details:{},
-      created_by:user.id
+      id:stableId(user.id+':equipment:'+b.request_id),
+      property_id:propertyId,equipment_type:equipmentType,name,
+      brand:String(b.brand||'').trim()||null,model:String(b.model||'').trim()||null,
+      details:b.details&&typeof b.details==='object'?b.details:{},created_by:user.id
     };
-
-    const r=await fetch(`${SUPABASE_URL}/rest/v1/equipment`,{
-      method:'POST',
-      headers:{apikey:SUPABASE_KEY,Authorization:auth,'Content-Type':'application/json',Prefer:'return=representation'},
-      body:JSON.stringify(payload)
-    });
-    const text=await r.text();let data=null;try{data=text?JSON.parse(text):null}catch{}
-    if(!r.ok)return res.status(r.status).json({error:data?.message||data?.hint||`Erreur Supabase ${r.status}`});
-    const row=Array.isArray(data)?data[0]:data;
-    if(!row?.id)return res.status(500).json({error:'L’équipement n’a pas été confirmé par le serveur.'});
-
-    const rules=TASK_RULES[equipmentType]||[];
-    let tasks=[];
+    const row=await insertOnce('equipment',payload,auth);
+    if(row.property_id!==propertyId||row.created_by!==user.id||row.name!==name||row.equipment_type!==equipmentType)return res.status(409).json({error:'Cette demande a déjà été enregistrée avec un autre contenu.'});
+    // Existing database triggers already create plans for several equipment types.
+    // Preserve those plans instead of layering a second set of tasks on top.
+    const existingResponse=await fetch(`${SUPABASE_URL}/rest/v1/tasks?equipment_id=eq.${row.id}&select=*`,{headers:{apikey:SUPABASE_KEY,Authorization:auth}});
+    const existing=await existingResponse.json();
+    if(!existingResponse.ok) return res.status(200).json({ok:true,equipment:row,tasks:[],task_warning:'Impossible de vérifier les tâches. Réessaie la même demande.'});
+    const generatedByDatabase=existing.some(t=>String(t.source_note||'').startsWith('Généré automatiquement par HomePilot'));
+    const rules=generatedByDatabase?[]:(TASK_RULES[equipmentType]||[]);
+    const tasksById=new Map(existing.map(task=>[task.id,task]));
     let taskWarning=null;
     if(rules.length){
-      const taskPayload=rules.map(([title,every,lead])=>({
+      const taskPayload=rules.map(([title,every,lead],index)=>({
+        id:stableId(row.id+':initial-task:'+index),
+        equipment_id:row.id,
         property_id:propertyId,
         title,
         category:'Entretien',
-        due_at:isoIn(lead||Math.min(every,30)),
+        due_at:isoIn(lead ?? Math.min(every,30)),
         status:'todo',
         created_by:user.id,
-        notes:`Créée automatiquement par HomePilot pour ${name}. Fréquence indicative : ${every} jours. Vérifier les recommandations du fabricant ou du professionnel.`
+        source_note:`Créée automatiquement par HomePilot pour ${name}. Fréquence indicative : ${every} jours. Vérifier les recommandations du fabricant ou du professionnel.`
       }));
-      const tr=await fetch(`${SUPABASE_URL}/rest/v1/tasks`,{
-        method:'POST',
-        headers:{apikey:SUPABASE_KEY,Authorization:auth,'Content-Type':'application/json',Prefer:'return=representation'},
-        body:JSON.stringify(taskPayload)
-      });
-      const taskText=await tr.text();let taskData=null;try{taskData=taskText?JSON.parse(taskText):null}catch{}
-      if(tr.ok)tasks=Array.isArray(taskData)?taskData:(taskData?[taskData]:[]);
-      else taskWarning=taskData?.message||taskData?.hint||`Erreur Supabase ${tr.status}`;
+      try {
+        for(const task of taskPayload){const saved=await insertOnce('tasks',task,auth);tasksById.set(saved.id,saved);}
+      } catch(error) { taskWarning=error.message; }
+
     }
 
     res.setHeader('Cache-Control','no-store');
-    return res.status(200).json({ok:true,equipment:row,tasks,task_warning:taskWarning});
+    return res.status(200).json({ok:true,equipment:row,tasks:[...tasksById.values()],task_warning:taskWarning});
   }catch(e){
     console.error('property-equipment-add proxy',e);
     if(e?.message==='SESSION')return res.status(401).json({error:'Session expirée. Reconnecte-toi.'});
-    return res.status(502).json({error:'Impossible d’ajouter l’équipement pour le moment.'});
+    return res.status(e.status||502).json({error:e.status===403?'Cette propriété ne permet pas l’ajout d’équipements avec ton compte.':'Impossible d’ajouter l’équipement pour le moment.'});
   }
 }
