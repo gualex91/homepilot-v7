@@ -1,7 +1,7 @@
 (function(){
  const $=id=>document.getElementById(id);
  const GROUPS=[
-  {id:'hpBudgetGroupOverview',title:'📊 Vue d’ensemble',open:true},
+  {id:'hpBudgetGroupOverview',title:'📊 Autres indicateurs et accompagnement',open:false},
   {id:'hpBudgetGroupMonthly',title:'🧾 Budget mensuel',open:true},
   {id:'hpBudgetGroupGoals',title:'🎯 Objectifs et valeur nette',open:false},
   {id:'hpBudgetGroupDebts',title:'💳 Dettes et paiements',open:false}
@@ -33,7 +33,9 @@
   // Dettes, paiements et hypothèque.
   move($('hpMortgageCard'),groups.hpBudgetGroupDebts);move($('hpRecurringBlock'),groups.hpBudgetGroupDebts);move($('hpDebtSection'),groups.hpBudgetGroupDebts);
   // Garde le titre + bouton Ajouter du Budget au-dessus des groupes.
-  GROUPS.forEach(cfg=>{const g=$(cfg.id);if(g&&g.parentElement===budget)budget.appendChild(g)});
+  const ordered=GROUPS.map(cfg=>$(cfg.id)).filter(g=>g&&g.parentElement===budget);
+  const tail=[...budget.children].slice(-ordered.length);
+  if(ordered.some((g,i)=>tail[i]!==g))ordered.forEach(g=>budget.appendChild(g));
  }
  function init(){setTimeout(organize,2600);let timer;new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(organize,120)}).observe(document.body,{childList:true,subtree:true});setInterval(organize,5000)}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();

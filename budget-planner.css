@@ -1,0 +1,47 @@
+#hpBudgetPlanner{font-size:1rem;line-height:1.5;margin:1rem 0 1.5rem;overflow-wrap:anywhere}
+#hpBudgetPlanner *{box-sizing:border-box}
+#hpBudgetPlanner .finance-heading{display:flex;justify-content:space-between;align-items:start;gap:.8rem;margin-bottom:1rem}
+#hpBudgetPlanner h3{margin:0;font-size:1.25rem}
+#hpBudgetPlanner h4{margin:0 0 .6rem;font-size:1.05rem}
+#hpBudgetPlanner p{margin:.45rem 0 .9rem}
+#hpBudgetPlanner .finance-note{font-size:.875rem;color:var(--mut);line-height:1.5}
+#hpBudgetPlanner button,#hpBudgetPlanner input,#hpBudgetPlanner select{font:inherit;min-height:44px;max-width:100%}
+#hpBudgetPlanner label{font-size:.9rem;display:block;margin:.6rem 0 .3rem}
+#hpBudgetPlanner input:not([type=checkbox]),#hpBudgetPlanner select{width:100%;min-width:0;padding:.7rem;border:1px solid var(--navborder,#c9d3cd);border-radius:10px;background:var(--card);color:var(--txt)}
+#hpBudgetPlanner .finance-tabs{display:flex;gap:.35rem;margin:1rem 0;flex-wrap:wrap}
+#hpBudgetPlanner .finance-tabs button{flex:1;background:var(--soft);color:var(--txt);border:1px solid transparent;padding:.65rem .35rem}
+#hpBudgetPlanner .finance-tabs button[aria-selected=true]{background:var(--b);color:white}
+#hpBudgetPlanner .finance-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem}
+#hpBudgetPlanner .finance-stat{border:1px solid var(--navborder,#ccd6cf);border-radius:14px;padding:1rem;background:var(--card);min-width:0}
+#hpBudgetPlanner .finance-stat span{display:block;font-size:.875rem;color:var(--mut)}
+#hpBudgetPlanner .finance-stat strong{display:block;font-size:1.55rem;line-height:1.25;margin:.45rem 0;letter-spacing:-.03em}
+#hpBudgetPlanner .finance-stat.primary{grid-column:1/-1;border-left:5px solid var(--b);background:var(--soft)}
+#hpBudgetPlanner .finance-block{padding:1rem;background:var(--card);border:1px solid var(--navborder,#ccd6cf);border-radius:14px;margin:1rem 0}
+#hpBudgetPlanner .finance-warning{border-left:4px solid #aa511b;background:var(--soft);padding:.8rem 1rem;margin:.8rem 0;font-size:.9rem}
+#hpBudgetPlanner .finance-negative{color:#a32d23}
+#hpBudgetPlanner [hidden]{display:none!important}
+#hpBudgetPlanner .finance-controls{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+#hpBudgetPlanner .finance-controls input{flex:1;min-width:130px}
+#hpBudgetPlanner .finance-controls button{flex:none;padding:.4rem .8rem}
+#hpBudgetPlanner .finance-table-wrap{overflow:auto}
+#hpBudgetPlanner table{width:100%;border-collapse:collapse;font-size:.875rem}
+#hpBudgetPlanner th,#hpBudgetPlanner td{padding:.65rem .35rem;text-align:right;border-bottom:1px solid var(--navborder,#ccd6cf);vertical-align:top}
+#hpBudgetPlanner th:first-child,#hpBudgetPlanner td:first-child{text-align:left;min-width:90px}
+#hpBudgetPlanner th{font-weight:600;color:var(--mut)}
+#hpBudgetPlanner .finance-row{padding:.85rem 0;border-bottom:1px solid var(--navborder,#ccd6cf)}
+#hpBudgetPlanner .finance-row:last-child{border:0}
+#hpBudgetPlanner .finance-row-head{display:flex;justify-content:space-between;gap:.7rem;align-items:center}
+#hpBudgetPlanner .finance-row-head strong{min-width:0}
+#hpBudgetPlanner .finance-check{display:flex;gap:.65rem;align-items:flex-start;font-weight:400;margin:1rem 0}
+#hpBudgetPlanner .finance-check input{width:20px;height:20px;min-height:20px;flex-shrink:0;margin-top:.2rem}
+#hpBudgetPlanner details{border:1px solid var(--navborder,#ccd6cf);padding:.9rem;border-radius:14px;background:var(--card);margin:.8rem 0}
+#hpBudgetPlanner summary{cursor:pointer;font-weight:700;min-height:30px}
+#hpBudgetPlanner .finance-edit-row{padding:.9rem 0;border-bottom:1px solid var(--navborder,#ccd6cf)}
+#hpBudgetPlanner .finance-remove{font-size:.875rem;color:#922c22;background:transparent;border:1px solid #922c22;margin-top:.8rem;padding:.4rem .7rem}
+#hpBudgetPlanner .finance-savebar{position:sticky;bottom:70px;background:var(--card);padding:.8rem;border:1px solid var(--navborder,#ccd6cf);border-radius:12px;margin:1rem 0;z-index:5;box-shadow:0 5px 20px #0001}
+#hpBudgetPlanner .finance-savebar button{width:100%}
+#hpBudgetPlanner .finance-action{border-left:3px solid var(--b);padding-left:.8rem;margin:1rem 0}
+#hpBudgetPlanner .finance-action p{font-size:.9rem}
+#hpBudgetPlanner textarea{font:inherit;font-size:.875rem;width:100%;min-height:230px;padding:.8rem;color:var(--txt);background:var(--card);border:1px solid var(--navborder,#ccd6cf);border-radius:8px}
+#hpBudgetPlanner .finance-date{font-size:.875rem;color:var(--mut)}
+@media(max-width:380px){#hpBudgetPlanner .finance-grid{grid-template-columns:1fr}#hpBudgetPlanner .finance-stat strong{font-size:1.4rem}#hpBudgetPlanner .finance-heading{display:block}}
