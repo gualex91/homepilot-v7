@@ -1,0 +1,59 @@
+/* A stable identity alongside the existing seasonal interface. */
+:root{
+  --nuvabri-forest:#173f3a;
+  --nuvabri-teal:#356f68;
+  --nuvabri-ivory:#f6f2e8;
+  --nuvabri-sage:#92b4a0;
+  --nuvabri-clay:#c77d5c;
+}
+.brand.nuvabri-brand{
+  display:inline-flex;
+  align-items:center;
+  gap:11px;
+  max-width:100%;
+  color:var(--nuvabri-forest);
+  font-family:ui-rounded,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:28px;
+  font-weight:750;
+  line-height:1.1;
+  letter-spacing:-.035em;
+  text-shadow:none;
+}
+.nuvabri-brand__icon{
+  display:block;
+  width:44px;
+  height:44px;
+  flex:none;
+  border-radius:12px;
+  background:var(--nuvabri-forest);
+}
+#auth .brand.nuvabri-brand{font-size:38px;gap:14px}
+#auth .nuvabri-brand__icon{width:64px;height:64px;border-radius:17px}
+.nuvabri-tagline{
+  margin:14px 0 22px;
+  max-width:34ch;
+  color:var(--nuvabri-forest);
+  font-size:1rem;
+  font-weight:550;
+  line-height:1.5;
+}
+#auth #ab,#auth #hpSavePassword{
+  background:var(--nuvabri-forest);
+  color:var(--nuvabri-ivory);
+  box-shadow:0 5px 14px #173f3a1a;
+}
+#auth #hpAuthModes button[aria-pressed="true"]{
+  background:var(--nuvabri-forest);
+  color:var(--nuvabri-ivory);
+  outline-color:var(--nuvabri-forest);
+}
+#auth button:focus-visible,#auth input:focus-visible{
+  outline:3px solid var(--nuvabri-forest);
+  outline-offset:3px;
+}
+@media(max-width:390px){
+  .brand.nuvabri-brand{font-size:25px!important;gap:9px}
+  #auth .brand.nuvabri-brand{font-size:32px!important;gap:12px}
+  #auth .nuvabri-brand__icon{width:56px;height:56px;border-radius:15px}
+  .nuvabri-tagline{font-size:.9375rem}
+}

@@ -14,6 +14,8 @@ Le lot de statistiques ajoute les mesures d’utilisation des membres connectés
 
 ## 1. Une expérience simple et utile
 
+Identité visuelle intégrée en préversion : logo Nuvabri, signature, palette de marque stable et icônes navigateur/iPhone/manifeste. Les décors saisonniers sont conservés. Voir `assets/brand/README.md` pour les fichiers et les limites de vérification.
+
 - Quatre destinations principales : Accueil, Mes biens, Finances, Plus.
 - Conserver toutes les propriétés, régions, immeubles et unités; ne pas limiter le modèle à une maison et un chalet.
 - Démarrage guidé : foyer, première propriété, équipements/tâches. Le budget reste accessible sans propriété.
