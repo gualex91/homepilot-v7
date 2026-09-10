@@ -47,3 +47,9 @@
 #hpBudgetPlanner .finance-project-funding{padding:.85rem;border-left:4px solid var(--b);background:var(--soft);border-radius:8px;font-weight:600}
 #hpBudgetPlanner [id^=hpFinanceProject-]{scroll-margin-top:1rem}
 @media(max-width:380px){#hpBudgetPlanner .finance-grid{grid-template-columns:1fr}#hpBudgetPlanner .finance-stat strong{font-size:1.4rem}#hpBudgetPlanner .finance-heading{display:block}}
+
+#hpBudgetPlanner .finance-scenario{border:2px solid var(--b);scroll-margin-top:1rem}
+#hpBudgetPlanner .finance-scenario-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:.75rem}
+#hpBudgetPlanner .finance-scenario-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
+#hpBudgetPlanner .finance-scenario-actions button{flex:1 1 210px}
+#hpBudgetPlanner .finance-scenario caption{text-align:left;font-weight:600;margin:.8rem 0}

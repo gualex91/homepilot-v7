@@ -149,5 +149,18 @@
     const months=Math.max(1,(Number(item.dueDate.slice(0,4))-Number(today.slice(0,4)))*12+Number(item.dueDate.slice(5,7))-Number(today.slice(5,7))+1);
     return {remaining,months,monthly:item.active===false?0:Math.ceil(remaining/months),overdue:item.dueDate<today};
   }
-  root.hpBudgetEngine={empty,validate,occurrences,events,analyze,validDate,monthEnd,addDays,cents,projectFunding};
+  function compareProject(input,projectId,changes,today){
+    if(!validDate(today))throw new Error('Date du calcul invalide.');
+    const before=validate(input),index=before.projects.findIndex(x=>x.id===projectId),original=before.projects[index];
+    if(!original||!original.active)throw new Error('Choisis un projet actif dans ton plan.');
+    const candidate={...original,totalAmount:changes?.totalAmount,savedAmount:changes?.savedAmount,dueDate:changes?.dueDate};
+    if(candidate.totalAmount!==original.totalAmount)candidate.costSource='estimate';
+    const after=validate({...before,projects:before.projects.map((x,i)=>i===index?candidate:x)});
+    if(candidate.dueDate<today)throw new Error('Choisis une date à partir d’aujourd’hui pour ce scénario.');
+    const month=today.slice(0,7);
+    const describe=plan=>{const result=analyze(plan,[],month,today,false),project=plan.projects[index];return {project,funding:projectFunding(project,today),margin:result.complete?result.projectedMargin:null}};
+    const a=describe(before),b=describe(after);
+    return {month,before:a,after:b,monthlyDelta:b.funding.monthly-a.funding.monthly,marginDelta:a.margin===null||b.margin===null?null:b.margin-a.margin};
+  }
+  root.hpBudgetEngine={empty,validate,occurrences,events,analyze,validDate,monthEnd,addDays,cents,projectFunding,compareProject};
 })(globalThis);

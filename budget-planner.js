@@ -7,7 +7,7 @@
   const CATS=['Maison','Épicerie','Transport','Loisirs','Assurances','Épargne','Salaire','Autre'];
   const FREQ={once:'Une seule fois',weekly:'Chaque semaine',biweekly:'Aux deux semaines',semimonthly:'Deux fois par mois',monthly:'Chaque mois',quarterly:'Chaque trimestre',yearly:'Chaque année'};
   let owner=null,epoch=0,loading=false,saving=false,ready=false,dirty=false,revision=null,plan=E.empty(),draft=E.empty(),entries=[],entriesComplete=true,legacy=null,month=today().slice(0,7),view='overview',lastResult=null,lastLoadedMonth=null;
-  let statusMessage='',statusError=false;
+  let statusMessage='',statusError=false,scenario=null;
   function status(message,error=false){
     statusMessage=message;statusError=error;
     for(const id of ['hpFinanceStatus','hpFinanceSaveStatus']){const el=$(id);if(el){el.textContent=message;el.setAttribute('role',error?'alert':'status');el.classList.toggle?.('finance-negative',error)}}
@@ -16,13 +16,13 @@
   function ensure(){
     const budget=$('budget');if(!budget||$('hpBudgetPlanner'))return;
     const box=document.createElement('div');box.id='hpBudgetPlanner';
-    box.innerHTML=`<div class="finance-heading"><div><h3>Mon budget, mes priorités</h3><div class="finance-note">Plan personnel · CAD · aucune connexion bancaire</div></div></div><div class="finance-controls"><button type="button" class="alt" data-action="previous" aria-label="Mois précédent">‹</button><input id="hpFinanceMonth" type="month" value="${month}" aria-label="Mois du budget"><button type="button" class="alt" data-action="next" aria-label="Mois suivant">›</button></div><div class="finance-tabs" role="tablist" aria-label="Mon budget"><button type="button" data-view="overview" role="tab" id="hpFinanceTabOverview" aria-controls="hpFinanceOverview">Mon bilan</button><button type="button" data-view="plan" role="tab" id="hpFinanceTabPlan" aria-controls="hpFinanceEditor">Mon plan</button><button type="button" data-view="calendar" role="tab" id="hpFinanceTabCalendar" aria-controls="hpFinanceCalendar">Échéances</button></div><p id="hpFinanceStatus" class="finance-note" role="status" aria-live="polite">Chargement du budget…</p><button type="button" class="alt" data-action="reload">Recharger</button><div id="hpFinanceOverview" role="tabpanel" aria-labelledby="hpFinanceTabOverview"></div><div id="hpFinanceEditor" role="tabpanel" aria-labelledby="hpFinanceTabPlan" hidden></div><div id="hpFinanceCalendar" role="tabpanel" aria-labelledby="hpFinanceTabCalendar" hidden></div>`;
+    box.innerHTML=`<div class="finance-heading"><div><h3>Mon budget, mes priorités</h3><div class="finance-note">Plan personnel · CAD · aucune connexion bancaire</div></div></div><div class="finance-controls"><button type="button" class="alt" data-action="previous" aria-label="Mois précédent">‹</button><input id="hpFinanceMonth" type="month" value="${month}" aria-label="Mois du budget"><button type="button" class="alt" data-action="next" aria-label="Mois suivant">›</button></div><div class="finance-tabs" role="tablist" aria-label="Mon budget"><button type="button" data-view="overview" role="tab" id="hpFinanceTabOverview" aria-controls="hpFinanceOverview">Mon bilan</button><button type="button" data-view="plan" role="tab" id="hpFinanceTabPlan" aria-controls="hpFinanceEditor">Mon plan</button><button type="button" data-view="calendar" role="tab" id="hpFinanceTabCalendar" aria-controls="hpFinanceCalendar">Échéances</button></div><p id="hpFinanceStatus" class="finance-note" role="status" aria-live="polite">Chargement du budget…</p><button type="button" class="alt" data-action="reload">Recharger</button><section id="hpFinanceScenario" class="finance-block finance-scenario" aria-labelledby="hpFinanceScenarioTitle" hidden></section><div id="hpFinanceOverview" role="tabpanel" aria-labelledby="hpFinanceTabOverview"></div><div id="hpFinanceEditor" role="tabpanel" aria-labelledby="hpFinanceTabPlan" hidden></div><div id="hpFinanceCalendar" role="tabpanel" aria-labelledby="hpFinanceTabCalendar" hidden></div>`;
     budget.querySelector('.row')?.after(box);
     box.addEventListener('click',onClick);box.addEventListener('input',onInput);box.addEventListener('change',onChange);
     box.addEventListener('keydown',event=>{const tab=event.target.closest('[role=tab]');if(!tab||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const tabs=[...box.querySelectorAll('[role=tab]')];let i=tabs.indexOf(tab);i=event.key==='Home'?0:event.key==='End'?2:(i+(event.key==='ArrowRight'?1:2))%3;setView(tabs[i].dataset.view);tabs[i].focus()});
     setView(view);
   }
-  function reset(){epoch++;owner=null;ready=false;dirty=false;revision=null;loading=false;saving=false;lastLoadedMonth=null;plan=E.empty();draft=E.empty();entries=[];legacy=null;lastResult=null;ensure();render();status('Connecte-toi pour retrouver ton budget privé.');}
+  function reset(){closeScenario();epoch++;owner=null;ready=false;dirty=false;revision=null;loading=false;saving=false;lastLoadedMonth=null;plan=E.empty();draft=E.empty();entries=[];legacy=null;lastResult=null;ensure();render();status('Connecte-toi pour retrouver ton budget privé.');}
   async function identity(){const {data,error}=await window.supabaseClient.auth.getSession();if(error)throw error;if(!data?.session?.user?.id)throw new Error('Connecte-toi pour accéder au budget.');return data.session}
   async function api(method,body){const session=await identity();if(owner&&session.user.id!==owner)throw new Error('La session a changé. Recharge le budget.');const r=await fetch('/api/budget-plan?month='+month,{method,headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,cache:'no-store',signal:AbortSignal.timeout(15000)});const data=await r.json();if(!r.ok)throw new Error(data.error||'Budget indisponible.');return data}
   async function load({force=false}={}){
@@ -38,13 +38,13 @@
       entries=data.entries||[];entriesComplete=data.entries_complete!==false;legacy=data.legacy;ready=true;lastLoadedMonth=month;
       render(!dirty);status(dirty?'Modifications non enregistrées.':data.config?'Plan enregistré. Opérations réelles à vérifier avec tes relevés.':'Crée ton plan pour voir tes prévisions.');
     }catch(error){if(stamp===epoch){ready=false;status(error.name==='TimeoutError'?'Le chargement prend trop de temps. Réessaie.':error.message,true);render(false)}}
-    finally{if(stamp===epoch){loading=false;if(requestedMonth!==month)load()}}
+    finally{if(stamp===epoch){loading=false;updateScenario();if(requestedMonth!==month)load()}}
   }
   function preview(){try{return E.analyze(E.validate(draft),entries,month,today(),entriesComplete&&lastLoadedMonth===month)}catch{return null}}
   function tile(label,value,note='',primary=false,negative=false){return `<div class="finance-stat${primary?' primary':''}"><span>${label}</span><strong${negative?' class="finance-negative"':''}>${value}</strong>${note?`<div class="finance-note">${note}</div>`:''}</div>`}
   function render(rebuildEditor=true){
     ensure();if(!$('hpFinanceOverview'))return;
-    lastResult=preview();renderOverview();renderCalendar();if(rebuildEditor)renderEditor();setView(view);
+    lastResult=preview();renderOverview();renderCalendar();if(rebuildEditor)renderEditor();setView(view);updateScenario();
   }
   function renderOverview(){
     const host=$('hpFinanceOverview'),r=lastResult;if(!host)return;
@@ -86,7 +86,7 @@
     return `<div class="finance-edit-row" id="hpFinanceProject-${i}">${x.propertyName?`<p class="finance-note">Bien associé : ${esc(x.propertyName)}</p>`:''}${x.taskKey?'<p class="finance-note">Issu d’une échéance d’entretien. Ce projet reste personnel; les modifications de la tâche ne changent pas automatiquement le budget.</p>':''}${input(p+'.label','Entretien ou remplacement prévu',x.label,'text','maxlength="120"')}${input(p+'.totalAmount','Coût total prévu, taxes incluses ($)',x.totalAmount,'number','min="0"')}${select(p+'.costSource','Origine du montant',x.costSource,[['estimate','Mon estimation — à vérifier'],['quote','Une soumission obtenue']])}${input(p+'.savedAmount','Déjà réservé pour ce projet, hors solde disponible ($)',x.savedAmount,'number','min="0"')}${input(p+'.dueDate','Date prévue de la dépense — à confirmer',x.dueDate,'date')}<p class="finance-project-funding" id="hpFinanceProjectFunding-${i}" aria-live="polite">${esc(projectNote(x))}</p>${checkbox(p+'.confirmed','J’ai vérifié le montant et l’échéance. Cette dépense n’est pas déjà prévue dans une charge, une enveloppe ou une provision.',x.confirmed)}${checkbox(p+'.active','Ce projet est encore à préparer ou à payer.',x.active!==false)}<p class="finance-note">Décoche ce dernier choix pour clôturer le projet après paiement ou annulation. Aucune transaction ni mise de côté réelle n’est créée.</p><button type="button" class="finance-remove" data-action="remove" data-list="projects" data-index="${i}">Retirer ce projet du plan</button></div>`;
   }
   function projectCards(r){
-    return `<div class="finance-block"><h4>Mes entretiens et remplacements</h4><p class="finance-note">Coûts déclarés, à vérifier. Les montants restent privés, même si la propriété est partagée.</p>${r.projects.length?r.projects.map((x,i)=>`<div class="finance-row"><b>${esc(x.label)}</b>${x.propertyName?`<div class="finance-note">${esc(x.propertyName)}</div>`:''}<p>${money(E.cents(x.totalAmount))} · ${dateLabel(x.dueDate)} · ${x.costSource==='quote'?'Soumission déclarée':'Estimation personnelle'}</p><p>${esc(projectNote(x))}</p><button type="button" class="alt" data-action="edit-project" data-index="${i}">Modifier ce projet</button></div>`).join(''):'<p>Depuis une tâche, choisis « Prévoir le coût ». Tu peux aussi préparer un remplacement directement ici.</p>'}<button type="button" class="alt" data-action="add" data-list="projects">+ Prévoir une dépense</button></div>`;
+    return `<div class="finance-block"><h4>Mes entretiens et remplacements</h4><p class="finance-note">Coûts déclarés, à vérifier. Les montants restent privés, même si la propriété est partagée.</p>${r.projects.length?r.projects.map((x,i)=>`<div class="finance-row"><b>${esc(x.label)}</b>${x.propertyName?`<div class="finance-note">${esc(x.propertyName)}</div>`:''}<p>${money(E.cents(x.totalAmount))} · ${dateLabel(x.dueDate)} · ${x.costSource==='quote'?'Soumission déclarée':'Estimation personnelle'}</p><p>${esc(projectNote(x))}</p><button type="button" class="alt" data-action="edit-project" data-index="${i}">Modifier ce projet</button>${x.active?`<button type="button" class="alt" data-action="scenario-open" data-project-id="${esc(x.id)}">Comparer un scénario</button>`:''}</div>`).join(''):'<p>Depuis une tâche, choisis « Prévoir le coût ». Tu peux aussi préparer un remplacement directement ici.</p>'}<button type="button" class="alt" data-action="add" data-list="projects">+ Prévoir une dépense</button></div>`;
   }
   function renderEditor(){
     const host=$('hpFinanceEditor');if(!host)return;if(!ready){host.innerHTML='<p>Recharge ton budget avant de le modifier.</p>';return}
@@ -96,7 +96,8 @@
   }
   function setView(next){view=next;const map={overview:'hpFinanceOverview',plan:'hpFinanceEditor',calendar:'hpFinanceCalendar'};for(const [key,id] of Object.entries(map))if($(id))$(id).hidden=key!==view;document.querySelectorAll('#hpBudgetPlanner [data-view]').forEach(b=>{if(b.getAttribute('role')==='tab'){b.setAttribute('aria-selected',String(b.dataset.view===view));b.tabIndex=b.dataset.view===view?0:-1}})}
   function onInput(event){
-    const field=event.target.dataset.field;if(!field||saving)return;const parts=field.split('.');let target=draft;for(const key of parts.slice(0,-1))target=target[key];const key=parts.at(-1),el=event.target;
+    if(event.target.dataset.scenarioField)return scenarioInput(event);
+    const field=event.target.dataset.field;if(!field||saving)return;closeScenario();const parts=field.split('.');let target=draft;for(const key of parts.slice(0,-1))target=target[key];const key=parts.at(-1),el=event.target;
     target[key]=el.type==='checkbox'?el.checked:el.type==='number'?(el.value===''?null:Number(el.value)):el.value;
     if(parts[0]==='projects'){
       if(['totalAmount','savedAmount','dueDate','costSource'].includes(key)){target.confirmed=false;const check=$('hf-projects-'+parts[1]+'-confirmed');if(check)check.checked=false}
@@ -106,7 +107,7 @@
     if(key==='frequency'){const p=parts.slice(0,-1).join('.');document.querySelector(`[data-second="${p}"]`).hidden=el.value!=='semimonthly'}
     lastResult=preview();renderOverview();renderCalendar();
   }
-  function onChange(event){if(event.target.dataset.field)return onInput(event);if(event.target.id==='hpFinanceMonth'){if(!/^20\d{2}-(0[1-9]|1[0-2])$/.test(event.target.value)){event.target.value=month;return}month=event.target.value;lastResult=preview();renderOverview();renderCalendar();load()}}
+  function onChange(event){if(event.target.dataset.field||event.target.dataset.scenarioField)return onInput(event);if(event.target.id==='hpFinanceMonth'){if(!/^20\d{2}-(0[1-9]|1[0-2])$/.test(event.target.value)){event.target.value=month;return}month=event.target.value;lastResult=preview();renderOverview();renderCalendar();load()}}
   async function save(){
     if(saving)return;if(!ready){saveProblem('Le budget n’est pas chargé. Utilise Recharger avant de sauvegarder.');return}if(loading){saveProblem('Attends la fin du chargement avant de sauvegarder.');return}let config;try{config=E.validate(draft)}catch(error){saveProblem(error.message);return}
     saving=true;const stamp=epoch,key='finance-plan:'+owner;
@@ -128,8 +129,12 @@
   function summary(){const r=lastResult;return `MON BUDGET PERSONNEL — ${month}\n${dirty?'BROUILLON NON ENREGISTRÉ\n':''}${r.complete?'Plan déclaré vérifié':'PLAN INCOMPLET'}\nRevenus prévus : ${money(r.totals.income)}\nCharges et dépenses courantes : ${money(r.totals.bills+r.totals.flexible)}\nProvisions annuelles : ${money(r.totals.provisions)}\nEntretiens et remplacements à réserver : ${money(r.totals.projects)}\nMarge prévue : ${r.complete?money(r.projectedMargin):'À compléter'}\nDépenses enregistrées : ${r.actual?money(r.actual.expense):'Indisponible'}\n\nENTRETIENS ET REMPLACEMENTS\n${r.projects.filter(x=>x.active).map(x=>'- '+x.label+' : '+money(E.cents(x.totalAmount))+' le '+x.dueDate+'; reste à financer '+money(x.remaining)).join('\n')||'Aucun projet actif.'}\n\nPOINTS À DISCUTER\n${r.actions.map(a=>'- '+a.title+' : '+a.body).join('\n')}\n\nDonnées déclarées, sans connexion bancaire. Ce résumé n’est pas une analyse des besoins d’assurance ni une recommandation de placement. Aucun envoi automatique.`}
   async function onClick(event){
     const b=event.target.closest('button');if(!b||!$('hpBudgetPlanner').contains(b))return;
-    if(b.dataset.view){setView(b.dataset.view);return}
+    if(b.dataset.view){closeScenario();setView(b.dataset.view);return}
     const action=b.dataset.action;if(saving&&!['advisor','copy','summary'].includes(action))return;
+    if(action==='scenario-open')return openScenario(b.dataset.projectId);
+    if(action==='scenario-close')return closeScenario(true);
+    if(action==='scenario-apply')return applyScenario();
+    if(['save','add','remove','import','edit-project'].includes(action))closeScenario();
     if(action==='save')return save();if(action==='reload')return load({force:true});if(action==='add')return add(b.dataset.list);
     if(action==='edit-project')return focusProject(Number(b.dataset.index));
     if(action==='remove'){if(!confirm('Retirer cette ligne du plan? Le retrait sera appliqué à la prochaine sauvegarde.'))return;draft[b.dataset.list].splice(Number(b.dataset.index),1);dirty=true;return render()}
@@ -138,6 +143,50 @@
     if(action==='advisor')return window.hpFindAdvisor?.();
     if(action==='summary'&&lastResult){$('hpFinanceSummary').hidden=false;$('hpFinanceSummaryText').value=summary();return}
     if(action==='copy'){try{await navigator.clipboard.writeText($('hpFinanceSummaryText').value);status('Résumé copié. Choisis toi-même si tu veux le partager.')}catch{$('hpFinanceSummaryText').select();status('Sélectionne et copie le résumé manuellement.')}}
+  }
+  function closeScenario(focus=false){
+    scenario=null;const host=$('hpFinanceScenario');if(host){host.hidden=true;host.innerHTML=''}
+    if(focus)$(view==='calendar'?'hpFinanceTabCalendar':'hpFinanceTabOverview')?.focus();
+  }
+  function scenarioInput(event){
+    const key=event.target.dataset.scenarioField;
+    if(!scenario||saving||!['totalAmount','savedAmount','dueDate'].includes(key))return;
+    scenario.fields[key]=key==='dueDate'?event.target.value:event.target.value===''?null:Number(event.target.value);updateScenario();
+  }
+  function scenarioResult(){
+    if(!scenario||!ready||scenario.owner!==owner||scenario.day!==today()||scenario.base!==JSON.stringify(E.validate(draft)))throw new Error('Ton plan a changé. Ferme cette comparaison et rouvre le projet.');
+    return E.compareProject(draft,scenario.projectId,scenario.fields,scenario.day);
+  }
+  function openScenario(projectId){
+    if(!ready||saving||loading){status('Attends le chargement du budget avant de comparer un scénario.');return}
+    try{
+      const base=E.validate(draft),project=base.projects.find(x=>x.id===projectId);
+      if(!project?.active)throw new Error('Choisis un projet actif dans ton plan.');
+      scenario={projectId,owner,day:today(),base:JSON.stringify(base),fields:{totalAmount:project.totalAmount,savedAmount:project.savedAmount,dueDate:project.dueDate}};
+      const field=(key,label,type)=>`<div><label for="hpScenario-${key}">${label}</label><input id="hpScenario-${key}" data-scenario-field="${key}" type="${type}" value="${esc(scenario.fields[key])}" ${type==='number'?'min="0" step="0.01" inputmode="decimal"':`min="${today()}"`}></div>`;
+      const host=$('hpFinanceScenario');host.hidden=false;
+      host.innerHTML=`<h4 id="hpFinanceScenarioTitle" tabindex="-1">Et si je changeais ce projet?</h4><p><b>${esc(project.label)}</b></p><p class="finance-note">Essaie d’autres montants ou une autre date. Les calculs partent de ton plan affiché${dirty?', qui contient des modifications non enregistrées':''}. La date reste à vérifier selon l’urgence de l’entretien.</p><div class="finance-scenario-fields">${field('totalAmount','Coût total envisagé, taxes incluses ($)','number')}${field('savedAmount','Montant réservé envisagé ($)','number')}${field('dueDate','Date envisagée','date')}</div><div id="hpScenarioResult" aria-live="polite"></div><div class="finance-scenario-actions"><button type="button" data-action="scenario-apply" id="hpScenarioApply">Reprendre dans mon plan</button><button type="button" class="alt" data-action="scenario-close">Fermer sans appliquer</button></div><p class="finance-note">Aucun changement enregistré ici. Après la reprise, vérifie les montants et confirme ton projet avant d’enregistrer le plan. Aucun déplacement d’argent ni changement de tâche automatique.</p>`;
+      updateScenario();host.scrollIntoView?.({block:'start'});$('hpFinanceScenarioTitle')?.focus({preventScroll:true});
+    }catch(error){closeScenario();status(error.message,true)}
+  }
+  function updateScenario(){
+    if(!scenario)return;const host=$('hpScenarioResult'),button=$('hpScenarioApply');if(!host||!button)return;
+    try{
+      const r=scenarioResult(),a=r.before,b=r.after;
+      const row=(label,before,after)=>`<tr><th scope="row">${label}</th><td>${before}</td><td>${after}</td></tr>`;
+      const monthLabel=new Intl.DateTimeFormat('fr-CA',{month:'long',year:'numeric'}).format(new Date(r.month+'-01T12:00:00'));
+      const change=r.monthlyDelta===0?'La réserve mensuelle reste identique.':`${money(Math.abs(r.monthlyDelta))} ${r.monthlyDelta>0?'de plus':'de moins'} à réserver par mois pour ce projet.`;
+      host.innerHTML=`<p class="finance-project-funding">${change}</p><div class="finance-table-wrap"><table><caption>Comparaison pour ${esc(monthLabel)}</caption><thead><tr><th scope="col">Prévision</th><th scope="col">Plan actuel</th><th scope="col">Scénario</th></tr></thead><tbody>${row('Coût total',money(E.cents(a.project.totalAmount)),money(E.cents(b.project.totalAmount)))}${row('Date',dateLabel(a.project.dueDate),dateLabel(b.project.dueDate))}${row('Déjà réservé',money(E.cents(a.project.savedAmount)),money(E.cents(b.project.savedAmount)))}${row('Reste à réserver',money(a.funding.remaining),money(b.funding.remaining))}${row('Mois pour réserver',a.funding.months,b.funding.months)}${row('Réserve mensuelle du projet',money(a.funding.monthly),money(b.funding.monthly))}${row('Marge prévue du mois',a.margin===null?'À compléter':money(a.margin),b.margin===null?'À compléter':money(b.margin))}</tbody></table></div><p class="finance-note">Mois actuel et mois d’échéance inclus. La marge tient compte des autres postes du plan; ce n’est pas un solde bancaire. Aucun intérêt ni changement de prix supposé.</p>${a.margin===null?'<p class="finance-note">Complète tes revenus et confirme ton budget pour comparer aussi la marge du mois.</p>':''}${b.margin!==null&&b.margin<0?'<p class="finance-warning">Avec ce scénario, les dépenses et réserves prévues dépassent les revenus du mois.</p>':''}${a.funding.overdue?'<p class="finance-warning">La date du plan actuel est passée : sa réserve mensuelle correspond à tout le montant restant à financer.</p>':''}${b.project.totalAmount!==a.project.totalAmount?'<p class="finance-note">Le nouveau coût sera repris comme une estimation personnelle. Vérifie une nouvelle soumission avant de changer son origine.</p>':''}`;
+      button.disabled=saving||loading;
+    }catch(error){host.innerHTML=`<p class="finance-warning" role="alert">${esc(error.message)}</p>`;button.disabled=true}
+  }
+  function applyScenario(){
+    if(!scenario||saving||loading)return;
+    try{
+      const result=scenarioResult(),index=draft.projects.findIndex(x=>x.id===scenario.projectId);
+      draft.projects[index]={...result.after.project,confirmed:false};draft.reviewed=false;dirty=true;
+      closeScenario();render();focusProject(index);status('Scénario repris, non enregistré. Vérifie le montant et la date, confirme le projet, puis enregistre ton plan.');
+    }catch(error){updateScenario();status(error.message,true)}
   }
   window.hpLoadFinancePlan=load;
   function focusProject(index){setView('plan');const row=$('hpFinanceProject-'+index);row?.closest('details')?.setAttribute('open','');row?.scrollIntoView?.({block:'start',behavior:'smooth'});$('hf-projects-'+index+'-totalAmount')?.focus()}
@@ -159,7 +208,7 @@
     }catch(error){status(error.message||'Le budget ne peut pas être ouvert.',true);return false}finally{openingTask=false}
   };
   let renderedDay=today();
-  function refreshDay(){if(renderedDay!==today()){renderedDay=today();lastResult=preview();renderOverview();renderCalendar()}}
+  function refreshDay(){if(renderedDay!==today()){closeScenario();renderedDay=today();lastResult=preview();renderOverview();renderCalendar()}}
   window.addEventListener('focus',refreshDay);document.addEventListener('visibilitychange',refreshDay);setInterval(refreshDay,60000);
   function init(){ensure();load();window.addEventListener('hp-budget-loaded',()=>load());window.supabaseClient?.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(session?.user?.id&&owner&&owner!==session.user.id))reset();if(event==='SIGNED_IN')setTimeout(()=>load(),0)});document.addEventListener('click',event=>{if(event.target.closest('.tab')?.getAttribute('onclick')?.includes("'budget'"))setTimeout(()=>load(),0)});window.addEventListener('beforeunload',event=>{if(dirty){event.preventDefault();event.returnValue=''}})}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();

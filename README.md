@@ -173,3 +173,14 @@ node --test tests/*.test.mjs
 Après une modification du coût, de l’épargne réservée, de la date ou de l’origine du montant, la confirmation du projet est maintenant décochée dans le formulaire comme dans le brouillon. Les messages de sauvegarde sont affichés près du bouton et restent visibles après le rafraîchissement du formulaire. Les erreurs de validation amènent le focus sur ce message. Les événements de changement des champs sont également pris en compte.
 
 Deux régressions reproduites avant correction vérifient la cohérence de la case, l’enregistrement après nouvelle confirmation et la conservation du message après une erreur réseau. Suite : 108 tests réussis, un scénario navigateur non exécuté. Les journaux de la préversion montraient des chargements réussis et aucune demande PUT du plan dans la fenêtre étudiée; ce constat ne permet pas d’affirmer que le défaut de confirmation explique tous les blocages possibles. L’essai avec le compte de l’utilisateur reste à confirmer.
+
+
+## Comparer un scénario d’entretien
+
+Un projet actif propose **Comparer un scénario** dans le bilan et les échéances de Finances. Le panneau compare le coût, la date, le montant réservé, le reste à financer, le nombre de mois, la réserve mensuelle et la marge prévue du mois courant. L’utilisateur peut essayer un autre coût, un autre montant réservé ou une autre date à partir d’aujourd’hui. Une simulation ne valide pas la possibilité de reporter un entretien.
+
+Les calculs réutilisent le moteur du budget complet, avec les autres charges, enveloppes, provisions et projets. La marge reste « À compléter » sans revenus et plan déclaré vérifié. Aucune hausse de prix, rendement ou financement n’est supposé. Un coût modifié est repris comme estimation personnelle, même si l’ancien coût provenait d’une soumission.
+
+Les essais restent dans la mémoire de la page. Fermer le panneau ne change pas le plan. **Reprendre dans mon plan** remplace les valeurs du même projet dans le brouillon, réinitialise la confirmation du projet et du budget, puis ouvre les champs à vérifier. L’utilisateur confirme et enregistre explicitement. Un changement de compte efface le scénario. Une modification du plan pendant la comparaison empêche d’appliquer un scénario fondé sur l’ancienne version; les révisions de sauvegarde protègent aussi contre les conflits distants. Aucun schéma, droit d’accès ou point d’API n’est ajouté.
+
+Vérifications : 115 tests automatisés réussis, un scénario navigateur non exécuté. Les sept nouveaux tests couvrent les calculs et arrondis, les autres postes du budget, les coûts et dates invalides, l’absence de marge pour un budget incomplet, la reprise sans doublon et avec confirmation, l’annulation, la déconnexion et le conflit de plan. Le rendu et l’essai connecté de cette nouvelle comparaison restent à valider sur iPhone.

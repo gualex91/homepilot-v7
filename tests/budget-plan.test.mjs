@@ -173,3 +173,34 @@ test('project save retries and stale revisions cannot duplicate or overwrite a p
     const clear=payload(b.request_id),removed=response();await handler(request('PUT',clear),removed);assert.equal(removed.code,200);assert.deepEqual(db.current.maintenance_projects,[]);
   });
 });
+
+test('project scenario recalculates the whole current month without mutating or duplicating the plan',()=>{
+  const p=plan();p.bills=[row('rent',1000,'2026-09-01')];p.envelopes=[row('food',500,'2026-09-01','monthly','Épicerie')];
+  p.provisions=[{id:'tax',label:'Taxes',category:'Maison',essential:true,annualAmount:1200,savedAmount:1200,dueDate:'2026-12-01'}];
+  const project={id:'project-a',label:'Chauffe-eau',category:'Maison',essential:false,totalAmount:1200,savedAmount:400,dueDate:'2026-12-01',costSource:'quote',confirmed:true,active:true,taskKey:'task:a',propertyName:'Maison'};
+  p.projects=[project,{...project,id:'project-b',taskKey:'task:b',totalAmount:600,savedAmount:0,dueDate:'2027-02-01'}];
+  const original=JSON.stringify(p),r=E.compareProject(p,'project-a',{totalAmount:1600,savedAmount:400,dueDate:'2026-11-01'},'2026-09-10');
+  assert.equal(r.before.funding.monthly,20000);assert.equal(r.after.funding.monthly,40000);assert.equal(r.monthlyDelta,20000);
+  assert.equal(r.before.margin,210000);assert.equal(r.after.margin,190000);assert.equal(r.marginDelta,-20000);
+  assert.equal(r.after.project.id,'project-a');assert.equal(r.after.project.taskKey,'task:a');assert.equal(JSON.stringify(p),original);
+});
+test('scenario cost changes become estimates while date-only changes retain the declared quote',()=>{
+  const p=plan();p.projects=[{id:'p',label:'Projet',category:'Maison',totalAmount:1000,savedAmount:0,dueDate:'2026-12-01',costSource:'quote',confirmed:true,active:true}];
+  const r=E.compareProject(p,'p',{totalAmount:1000,savedAmount:0,dueDate:'2027-02-01'},'2026-09-10');
+  assert.equal(r.after.project.costSource,'quote');assert.equal(r.after.funding.monthly,16667);assert.equal(r.monthlyDelta,-8333);
+  const changed=E.compareProject(p,'p',{totalAmount:1100,savedAmount:0,dueDate:'2027-02-01'},'2026-09-10');
+  assert.equal(changed.after.project.costSource,'estimate');
+});
+test('scenarios refuse invalid costs, past dates, closed projects and unknown identifiers',()=>{
+  const p=plan();p.projects=[{id:'p',label:'Projet',category:'Maison',totalAmount:100,savedAmount:0,dueDate:'2026-09-01',costSource:'estimate',confirmed:true,active:true}];
+  const changes={totalAmount:100,savedAmount:0,dueDate:'2026-09-10'};
+  for(const bad of [{totalAmount:null},{totalAmount:-1},{totalAmount:10.001},{savedAmount:101},{dueDate:'2026-02-30'},{dueDate:'2026-09-09'}])assert.throws(()=>E.compareProject(p,'p',{...changes,...bad},'2026-09-10'));
+  assert.throws(()=>E.compareProject(p,'absent',changes,'2026-09-10'));
+  const r=E.compareProject(p,'p',changes,'2026-09-10');assert.equal(r.before.funding.overdue,true);assert.equal(r.after.funding.months,1);
+  p.projects[0].active=false;assert.throws(()=>E.compareProject(p,'p',changes,'2026-09-10'));
+});
+test('an incomplete plan has no reassuring scenario margin and a fully funded project needs no reserve',()=>{
+  const p=E.empty();p.projects=[{id:'p',label:'Projet',category:'Maison',totalAmount:1200,savedAmount:400,dueDate:'2026-12-01',costSource:'estimate',confirmed:true,active:true}];
+  const r=E.compareProject(p,'p',{totalAmount:1200,savedAmount:1200,dueDate:'2026-12-01'},'2026-09-10');
+  assert.equal(r.after.funding.monthly,0);assert.equal(r.monthlyDelta,-20000);assert.equal(r.before.margin,null);assert.equal(r.after.margin,null);assert.equal(r.marginDelta,null);
+});

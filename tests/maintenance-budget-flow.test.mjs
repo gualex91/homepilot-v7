@@ -41,8 +41,9 @@ function harness({loadFailure=false}={}){
   for(const file of ['stability-core.js','budget-engine.js','maintenance-budget.js','budget-planner.js'])vm.runInContext(source(file),ctx,{filename:file});
   const tick=()=>new Promise(resolve=>setImmediate(resolve));
   const input=(field,value,type='number',event='input')=>{const target=nodes.get('hf-'+field.replaceAll('.','-'))||{};Object.assign(target,{dataset:{field},value:String(value),type,checked:value===true});return nodes.get('hpBudgetPlanner').handlers[event]({target})};
-  const click=action=>{const b={dataset:{action},closest(){return this},getAttribute(){return null}};return nodes.get('hpBudgetPlanner').handlers.click({target:b})};
+  const click=(action,data={})=>{const b={dataset:{action,...data},closest(){return this},getAttribute(){return null}};return nodes.get('hpBudgetPlanner').handlers.click({target:b})};
   return {ctx,nodes,requests,navigation,input,click,tick,stored:()=>stored,
+    scenarioInput(key,value){const target={dataset:{scenarioField:key},value:String(value)};return nodes.get('hpBudgetPlanner').handlers.input({target})},
     async start(){for(const fn of events.DOMContentLoaded||[])fn();await tick()},
     async task(task={id:'task-a',title:'Entretien du spa',due_at:'2026-12-01'},property='Chalet',kind='property'){
       const html=ctx.hpMaintenanceBudget.button(task,property,kind),encoded=html.match(/data-maintenance-budget="([^"]+)"/)?.[1];
@@ -102,4 +103,34 @@ test('unavailable budgets cannot accept a task and a new account never inherits 
   assert.doesNotMatch(h.nodes.get('hpFinanceEditor').innerHTML,/7654|Chalet/);
   await h.owner('owner-b');await h.task({id:'new',title:'Filtre',due_at:'2026-10-01'},'Maison');
   assert.doesNotMatch(h.nodes.get('hpFinanceEditor').innerHTML,/7654|Chalet/);
+});
+
+
+test('scenario calculations are temporary; applying updates the same project and requires confirmation and save',async()=>{
+  const h=harness();await h.start();await h.task();h.input('projects.0.totalAmount',1200);h.input('projects.0.savedAmount',400);h.input('projects.0.confirmed',true,'checkbox');await h.click('save');
+  const id=h.stored().projects[0].id,writes=h.requests.filter(x=>x.options.method==='PUT').length;
+  await h.click('scenario-open',{projectId:id});h.scenarioInput('totalAmount',1600);h.scenarioInput('dueDate','2026-11-01');
+  assert.match(h.nodes.get('hpScenarioResult').innerHTML,/200,00.*de plus/);assert.equal(h.stored().projects[0].totalAmount,1200);
+  assert.equal(h.requests.filter(x=>x.options.method==='PUT').length,writes);
+  await h.ctx.hpLoadFinancePlan();assert.equal(h.nodes.get('hpScenarioApply').disabled,false);
+  await h.click('scenario-apply');assert.equal(h.nodes.get('hpFinanceScenario').hidden,true);
+  await h.click('save');assert.equal(h.requests.filter(x=>x.options.method==='PUT').length,writes);
+  h.input('projects.0.confirmed',true,'checkbox');await h.click('save');
+  assert.equal(h.stored().projects.length,1);assert.equal(h.stored().projects[0].id,id);assert.equal(h.stored().projects[0].totalAmount,1600);assert.equal(h.stored().projects[0].dueDate,'2026-11-01');
+});
+test('closing or invalidating a scenario never modifies the plan and logout clears its amounts',async()=>{
+  const h=harness();await h.start();await h.task();h.input('projects.0.totalAmount',500);h.input('projects.0.confirmed',true,'checkbox');await h.click('save');
+  const id=h.stored().projects[0].id;
+  await h.click('scenario-open',{projectId:id});h.scenarioInput('totalAmount',9876);await h.click('scenario-close');
+  assert.equal(h.stored().projects[0].totalAmount,500);assert.equal(h.nodes.get('hpFinanceScenario').innerHTML,'');
+  await h.click('scenario-open',{projectId:id});h.scenarioInput('savedAmount',600);assert.equal(h.nodes.get('hpScenarioApply').disabled,true);
+  await h.click('scenario-apply');assert.equal(h.stored().projects[0].totalAmount,500);
+  h.logout();assert.equal(h.nodes.get('hpFinanceScenario').innerHTML,'');assert.equal(h.nodes.get('hpFinanceScenario').hidden,true);
+});
+test('a scenario cannot overwrite a plan changed during comparison',async()=>{
+  const h=harness();await h.start();await h.task();h.input('projects.0.totalAmount',500);h.input('projects.0.confirmed',true,'checkbox');await h.click('save');
+  await h.click('scenario-open',{projectId:h.stored().projects[0].id});h.scenarioInput('totalAmount',800);
+  h.stored().projects[0].totalAmount=700;await h.ctx.hpLoadFinancePlan();
+  assert.equal(h.nodes.get('hpScenarioApply').disabled,true);assert.match(h.nodes.get('hpScenarioResult').innerHTML,/plan a changé/);
+  await h.click('scenario-apply');assert.equal(h.stored().projects[0].totalAmount,700);
 });
