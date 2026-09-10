@@ -40,7 +40,7 @@ function harness({loadFailure=false}={}){
   });ctx.window=ctx;
   for(const file of ['stability-core.js','budget-engine.js','maintenance-budget.js','budget-planner.js'])vm.runInContext(source(file),ctx,{filename:file});
   const tick=()=>new Promise(resolve=>setImmediate(resolve));
-  const input=(field,value,type='number')=>nodes.get('hpBudgetPlanner').handlers.input({target:{dataset:{field},value:String(value),type,checked:value===true}});
+  const input=(field,value,type='number',event='input')=>{const target=nodes.get('hf-'+field.replaceAll('.','-'))||{};Object.assign(target,{dataset:{field},value:String(value),type,checked:value===true});return nodes.get('hpBudgetPlanner').handlers[event]({target})};
   const click=action=>{const b={dataset:{action},closest(){return this},getAttribute(){return null}};return nodes.get('hpBudgetPlanner').handlers.click({target:b})};
   return {ctx,nodes,requests,navigation,input,click,tick,stored:()=>stored,
     async start(){for(const fn of events.DOMContentLoaded||[])fn();await tick()},
@@ -73,6 +73,21 @@ test('editing the cost requires renewed confirmation and an uncertain save reuse
   h.input('projects.0.confirmed',true,'checkbox');h.failSave();await h.click('save');assert.match(h.nodes.get('hpFinanceStatus').textContent,/Confirmation non reçue/);
   await h.click('save');const writes=h.requests.filter(r=>r.options.method==='PUT').map(r=>JSON.parse(r.options.body));
   assert.equal(writes.length,2);assert.equal(writes[0].request_id,writes[1].request_id);assert.equal(h.stored().projects.length,1);
+});
+test('changing a confirmed amount visibly unchecks confirmation and shows the save error beside the button',async()=>{
+  const h=harness();await h.start();await h.task();h.input('projects.0.totalAmount',100);h.input('projects.0.confirmed',true,'checkbox');
+  const check=h.nodes.get('hf-projects-0-confirmed');assert.ok(check,'confirmation must be addressable in the rendered form');assert.equal(check.checked,true);
+  h.input('projects.0.totalAmount',200);assert.equal(check.checked,false);
+  await h.click('save');assert.equal(h.requests.filter(r=>r.options.method==='PUT').length,0);
+  assert.match(h.nodes.get('hpFinanceSaveStatus').textContent,/Confirme/);assert.equal(h.nodes.get('hpFinanceSaveStatus').focused,true);
+  h.input('projects.0.confirmed',true,'checkbox');await h.click('save');
+  assert.equal(h.stored().projects[0].totalAmount,200);assert.match(h.nodes.get('hpFinanceSaveStatus').textContent,/Plan enregistré/);
+});
+test('change events commit form values and network save errors remain beside the retry button',async()=>{
+  const h=harness();await h.start();await h.task();
+  h.input('projects.0.totalAmount',250,'number','change');h.input('projects.0.confirmed',true,'checkbox','change');
+  h.failSave();await h.click('save');assert.match(h.nodes.get('hpFinanceSaveStatus').textContent,/Confirmation non reçue/);
+  await h.click('save');assert.equal(h.stored().projects[0].totalAmount,250);assert.match(h.nodes.get('hpFinanceSaveStatus').textContent,/Plan enregistré/);
 });
 test('different recurring occurrences stay separate; task and property labels cannot inject HTML',async()=>{
   const h=harness();await h.start();const task={id:'same',title:'<img src=x onerror="attack()">',due_date:'2026-12-01'};

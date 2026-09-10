@@ -166,3 +166,10 @@ Vérification : calculs, échéances ponctuelles, arrondis, double comptage, cl�
 ```sh
 node --test tests/*.test.mjs
 ```
+
+
+### Correctif de confirmation et de sauvegarde
+
+Après une modification du coût, de l’épargne réservée, de la date ou de l’origine du montant, la confirmation du projet est maintenant décochée dans le formulaire comme dans le brouillon. Les messages de sauvegarde sont affichés près du bouton et restent visibles après le rafraîchissement du formulaire. Les erreurs de validation amènent le focus sur ce message. Les événements de changement des champs sont également pris en compte.
+
+Deux régressions reproduites avant correction vérifient la cohérence de la case, l’enregistrement après nouvelle confirmation et la conservation du message après une erreur réseau. Suite : 108 tests réussis, un scénario navigateur non exécuté. Les journaux de la préversion montraient des chargements réussis et aucune demande PUT du plan dans la fenêtre étudiée; ce constat ne permet pas d’affirmer que le défaut de confirmation explique tous les blocages possibles. L’essai avec le compte de l’utilisateur reste à confirmer.
