@@ -60,11 +60,13 @@ test('budget proxy preserves Request method, body and authorization',async()=>{
 });
 test('all frontend scripts and inline scripts parse and shell assets exist',()=>{
  for(const file of readdirSync(root).filter(f=>f.endsWith('.js')))new vm.Script(readFileSync(resolve(root,file),'utf8'),{filename:file});
- for(const file of ['index.html','seasonal-shell.html']){
+ for(const file of ['index.html','seasonal-shell.html','app-core.html']){
   const html=readFileSync(resolve(root,file),'utf8');
   for(const match of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g))new vm.Script(match[1],{filename:file});
   for(const match of html.matchAll(/src="(\/[\w-]+\.js)(?:\?[^" ]+)?"/g))assert.ok(existsSync(resolve(root,'.'+match[1])),match[1]);
  }
+ assert.equal(readFileSync(resolve(root,'index.html'),'utf8'),readFileSync(resolve(root,'seasonal-shell.html'),'utf8'));
+ assert.match(readFileSync(resolve(root,'index.html'),'utf8'),/fetch\('\/app-core\.html\?source='/);
 });
 test('property creation resumes the same property and equipment after failure',async()=>{
  const rows=new Map(),calls=[],alerts=[],c=core();let fail=true;
@@ -117,7 +119,7 @@ test('browser: dashboard stability and budget save-to-summary flow',{skip:proces
  const {chromium}=require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES?process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES+'/playwright':'playwright');
  const server=createServer((req,res)=>{
    const pathname=decodeURIComponent(new URL(req.url,'http://test').pathname);
-   const file=resolve(root,'.'+(pathname==='/'?'/seasonal-shell.html':pathname));
+   const file=resolve(root,'.'+(pathname==='/'?'/index.html':pathname));
    if(!file.startsWith(root+'/')||!existsSync(file)){res.writeHead(404);res.end();return}
    res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.svg':'image/svg+xml'})[extname(file)]||'text/plain');res.end(readFileSync(file));
  });

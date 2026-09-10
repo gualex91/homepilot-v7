@@ -22,6 +22,8 @@ Les invitations sont enregistrées dans le cloud mais aucun courriel d'invitatio
 
 ## Correctifs de stabilité — septembre 2026
 
+L'entrée publique `index.html` contient le chargeur complet des modules. Le contenu de base est dans `app-core.html`. `seasonal-shell.html` reste un alias compatible, identique à `index.html`. Aucun rewrite de la racine n'est nécessaire : Vercel privilégie le fichier index existant.
+
 - Les ajouts de dépenses, de propriétés et d'équipements réutilisent un identifiant de demande tant que la sauvegarde n'est pas confirmée. Après une erreur réseau, réessayer sans modifier le formulaire.
 - Les équipements utilisent un seul parcours d'ajout. Les tâches déjà générées par la base sont conservées; une génération incomplète est signalée et peut être reprise.
 - Les requêtes Budget passent par les routes HomePilot, avec le jeton de l'utilisateur et les règles RLS existantes. Les budgets restent personnels : aucun partage financier ni schéma de base n'a été modifié.
