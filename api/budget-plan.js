@@ -38,7 +38,7 @@ export default async function handler(req,res){
       }
       return res.status(200).json({ok:true,config:rows[0].config,revision:rows[0].revision,updated_at:rows[0].updated_at});
     }
-    const month=new URL(req.url,'https://homepilot.invalid').searchParams.get('month')||'';
+    const month=new URL(req.url,'https://nuvabri.invalid').searchParams.get('month')||'';
     if(!/^20\d{2}-(0[1-9]|1[0-2])$/.test(month))return res.status(400).json({error:'Mois invalide.'});
     const entries=[];let complete=false;
     for(let offset=0;offset<10000;offset+=500){

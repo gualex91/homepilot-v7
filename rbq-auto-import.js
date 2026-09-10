@@ -16,7 +16,7 @@
     if(existing===null)return;
     if(existing>1000){markCompleted();return}
     attempted=true;
-    banner('<b>🏗 Import RBQ Québec</b><br>HomePilot prépare le répertoire des professionnels. Tu peux continuer à utiliser l’application.');
+    banner('<b>🏗 Import RBQ Québec</b><br>Nuvabri prépare le répertoire des professionnels. Tu peux continuer à utiliser l’application.');
     const {data,error}=await c.functions.invoke('import-rbq-professionals');
     const after=await importedCount(c);
     if(after!==null&&after>1000){markCompleted();banner('<b>✓ Import RBQ terminé</b><br>Les fiches importées sont consultables dans l’espace admin. Seules les fiches admissibles sont publiées.',true);window.dispatchEvent(new Event('hp-professionals-updated'));return}

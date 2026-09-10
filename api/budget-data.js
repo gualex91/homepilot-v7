@@ -5,7 +5,7 @@ export default async function handler(req,res){
   const auth=req.headers.authorization||'';
   if(!auth.startsWith('Bearer '))return res.status(401).json({error:'Session manquante'});
   const target=new URL(`${URL_BASE}/rest/v1/`);
-  const input=new URL(req.url,'https://homepilot.invalid');
+  const input=new URL(req.url,'https://nuvabri.invalid');
   const table=input.searchParams.get('table');
   if(!allowed.has(table))return res.status(400).json({error:'Table non autorisée'});
   target.pathname+=table;

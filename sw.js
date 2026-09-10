@@ -1,4 +1,4 @@
-const CACHE='homepilot-v7-recovery-v1';
+const CACHE='nuvabri-brand-v1';
 
 self.addEventListener('install',event=>{
   self.skipWaiting();

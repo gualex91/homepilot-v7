@@ -28,7 +28,7 @@ function authHarness({hash='',initial=null,resetError=null,signOutError=null,boo
     signUp:async()=>({data:{session:null}}),
     updateUser:async payload=>{calls.update.push(payload);return {data:{user:initial?.user}}},
     signOut:async opts=>{calls.out.push(opts);callback('SIGNED_OUT',null);return {error:signOutError}}};
-  const ctx=vm.createContext({URL,URLSearchParams,setTimeout,document:{getElementById:el.get},location:{origin:'https://homepilot.test',hash,search:'',reload(){}},history:{replaceState(){}}});
+  const ctx=vm.createContext({URL,URLSearchParams,setTimeout,document:{getElementById:el.get},location:{origin:'https://nuvabri.test',hash,search:'',reload(){}},history:{replaceState(){}}});
   vm.runInContext(source('account-access.js'),ctx);
   ctx.hpAccountAccess.start({auth},async value=>{calls.boot.push(value);if(bootError)throw Error('load failed')});
   return {...el,api:ctx.hpAccountAccess,calls,event:(...args)=>callback(...args)};
@@ -61,7 +61,7 @@ test('password reset keeps return URL same-origin and never claims an account ex
   const h=authHarness();await tick();h.api.render('login');h.api.requestResetView();
   h.get('em').value='Test@Example.com';await h.api.submit();
   assert.equal(h.calls.reset.length,1);assert.equal(h.calls.reset[0][0],'test@example.com');
-  assert.equal(h.calls.reset[0][1].redirectTo,'https://homepilot.test/');
+  assert.equal(h.calls.reset[0][1].redirectTo,'https://nuvabri.test/');
   assert.match(h.get('am').textContent,/Si un compte correspond/);assert.equal(h.get('ab').disabled,false);
 });
 test('recovery does not boot dashboard and saving waits for matching passwords',async()=>{

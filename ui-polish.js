@@ -22,7 +22,7 @@
   function shortenCopy(){const replacements=new Map([
     ['Garde tes équipements de loisir au même endroit : motoneige, VTT, bateau, VR, roulotte et plus.','Tes équipements de loisir, tâches et rappels au même endroit.'],
     ['Les faits financiers sont informatifs. Vérifie tes droits personnels dans Mon dossier ARC avant de cotiser.','Information générale — vérifie tes droits personnels avant de cotiser.'],
-    ['La vue d’ensemble utilise uniquement les montants enregistrés dans HomePilot. Les paiements automatiques et transactions bancaires ne sont pas importés automatiquement.','Basé sur les montants enregistrés dans HomePilot.']
+    ['La vue d’ensemble utilise uniquement les montants enregistrés dans Nuvabri. Les paiements automatiques et transactions bancaires ne sont pas importés automatiquement.','Basé sur les montants enregistrés dans Nuvabri.']
   ]);document.querySelectorAll('p,.muted,.notice').forEach(el=>{const t=(el.textContent||'').trim();if(replacements.has(t))el.textContent=replacements.get(t)})}
   function removeDuplicateAdvisor(){const budget=document.getElementById('budget');if(!budget)return;const nodes=[...budget.querySelectorAll('button,a')].filter(x=>(x.textContent||'').toLowerCase().includes('trouver un conseiller'));nodes.slice(1).forEach(x=>{const card=x.closest('.card');if(card&&card.parentElement===budget)card.remove();else x.remove()})}
   function normalizeButtons(){document.querySelectorAll('button').forEach(b=>{const t=(b.textContent||'').trim().toLowerCase();if(['supprimer','×'].includes(t))b.classList.add('alt');if(t==='modifier'||t.startsWith('+ '))b.classList.add('alt')})}

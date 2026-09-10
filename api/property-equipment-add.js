@@ -36,7 +36,7 @@ export default async function handler(req,res){
   const auth=req.headers.authorization||'';
   if(!auth.startsWith('Bearer '))return res.status(401).json({error:'Session manquante'});
   const b=req.body||{};
-  if(!requestId(b.request_id))return res.status(400).json({error:'Actualise HomePilot avant de réessayer.'});
+  if(!requestId(b.request_id))return res.status(400).json({error:'Actualise Nuvabri avant de réessayer.'});
   const propertyId=String(b.property_id||'').trim();
   const equipmentType=String(b.equipment_type||'').trim();
   const name=String(b.name||'').trim();
@@ -68,7 +68,7 @@ export default async function handler(req,res){
     const existingResponse=await fetch(`${SUPABASE_URL}/rest/v1/tasks?equipment_id=eq.${row.id}&select=*`,{headers:{apikey:SUPABASE_KEY,Authorization:auth}});
     const existing=await existingResponse.json();
     if(!existingResponse.ok) return res.status(200).json({ok:true,equipment:row,tasks:[],task_warning:'Impossible de vérifier les tâches. Réessaie la même demande.'});
-    const generatedByDatabase=existing.some(t=>String(t.source_note||'').startsWith('Généré automatiquement par HomePilot'));
+    const generatedByDatabase=existing.some(t=>/^Généré automatiquement par (?:HomePilot|Nuvabri)(?:\b|$)/.test(String(t.source_note||'')));
     const rules=generatedByDatabase?[]:(TASK_RULES[equipmentType]||[]);
     const tasksById=new Map(existing.map(task=>[task.id,task]));
     let taskWarning=null;
@@ -82,7 +82,7 @@ export default async function handler(req,res){
         due_at:isoIn(lead ?? Math.min(every,30)),
         status:'todo',
         created_by:user.id,
-        source_note:`Créée automatiquement par HomePilot pour ${name}. Fréquence indicative : ${every} jours. Vérifier les recommandations du fabricant ou du professionnel.`
+        source_note:`Créée automatiquement par Nuvabri pour ${name}. Fréquence indicative : ${every} jours. Vérifier les recommandations du fabricant ou du professionnel.`
       }));
       try {
         for(const task of taskPayload){const saved=await insertOnce('tasks',task,auth);tasksById.set(saved.id,saved);}

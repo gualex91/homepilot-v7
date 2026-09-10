@@ -17,5 +17,5 @@ export default async function handler(req,res){
     const rows=Array.isArray(data)?data:[];
     if(!rows.length)return res.status(404).json({error:'Entrée introuvable ou non autorisée'});
     return res.status(200).json({ok:true,id:rows[0]?.id||id});
-  }catch(e){console.error('budget-delete proxy',e);return res.status(502).json({error:'Le serveur HomePilot ne peut pas supprimer cette entrée.'})}
+  }catch(e){console.error('budget-delete proxy',e);return res.status(502).json({error:'Le serveur Nuvabri ne peut pas supprimer cette entrée.'})}
 }

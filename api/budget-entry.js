@@ -8,7 +8,7 @@ export default async function handler(req,res){
   const amount=Number(b.amount);
   if(!Number.isFinite(amount)||!(amount>0))return res.status(400).json({error:'Montant invalide'});
   if(!/^\d{4}-\d{2}-\d{2}$/.test(b.entry_date||''))return res.status(400).json({error:'Date manquante'});
-  if(!requestId(b.request_id))return res.status(400).json({error:'Actualise HomePilot avant de réessayer.'});
+  if(!requestId(b.request_id))return res.status(400).json({error:'Actualise Nuvabri avant de réessayer.'});
   const payload={
     user_id:b.user_id,
     household_id:b.household_id||null,
@@ -30,6 +30,6 @@ export default async function handler(req,res){
     return res.status(200).json({ok:true,id:row.id});
   }catch(e){
     console.error('budget-entry proxy',e);
-    return res.status(e.status||502).json({error:e.status===401?'Session expirée. Reconnecte-toi.':e.status===403?'Cette sauvegarde n’est pas autorisée.':'Le serveur HomePilot ne peut pas enregistrer cette entrée.'});
+    return res.status(e.status||502).json({error:e.status===401?'Session expirée. Reconnecte-toi.':e.status===403?'Cette sauvegarde n’est pas autorisée.':'Le serveur Nuvabri ne peut pas enregistrer cette entrée.'});
   }
 }

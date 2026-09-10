@@ -19,7 +19,7 @@
  const recurring=recurringR.data||[],upcoming=recurring.reduce((a,x)=>a+Number(x.amount||0),0);
  $('hpOverviewMonth').textContent=new Intl.DateTimeFormat('fr-CA',{month:'long',year:'numeric'}).format(now);
  $('hpOverviewGrid').innerHTML=tile('💵','Revenus',money(income))+tile('🧾','Dépenses',money(expense))+tile(balance>=0?'✅':'⚠️','Solde du mois',money(balance),balance>=0?'Positif':'Négatif')+tile('🎯','Épargne',money(saved),target>0?`${Math.round(saved/target*100)} % des objectifs`:'Aucun objectif cible')+tile('💳','Dettes totales',money(totalDebt),mortgage>0?'Hypothèque incluse':'Hors hypothèque non renseignée')+tile('🔁','À payer bientôt',money(upcoming),`${recurring.length} paiement${recurring.length===1?'':'s'} dans les 30 jours`);
- $('hpOverviewNote').textContent='La vue d’ensemble utilise uniquement les montants enregistrés dans HomePilot. Les paiements automatiques et transactions bancaires ne sont pas importés automatiquement.';
+ $('hpOverviewNote').textContent='La vue d’ensemble utilise uniquement les montants enregistrés dans Nuvabri. Les paiements automatiques et transactions bancaires ne sont pas importés automatiquement.';
  }
  window.addEventListener('hp-budget-loaded',()=>{load().catch(console.error)});
  function init(){ensureUI();setTimeout(load,2400);new MutationObserver(()=>{ensureUI()}).observe(document.body,{childList:true,subtree:true});window.addEventListener('hp-mortgage-updated',load);setInterval(load,180000)}

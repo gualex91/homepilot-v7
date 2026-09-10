@@ -13,7 +13,7 @@ begin
  foreach name in array array['','1888254661','5140000000','4185550123','2222222222','4182346789abc'] loop
   if not ('invalid_phone'=any(public.hp_directory_issues('Atelier exemple',name,null,'rbq_open_data','1234-5678-90'))) then raise exception 'Invalid phone passed: %',name; end if;
  end loop;
- if not ('missing_reference'=any(public.hp_directory_issues('Atelier exemple','4182346789',null,'HomePilot verified web 2026-09-09'))) then raise exception 'Import label treated as evidence'; end if;
+ if not ('missing_reference'=any(public.hp_directory_issues('Atelier exemple','4182346789',null,'Nuvabri verified web 2026-09-09'))) then raise exception 'Import label treated as evidence'; end if;
  if not ('missing_reference'=any(public.hp_directory_issues('Atelier exemple','4182346789','javascript:alert(1)','manual'))) then raise exception 'Unsafe URL accepted'; end if;
  if cardinality(public.hp_directory_issues('Atelier exemple','4182346789','https://www.rbq.gouv.qc.ca/','manual'))<>0 then raise exception 'Traceable URL rejected'; end if;
 

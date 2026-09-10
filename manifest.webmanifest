@@ -1,9 +1,9 @@
 {
-  "name": "HomePilot V7 Cloud",
-  "short_name": "HomePilot",
+  "name": "Nuvabri",
+  "short_name": "Nuvabri",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#f4f6f1",
   "theme_color": "#356f68",
-  "description": "HomePilot V7 connecté à Supabase"
+  "description": "Entretiens tes biens, organise tes rappels et prépare tes dépenses avec Nuvabri."
 }

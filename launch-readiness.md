@@ -1,4 +1,4 @@
-# HomePilot — ordre de travail avant lancement
+# Nuvabri — ordre de travail avant lancement
 
 Décision du 10 septembre 2026 : préparer une bêta ciblée, conserver le budget essentiel gratuit et financer progressivement l’application par des commerces partenaires. Ce document est une feuille de route, pas une attestation de conformité ou de disponibilité publique.
 
@@ -32,7 +32,7 @@ Non implémenté / non activé : suppression de compte, politique officielle et 
 - Distinguer demande enregistrée, remise au service d’envoi, livraison confirmée et réponse du commerce. Un INSERT n’est pas une livraison.
 - Vérifier les coordonnées des commerces destinataires; choisir/configurer l’expéditeur autorisé, les reprises, les doublons et les échecs avant envoi automatique.
 - Invitations de foyer : enregistrement cloud et partage manuel clairement expliqués jusqu’à validation d’un véritable courriel.
-- Rappels : annoncer l’affichage dans HomePilot et l’export ponctuel .ics, pas une synchronisation ou une notification automatique inexistante.
+- Rappels : annoncer l’affichage dans Nuvabri et l’export ponctuel .ics, pas une synchronisation ou une notification automatique inexistante.
 - Aucun envoi de test à un utilisateur ou commerce réel sans autorisation.
 
 ## 4. Pilote partenaires — après fiabilisation du parcours

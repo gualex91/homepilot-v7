@@ -4,7 +4,7 @@
  function decorate(){
   document.querySelectorAll('input').forEach(i=>{const p=((i.placeholder||'')+' '+(i.previousElementSibling?.textContent||'')).toLowerCase();if((p.includes('code postal')||p.includes('postal'))&&!i.dataset.hpQc){i.dataset.hpQc='1';i.placeholder='Ex. G7H 2B1';i.autocomplete='postal-code';i.addEventListener('blur',()=>{i.value=HomePilotGeo.normalizePostalCode(i.value)})}});
   const propertySection=document.getElementById('pc')||document.getElementById('propertyForm');
-  if(propertySection&&!document.getElementById('hpQuebecScope')){const n=document.createElement('div');n.id='hpQuebecScope';n.className='notice';n.style.margin='10px 0';n.innerHTML='<b>📍 HomePilot Québec</b><br><span class="muted">Cette propriété peut être située partout au Québec. Les tâches, services et professionnels seront adaptés à son emplacement.</span>';propertySection.prepend(n)}
+  if(propertySection&&!document.getElementById('hpQuebecScope')){const n=document.createElement('div');n.id='hpQuebecScope';n.className='notice';n.style.margin='10px 0';n.innerHTML='<b>📍 Nuvabri Québec</b><br><span class="muted">Cette propriété peut être située partout au Québec. Les tâches, services et professionnels seront adaptés à son emplacement.</span>';propertySection.prepend(n)}
  }
  function exposeRegionSelector(){
   const postal=[...document.querySelectorAll('input')].find(i=>(((i.placeholder||'')+' '+(i.previousElementSibling?.textContent||'')).toLowerCase().includes('postal')));if(!postal||document.getElementById('hpRegion'))return;

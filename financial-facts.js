@@ -67,7 +67,7 @@
       document.getElementById('hpHomeFactTitle').textContent=f.title;
       document.getElementById('hpHomeFactBody').textContent=f.body;
       const link=document.getElementById('hpHomeFactSource');link.textContent=(f.example?'Méthode budgétaire : ':'En savoir plus : ')+f.source.name;link.href=f.source.url;
-      document.getElementById('hpHomeFactDate').textContent=f.example?'Exemple de calcul HomePilot':'Source consultée le '+new Intl.DateTimeFormat('fr-CA',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(f.checkedOn+'T12:00:00Z'));
+      document.getElementById('hpHomeFactDate').textContent=f.example?'Exemple de calcul Nuvabri':'Source consultée le '+new Intl.DateTimeFormat('fr-CA',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(f.checkedOn+'T12:00:00Z'));
       card.hidden=false;
     }
     // No Supabase calls in the synchronous callback. Duplicate sign-in events

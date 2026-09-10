@@ -19,5 +19,5 @@ export default async function handler(req,res){
     let data=null;try{data=text?JSON.parse(text):null}catch{}
     if(!r.ok){const msg=data?.message||data?.error_description||data?.hint||`Erreur Supabase ${r.status}`;return res.status(r.status).json({error:msg,code:data?.code||null})}
     return res.status(200).json({ok:true,rows:Array.isArray(data)?data:[]});
-  }catch(e){console.error('budget-list proxy',e);return res.status(502).json({error:'Le serveur HomePilot ne peut pas lire le budget.'})}
+  }catch(e){console.error('budget-list proxy',e);return res.status(502).json({error:'Le serveur Nuvabri ne peut pas lire le budget.'})}
 }

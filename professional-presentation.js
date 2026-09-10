@@ -7,10 +7,10 @@
   function listingLabel(profile){
     if(profile.listing_tier==='sponsored'||profile.sponsored)return 'Publicité · Commandité';
     if(profile.listing_tier==='partner'||profile.partner)return 'Partenaire commercial';
-    return profile.homepilot_featured===true?'Mis en avant par HomePilot · Fiche non commanditée':'Fiche non commanditée';
+    return profile.homepilot_featured===true?'Mis en avant par Nuvabri · Fiche non commanditée':'Fiche non commanditée';
   }
   function sortRows(rows,order){return order==='alphabetical'?[...rows].sort((a,b)=>String(a.business_name).localeCompare(String(b.business_name),'fr')):[...rows]}
-  const disclosure='Les mises en avant choisies par HomePilot, les commandites et les partenariats peuvent influencer l’ordre d’affichage. Ils ne garantissent ni la qualité ni la disponibilité. La vérification est distincte de la mise en avant et du statut commercial.';
+  const disclosure='Les mises en avant choisies par Nuvabri, les commandites et les partenariats peuvent influencer l’ordre d’affichage. Ils ne garantissent ni la qualité ni la disponibilité. La vérification est distincte de la mise en avant et du statut commercial.';
   function evidence(profile){
     const license=String(profile.rbq_license||profile.source_reference||'').replace(/^Licence RBQ\s+/i,'');
     if(['rbq_open_data','RBQ_CC_BY_4_0'].includes(profile.source)&&/^\d{4}-\d{4}-\d{2}$/.test(license)){
@@ -51,7 +51,7 @@
   }
   function quote(profile,{property,task=null,category='general'}){
     const body=document.getElementById('hpProBody');if(!profile||!property?.id||!body)return;
-    body.innerHTML=`<button type="button" class="alt" id="hpLeadBack">Retour aux commerces</button><h3>Demande à ${esc(profile.business_name)}</h3><p class="muted">Pour ${esc(property.name||'la propriété choisie')} · ${esc(property.city||'')}</p><p class="hp-commercial-disclosure">L’enregistrement dans HomePilot ne confirme pas la réception par le commerce. Pour un besoin urgent, contacte-le directement. N’inscris pas de renseignements bancaires ou d’assurance.</p><form id="hpLeadForm"><label for="hpLeadName">Nom</label><input id="hpLeadName" autocomplete="name" maxlength="120" required><label for="hpLeadEmail">Courriel pour la réponse</label><input id="hpLeadEmail" type="email" autocomplete="email" maxlength="254" required><label for="hpLeadPhone">Téléphone (facultatif)</label><input id="hpLeadPhone" type="tel" autocomplete="tel" maxlength="40"><label for="hpLeadMessage">Ton besoin</label><textarea id="hpLeadMessage" minlength="10" maxlength="3000" required></textarea><label class="choice"><input id="hpLeadConsent" type="checkbox" required> J’autorise le partage de ces coordonnées et de ce message avec ${esc(profile.business_name)}, uniquement pour répondre à cette demande.</label><button type="submit" id="hpLeadSend">Enregistrer ma demande</button><p id="hpLeadStatus" role="status" aria-live="polite"></p></form>`;
+    body.innerHTML=`<button type="button" class="alt" id="hpLeadBack">Retour aux commerces</button><h3>Demande à ${esc(profile.business_name)}</h3><p class="muted">Pour ${esc(property.name||'la propriété choisie')} · ${esc(property.city||'')}</p><p class="hp-commercial-disclosure">L’enregistrement dans Nuvabri ne confirme pas la réception par le commerce. Pour un besoin urgent, contacte-le directement. N’inscris pas de renseignements bancaires ou d’assurance.</p><form id="hpLeadForm"><label for="hpLeadName">Nom</label><input id="hpLeadName" autocomplete="name" maxlength="120" required><label for="hpLeadEmail">Courriel pour la réponse</label><input id="hpLeadEmail" type="email" autocomplete="email" maxlength="254" required><label for="hpLeadPhone">Téléphone (facultatif)</label><input id="hpLeadPhone" type="tel" autocomplete="tel" maxlength="40"><label for="hpLeadMessage">Ton besoin</label><textarea id="hpLeadMessage" minlength="10" maxlength="3000" required></textarea><label class="choice"><input id="hpLeadConsent" type="checkbox" required> J’autorise le partage de ces coordonnées et de ce message avec ${esc(profile.business_name)}, uniquement pour répondre à cette demande.</label><button type="submit" id="hpLeadSend">Enregistrer ma demande</button><p id="hpLeadStatus" role="status" aria-live="polite"></p></form>`;
     document.getElementById('hpLeadBack').onclick=()=>{if(current)render(current.rows,current)};
     let busy=false,attempt=null;
     document.getElementById('hpLeadForm').onsubmit=async event=>{
@@ -73,7 +73,7 @@
         let saved=result.data?.[0];
         if(!saved){const check=await client.from('professional_leads').select('id').eq('id',attempt.id).eq('user_id',auth.user.id).maybeSingle();if(check.error)throw check.error;saved=check.data}
         if(!saved?.id)throw Error('unconfirmed');
-        body.innerHTML=`<h3>Demande enregistrée</h3><p class="muted">Elle est conservée dans HomePilot pour ${esc(profile.business_name)}. Sa livraison au commerce n’est pas confirmée. Aucun retour n’est garanti.</p><p class="muted">Référence : ${esc(saved.id)}</p>${card(profile,false)}`;
+        body.innerHTML=`<h3>Demande enregistrée</h3><p class="muted">Elle est conservée dans Nuvabri pour ${esc(profile.business_name)}. Sa livraison au commerce n’est pas confirmée. Aucun retour n’est garanti.</p><p class="muted">Référence : ${esc(saved.id)}</p>${card(profile,false)}`;
       }catch(error){status.textContent=error?.message==='session'?'Reconnecte-toi avant d’enregistrer ta demande.':'L’enregistrement n’a pas pu être confirmé. Réessaie sans fermer ni modifier ce formulaire.'}
       finally{busy=false;if(button.isConnected)button.disabled=false}
     };

@@ -34,7 +34,7 @@ Modifications préparées et enregistrées, non déployées.
 
 ```text
 Use case: stylized-concept.
-Asset type: HomePilot seasonal botanical app background.
+Asset type: Nuvabri seasonal botanical app background.
 Generate one portrait image, exactly 1024x1536 pixels. A refined natural botanical watercolor print on softly tinted matte paper, matching the visual family of the approved autumn botanical background: natural organic silhouettes, finely observed veins or needles, subtle pigment texture, realistic graceful contours, softly muted color and quiet luminous paper. The autumn reference had six separate realistic leaves cropped naturally at the left and right edges, leaving the middle peaceful. Use that restrained botanical print treatment and edge composition, but create a completely distinct seasonal subject.
 Composition: approximately 4-6 sparse botanical clusters or individual leaves arranged only near the outer left and right margins, partially cropped by the image edges; maintain a quiet empty central 65-70% of the image for app content. Keep the foliage narrow and airy, separated by generous breathing room. Soft light, muted detail, no strong shadows.
 Constraints: no text, no UI, no frame, no logo, no watermark; no stars, sparkles, geometric shapes, confetti or ornamental symbols; no orange autumn leaves.
@@ -45,7 +45,7 @@ Season: SPRING. Young fresh green birch and beech leaves on slender fresh twigs,
 
 ```text
 Use case: stylized-concept.
-Asset type: HomePilot seasonal botanical app background.
+Asset type: Nuvabri seasonal botanical app background.
 Generate one portrait image, exactly 1024x1536 pixels. A refined natural botanical watercolor print on softly tinted matte paper, matching the visual family of the approved autumn botanical background: natural organic silhouettes, finely observed veins or needles, subtle pigment texture, realistic graceful contours, softly muted color and quiet luminous paper. The autumn reference had six separate realistic leaves cropped naturally at the left and right edges, leaving the middle peaceful. Use that restrained botanical print treatment and edge composition, but create a completely distinct seasonal subject.
 Composition: approximately 4-6 sparse botanical clusters or individual leaves arranged only near the outer left and right margins, partially cropped by the image edges; maintain a quiet empty central 65-70% of the image for app content. Keep the foliage narrow and airy, separated by generous breathing room. Soft light, muted detail, no strong shadows.
 Constraints: no text, no UI, no frame, no logo, no watermark; no stars, sparkles, geometric shapes, confetti or ornamental symbols; no orange autumn leaves.
@@ -56,7 +56,7 @@ Season: SUMMER. Lush mature green temperate leaves and delicate meadow grasses n
 
 ```text
 Use case: stylized-concept.
-Asset type: HomePilot seasonal botanical app background.
+Asset type: Nuvabri seasonal botanical app background.
 Generate one portrait image, exactly 1024x1536 pixels. A refined natural botanical watercolor print on softly tinted matte paper, matching the visual family of the approved autumn botanical background: natural organic silhouettes, finely observed veins or needles, subtle pigment texture, realistic graceful contours, softly muted color and quiet luminous paper. The autumn reference had six separate realistic leaves cropped naturally at the left and right edges, leaving the middle peaceful. Use that restrained botanical print treatment and edge composition, but create a completely distinct seasonal subject.
 Composition: approximately 4-6 sparse botanical clusters or individual leaves arranged only near the outer left and right margins, partially cropped by the image edges; maintain a quiet empty central 65-70% of the image for app content. Keep the foliage narrow and airy, separated by generous breathing room. Soft light, muted detail, no strong shadows.
 Constraints: no text, no UI, no frame, no logo, no watermark; no stars, sparkles, geometric shapes, confetti or ornamental symbols; no orange autumn leaves.
@@ -67,7 +67,7 @@ Season: WINTER. Sparse bare birch twigs and small spruce tips, delicately dusted
 
 ```text
 Use case: stylized-concept.
-Asset type: HomePilot seasonal botanical app background.
+Asset type: Nuvabri seasonal botanical app background.
 Generate one portrait image, exactly 1024x1536 pixels. A refined natural botanical watercolor print on softly tinted matte paper, matching the visual family of the approved autumn botanical background: natural organic silhouettes, finely observed veins or needles, subtle pigment texture, realistic graceful contours, softly muted color and quiet luminous paper. The autumn reference had six separate realistic leaves cropped naturally at the left and right edges, leaving the middle peaceful. Use that restrained botanical print treatment and edge composition, but create a completely distinct seasonal subject.
 Composition: approximately 4-6 sparse botanical clusters or individual leaves arranged only near the outer left and right margins, partially cropped by the image edges; maintain a quiet empty central 65-70% of the image for app content. Keep the foliage narrow and airy, separated by generous breathing room. Soft light, muted detail, no strong shadows.
 Constraints: no text, no UI, no frame, no logo, no watermark; no stars, sparkles, geometric shapes, confetti or ornamental symbols; no orange autumn leaves.

@@ -1,4 +1,22 @@
-# HomePilot V7 Cloud
+# Nuvabri
+
+## Changement de marque — 10 septembre 2026
+
+La version de test utilise **Nuvabri** dans l'interface, l'aide, l'administration,
+les messages, les descriptions de nouvelles tâches et les fichiers exportés.
+Le titre Web, le nom proposé sur l'écran d'accueil et le manifeste utilisent le
+même nom. Les références aux scripts sont renouvelées pour charger ces textes.
+
+Compatibilité conservée : les clés de session et de stockage, identifiants de
+calendrier `@homepilot`, contrats internes et anciennes migrations gardent leur
+identité. Les tâches générées sous HomePilot ou Nuvabri sont reconnues afin de
+ne pas les créer en double. Aucune donnée historique ni fonction en base n'est
+réécrite. Les interfaces JavaScript internes `HomePilot*` restent compatibles.
+
+Le dépôt GitHub et le projet Vercel gardent leur nom technique actuel; le
+renommage du domaine n'est pas effectué. Cette livraison vise la prévisualisation
+autorisée. Les intégrations de courriel et d'IA restent désactivées dans cet
+environnement; aucun domaine, aucune boîte courriel ni marque n'est réservé.
 
 ## Centre de messages — préparation du 10 septembre 2026
 
@@ -37,7 +55,7 @@ L'entrée publique `index.html` contient le chargeur complet des modules. Le con
 
 - Les ajouts de dépenses, de propriétés et d'équipements réutilisent un identifiant de demande tant que la sauvegarde n'est pas confirmée. Après une erreur réseau, réessayer sans modifier le formulaire.
 - Les équipements utilisent un seul parcours d'ajout. Les tâches déjà générées par la base sont conservées; une génération incomplète est signalée et peut être reprise.
-- Les requêtes Budget passent par les routes HomePilot, avec le jeton de l'utilisateur et les règles RLS existantes. Les budgets restent personnels : aucun partage financier ni schéma de base n'a été modifié.
+- Les requêtes Budget passent par les routes Nuvabri, avec le jeton de l'utilisateur et les règles RLS existantes. Les budgets restent personnels : aucun partage financier ni schéma de base n'a été modifié.
 - Les sous-sections du Budget se rafraîchissent sur l'événement `hp-budget-loaded` plutôt qu'en remplaçant successivement sa fonction de chargement.
 - Les échéances mensuelles sont bornées au dernier jour du mois; une échéance de fin de mois reste en fin de mois. Les dates des tâches générées côté serveur utilisent le calendrier UTC.
 - L'accueil filtre les tâches terminées par identifiant avant de limiter la liste. Le classement cesse de modifier le DOM quand les données ne changent plus. Les noms et titres sont échappés lors du rendu HTML.
@@ -89,7 +107,7 @@ Les avertissements Supabase préexistants sur certaines fonctions `SECURITY DEFI
 
 `financial-facts.js` ajoute une carte « Le savais-tu? », même sans propriété ou budget configuré. Le lot de préparation bêta la place après les prochaines tâches; l’idée saisonnière reste accessible dans un volet replié. Douze capsules couvrent le budget, l’épargne, les imprévus et les dettes; deux sont des exemples de calcul clairement identifiés, pas des statistiques de population. Les sources ACFC ont été consultées le 10 septembre 2026 et sont liées directement dans chaque carte.
 
-Une nouvelle connexion ou un nouveau chargement de HomePilot avec une session existante tire la prochaine capsule d’une série mélangée. Les douze passent avant de recommencer, sans répéter la dernière au changement de série. Les événements de connexion répétés lors du retour dans un onglet, le renouvellement du jeton et la navigation interne ne changent pas le texte en cours de lecture.
+Une nouvelle connexion ou un nouveau chargement de Nuvabri avec une session existante tire la prochaine capsule d’une série mélangée. Les douze passent avant de recommencer, sans répéter la dernière au changement de série. Les événements de connexion répétés lors du retour dans un onglet, le renouvellement du jeton et la navigation interne ne changent pas le texte en cours de lecture.
 
 L’ordre est une préférence locale du navigateur (`hp.home-financial-facts.v1`), sans identifiant de membre, jeton ni données financières. Il n’est pas synchronisé entre appareils. Si le stockage est indisponible, la rotation continue en mémoire; l’historique ne peut pas être conservé après fermeture. Aucun appel à la base ni génération automatique de conseil n’est ajouté. Les capsules documentaires sont retirées à leur date de révision (`reviewBy`, initialement le 10 mars 2027) tant que les sources n’ont pas été revérifiées; les exemples de calcul restent disponibles.
 

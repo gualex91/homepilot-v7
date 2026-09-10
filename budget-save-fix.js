@@ -14,9 +14,9 @@
    },15000);
    try{
      const user=currentUser();
-     if(!user)throw new Error('Session introuvable. Ferme puis rouvre HomePilot.');
+     if(!user)throw new Error('Session introuvable. Ferme puis rouvre Nuvabri.');
      const token=await localToken();
-     if(!token)throw new Error('Session expirée. Reconnecte-toi à HomePilot.');
+     if(!token)throw new Error('Session expirée. Reconnecte-toi à Nuvabri.');
      const amount=Number($('hpBudgetAmount')?.value||0),entryDate=$('hpBudgetDate')?.value||'';
      if(!(amount>0))throw new Error('Entre un montant supérieur à 0.');
      if(!entryDate)throw new Error('Choisis une date.');
@@ -31,7 +31,7 @@
      }finally{clearTimeout(abortTimer)}
      let body=null;try{body=await r.json()}catch{}
      if(!r.ok)throw new Error(body?.error||('Erreur serveur '+r.status));
-     if(!body?.ok||!body?.id)throw new Error('HomePilot n’a pas confirmé la sauvegarde dans la base de données.');
+     if(!body?.ok||!body?.id)throw new Error('Nuvabri n’a pas confirmé la sauvegarde dans la base de données.');
      hpStability.complete(operationKey);
      clearTimeout(watchdog);watchdog=null;
      resetButton(btn);
@@ -44,8 +44,8 @@
    }catch(e){
      clearTimeout(watchdog);watchdog=null;
      resetButton(btn);
-     console.error('HomePilot budget save error',e);
-     const msg=e?.name==='AbortError'?'Le serveur HomePilot ne répond pas. Réessaie.':(e?.message||'Erreur inconnue');
+     console.error('Nuvabri budget save error',e);
+     const msg=e?.name==='AbortError'?'Le serveur Nuvabri ne répond pas. Réessaie.':(e?.message||'Erreur inconnue');
      if(status)status.textContent='Erreur : '+msg;
      alert(msg);
    }

@@ -57,8 +57,8 @@ test('priority never revives a disabled, unqualified or out-of-region profile; l
 
 test('placement is disclosed without inventing sponsorship, and alphabetical sorting remains available',()=>{
  const P=globalThis.hpProfessionalPresentation,featured={...G,homepilot_featured:true};
- const card=P.card(featured);assert.match(card,/Mis en avant par HomePilot/);assert.match(card,/Fiche non commanditée/);
+ const card=P.card(featured);assert.match(card,/Mis en avant par Nuvabri/);assert.match(card,/Fiche non commanditée/);
  assert.doesNotMatch(card,/Partenaire commercial|Publicité · Commandité|licence active/);
- assert.match(P.disclosure,/mises en avant choisies par HomePilot/);
+ assert.match(P.disclosure,/mises en avant choisies par Nuvabri/);
  assert.deepEqual(P.sortRows([featured,{...other,business_name:'Alpha'}],'alphabetical').map(p=>p.business_name),['Alpha','Gesti Énergie']);
 });

@@ -1,1 +1,1 @@
-HomePilot seasonal visual theme v3 — fixed Netlify build to publish illustrated seasonal backgrounds — 2026-09-08
+Nuvabri seasonal visual theme v3 — fixed Netlify build to publish illustrated seasonal backgrounds — 2026-09-08

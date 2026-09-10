@@ -42,7 +42,7 @@ function harness(){
  const props=[{id:'house',name:'Maison',city:'Jonquière',postal_code:'G7X1A1',address:'Adresse privée'},{id:'chalet',name:'Chalet',city:'Québec',postal_code:'G1R1A1'}];
  const document={readyState:'complete',body,createElement:tag=>new Element(tag),getElementById:id=>body.querySelector('#'+id),addEventListener:(event,callback)=>{if(event==='click')listeners.push(callback)},querySelectorAll:s=>s.includes(' > *')?s.split(',').flatMap(selector=>document.getElementById(selector.trim().split(' ')[0].slice(1))?.children||[]):body.querySelectorAll(s)};
  const context={document,props,tasks,ap:props[0],eq:tasks.map((t,i)=>({id:t.equipment_id,property_id:'house',brand:'Marque'+i,model:'Modèle'+i,serial_number:'SERIAL-SECRET'})),URL,URLSearchParams,AbortController,Date,console,setTimeout:()=>0,clearTimeout(){},setInterval:callback=>intervals.push(callback),clearInterval(){},MutationObserver:class{observe(){}},hpStability:{token:async()=> 'session-fixture'},fetch:async(url)=>{
-  requests.push(new URL(url,'https://homepilot.test'));
+  requests.push(new URL(url,'https://nuvabri.test'));
   return {ok:true,json:async()=>({rows:[{id:'professional',business_name:'Commerce local',active:true,directory_issues:[],phone:'4182346789'}]})};
  }};context.window=context;const ctx=vm.createContext(context);
  for(const file of ['professional-presentation.js','vr-expert-shop.js','diy-guides.js','professional-directory-cloud.js','leisure-tasks.js','professional-task-router.js'])vm.runInContext(source(file),ctx,{filename:file});
@@ -158,7 +158,9 @@ test('all curated product and category links are reachable through a supported e
 
 test('both entry shells load the merchant catalog before consumers with identical versions',()=>{
  const index=source('index.html');assert.equal(index,source('seasonal-shell.html'));
- assert.match(index,/quiet-directory-v1-20260910/);
- assert.ok(index.indexOf('/vr-expert-shop.js?v=2')<index.indexOf('/diy-guides.js?v=13'));
- assert.ok(index.indexOf('/vr-expert-shop.js?v=2')<index.indexOf('/leisure-tasks.js?v=3'));
+ assert.match(index,/nuvabri-brand-v1-20260910/);
+ const merchant=index.indexOf('/vr-expert-shop.js?v=');
+ assert.ok(merchant>=0);
+ assert.ok(merchant<index.indexOf('/diy-guides.js?v='));
+ assert.ok(merchant<index.indexOf('/leisure-tasks.js?v='));
 });

@@ -9,7 +9,7 @@
    ['🌿','Préparer le terrain','Les premières semaines du printemps sont idéales pour repérer les dommages hivernaux.','Fais le tour du terrain : branches cassées, clôtures, drains, terrasse et zones détrempées.'],
    ['🏠','Observer les fondations','La fonte peut faire apparaître des fissures ou des traces d’humidité.','Inspecte visuellement le sous-sol et le pourtour des fondations pour repérer humidité ou fissures nouvelles.'],
    ['🧹','Nettoyer les entrées d’air','Les grilles extérieures peuvent accumuler poussière et débris.','Nettoie délicatement les prises et sorties d’air accessibles et vérifie qu’elles ne sont pas bloquées.'],
-   ['🛠️','Faire l’inventaire des petits travaux','Le printemps est un bon moment pour planifier avant la haute saison.','Note trois petits travaux à régler ce mois-ci et ajoute-les à HomePilot.'],
+   ['🛠️','Faire l’inventaire des petits travaux','Le printemps est un bon moment pour planifier avant la haute saison.','Note trois petits travaux à régler ce mois-ci et ajoute-les à Nuvabri.'],
    ['🌼','Préparer la terrasse','Un contrôle rapide évite les surprises au premier BBQ.','Inspecte les planches, rampes, marches et vis avant de remettre le mobilier extérieur.'],
    ['🚿','Vérifier les robinets extérieurs','Le gel peut avoir causé des dommages invisibles.','Ouvre progressivement les robinets extérieurs et vérifie s’il y a une fuite à l’intérieur ou autour du raccord.'],
    ['🧽','Nettoyer un filtre aujourd’hui','Un seul filtre propre peut déjà améliorer le rendement d’un appareil.','Choisis aujourd’hui le filtre de la thermopompe, de l’échangeur d’air ou de la hotte et nettoie-le selon le manuel.']
@@ -68,7 +68,7 @@
    ['🏡','Faire un mini-tour de la maison','Avant une période occupée, règle les petits irritants faciles.','Vérifie ampoules, détecteurs, entrée, salle de bain et cuisine en 10 minutes.'],
    ['🎶','Créer une soirée tranquille','Toutes les idées saisonnières n’ont pas besoin d’être des tâches.','Choisis une musique des Fêtes, baisse les lumières et profite simplement de la maison.'],
    ['🧹','Préparer la maison avant les visites','Une courte routine vaut mieux qu’un grand ménage stressant.','Concentre-toi sur entrée, cuisine, salle de bain et surfaces visibles.'],
-   ['✨','Faire le bilan de l’année','Décembre est un bon moment pour regarder ce qui a été fait.','Regarde les tâches complétées dans HomePilot et note deux priorités pour l’année prochaine.']
+   ['✨','Faire le bilan de l’année','Décembre est un bon moment pour regarder ce qui a été fait.','Regarde les tâches complétées dans Nuvabri et note deux priorités pour l’année prochaine.']
   ]
  };
  function seasonKey(d){const m=d.getMonth()+1;return m===12?'christmas':m>=3&&m<=5?'spring':m>=6&&m<=8?'summer':m>=9&&m<=11?'autumn':'winter'}

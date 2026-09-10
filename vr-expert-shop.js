@@ -90,7 +90,7 @@
  const external=(url,label)=>`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:10px 0;overflow-wrap:anywhere">${esc(label)} ↗</a>`;
  function item(p){return `<div class="card hpMerchantProduct" data-hp-product-id="${p.id}" style="margin:8px 0"><b>${esc(p.label)}</b><p class="muted">${esc(p.note)}</p>${p.onOrder?'<p class="muted">Sur commande lors du relevé du 10 septembre 2026; délai à confirmer.</p>':''}${external(p.url,'Voir chez VR Expert')}</div>`}
  function intro(){return '<p class="muted">Suggestions chez VR Expert Jonquière, à choisir selon ton besoin et ton modèle. Tu peux utiliser le matériel que tu possèdes déjà.</p><p class="muted">Catalogue consulté le 10 septembre 2026. Prix, compatibilité et disponibilité à confirmer chez le marchand; stock non synchronisé.</p>'}
- function footer(){return `<p class="muted">Liens commerciaux non rémunérés. Aucun achat n’est effectué dans HomePilot.</p>${external(ORIGIN+'/boutique/','Tout le catalogue VR Expert')}`}
+ function footer(){return `<p class="muted">Liens commerciaux non rémunérés. Aucun achat n’est effectué dans Nuvabri.</p>${external(ORIGIN+'/boutique/','Tout le catalogue VR Expert')}`}
  function selected(ids){return (ids||[]).map(id=>byId.get(id)).filter(Boolean)}
  function categoryLinks(ids){return ids.map(id=>catById.get(id)).filter(Boolean).map(c=>'<div>'+external(c.url,c.label)+'</div>').join('')}
  function renderForGuide(key){

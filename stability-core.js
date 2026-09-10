@@ -10,7 +10,7 @@
   }
   async function token() {
     const client = root.supabaseClient;
-    if (!client) throw new Error('Connexion HomePilot indisponible.');
+    if (!client) throw new Error('Connexion Nuvabri indisponible.');
     const {data, error} = await client.auth.getSession();
     if (error) throw error;
     if (!data?.session?.access_token) throw new Error('Session expirée. Reconnecte-toi.');

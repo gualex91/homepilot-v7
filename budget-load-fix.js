@@ -12,7 +12,7 @@
      const endD=new Date(now.getFullYear(),now.getMonth()+1,0);
      const end=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,'0')}-${String(endD.getDate()).padStart(2,'0')}`;
      const t=await token();
-     const r=await withTimeout(fetch(`/api/budget-list?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&v=${Date.now()}`,{headers:{'Authorization':'Bearer '+t},cache:'no-store'}),10000,'Le serveur HomePilot ne répond pas.');
+     const r=await withTimeout(fetch(`/api/budget-list?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&v=${Date.now()}`,{headers:{'Authorization':'Bearer '+t},cache:'no-store'}),10000,'Le serveur Nuvabri ne répond pas.');
      let body=null;try{body=await r.json()}catch{}
      if(!r.ok)throw new Error(body?.error||('Erreur serveur '+r.status));
      const rows=body?.rows||[];
@@ -23,7 +23,7 @@
      if($('hpBalance'))$('hpBalance').textContent=money(inc-exp);
      if($('hpBudgetList'))$('hpBudgetList').innerHTML=rows.length?rows.map(x=>`<div class="card row"><div><b>${x.entry_type==='income'?'＋':'−'} ${money(Number(x.amount||0))}</b><div class="muted">${esc(x.category)}${x.description?' • '+esc(x.description):''}${x.properties?.name?' • 🏠 '+esc(x.properties.name):''}<br>${new Intl.DateTimeFormat('fr-CA',{day:'numeric',month:'long'}).format(new Date(x.entry_date+'T12:00:00'))}</div></div><button class="alt" onclick="hpDeleteBudget('${x.id}')">×</button></div>`).join(''):'<div class="card muted">Aucune entrée pour ce mois.</div>';
      window.dispatchEvent(new CustomEvent('hp-budget-loaded',{detail:{rows,income:inc,expense:exp,balance:inc-exp}}));
-   }catch(e){console.error('HomePilot budget load proxy error',e);const list=$('hpBudgetList');if(list)list.innerHTML='<div class="notice">Impossible de rafraîchir le budget pour le moment.</div>'}
+   }catch(e){console.error('Nuvabri budget load proxy error',e);const list=$('hpBudgetList');if(list)list.innerHTML='<div class="notice">Impossible de rafraîchir le budget pour le moment.</div>'}
  }
  async function del(id){
    if(!confirm('Supprimer cette entrée du budget?'))return;
@@ -33,7 +33,7 @@
      let body=null;try{body=await r.json()}catch{}
      if(!r.ok||!body?.ok)throw new Error(body?.error||'Suppression impossible.');
      await load();
-   }catch(e){console.error('HomePilot budget delete',e);alert(e?.message||'Impossible de supprimer cette entrée.')}
+   }catch(e){console.error('Nuvabri budget delete',e);alert(e?.message||'Impossible de supprimer cette entrée.')}
  }
  window.hpLoadBudget=load;
  window.hpDeleteBudget=del;

@@ -52,10 +52,10 @@ test('budget SDK requests use the same origin without rerouting auth',async()=>{
  ctx.hpStability.budgetFetch('https://vkfvjwxajgeafzyphjvh.supabase.co/auth/v1/user',{});assert.match(calls[1][0],/\/auth\/v1\/user$/);
 });
 test('budget proxy preserves Request method, body and authorization',async()=>{
- const calls=[],ctx=vm.createContext({URL,URLSearchParams,Request,location:{origin:'https://homepilot.test'},fetch:(...args)=>calls.push(args)});
+ const calls=[],ctx=vm.createContext({URL,URLSearchParams,Request,location:{origin:'https://nuvabri.test'},fetch:(...args)=>calls.push(args)});
  vm.runInContext(readFileSync(resolve(root,'stability-core.js'),'utf8'),ctx);
  ctx.hpStability.budgetFetch(new Request('https://vkfvjwxajgeafzyphjvh.supabase.co/rest/v1/budget_assets',{method:'POST',headers:{Authorization:'Bearer test'},body:'{"amount":1}'}));
- const req=calls[0][0];assert.match(req.url,/homepilot.test\/api\/budget-data/);assert.equal(req.method,'POST');assert.equal(req.headers.get('Authorization'),'Bearer test');assert.equal(await req.text(),'{"amount":1}');
+ const req=calls[0][0];assert.match(req.url,/nuvabri.test\/api\/budget-data/);assert.equal(req.method,'POST');assert.equal(req.headers.get('Authorization'),'Bearer test');assert.equal(await req.text(),'{"amount":1}');
  ctx.hpStability.budgetFetch(new URL('https://vkfvjwxajgeafzyphjvh.supabase.co/rest/v1/budget_debts'));assert.match(calls[1][0],/^\/api\/budget-data/);
 });
 test('all frontend scripts and inline scripts parse and shell assets exist',()=>{
@@ -95,8 +95,8 @@ test('partial task failure is visible; retry repairs without duplicate equipment
  const again=response();await addEquipment(req,again);assert.equal(again.body.tasks.length,2);
  }finally{global.fetch=real}
 });
-test('database-generated tasks are preserved instead of duplicated',async()=>{
- const real=global.fetch,fake=fakeDB(),id=stableId(user+':equipment:'+request);fake.db.tasks.set('generated',{id:'generated',equipment_id:id,source_note:'Généré automatiquement par HomePilot'});global.fetch=fake.fetch;
+for(const brand of ['HomePilot','Nuvabri'])test(`database-generated ${brand} tasks are preserved instead of duplicated`,async()=>{
+ const real=global.fetch,fake=fakeDB(),id=stableId(user+':equipment:'+request);fake.db.tasks.set('generated',{id:'generated',equipment_id:id,source_note:`Généré automatiquement par ${brand}`});global.fetch=fake.fetch;
  try{const res=response();await addEquipment({method:'POST',headers:{authorization:'Bearer example'},body:{request_id:request,property_id:property,equipment_type:'piscine',name:'Piscine'}},res);assert.equal(res.code,200);assert.equal(fake.db.tasks.size,1)}finally{global.fetch=real}
 });
 test('budget ignores spoofed user IDs and retries never double the amount',async()=>{
