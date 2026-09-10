@@ -12,12 +12,12 @@
   .stats{gap:7px!important}.stats div{padding:10px 6px!important}.stats b{font-size:21px!important}
   .notice{border-radius:13px!important}
   .tabs{padding-bottom:env(safe-area-inset-bottom)}
-  .tabs>div{width:100%!important;min-width:0!important;grid-template-columns:repeat(7,minmax(0,1fr))!important}
-  .tab{font-size:10px!important;line-height:1.2;padding:10px 1px!important;min-width:0;white-space:normal}
+  .tabs>div{width:100%!important;min-width:0!important;grid-template-columns:repeat(4,minmax(0,1fr))!important}
+  .tab{font-size:14px!important;line-height:1.2;padding:10px 1px!important;min-width:0;white-space:normal}
   .tab br{display:block}
   #budget .hpBudgetSectionHeader{margin-top:10px}
-  @media(max-width:390px){.brand{font-size:25px!important}.card{padding:13px!important}.stats b{font-size:18px!important}.tab{font-size:9px!important}.tab{letter-spacing:-.02em}}
-  @media(min-width:520px){.tab{font-size:11px!important}}
+  @media(max-width:390px){.brand{font-size:25px!important}.card{padding:13px!important}.stats b{font-size:18px!important}.tab{font-size:14px!important}.tab{letter-spacing:-.02em}}
+  @media(min-width:520px){.tab{font-size:14px!important}}
   `;document.head.appendChild(s)}
   function shortenCopy(){const replacements=new Map([
     ['Garde tes équipements de loisir au même endroit : motoneige, VTT, bateau, VR, roulotte et plus.','Tes équipements de loisir, tâches et rappels au même endroit.'],

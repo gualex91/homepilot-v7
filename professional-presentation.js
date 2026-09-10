@@ -1,0 +1,70 @@
+(function(root){
+  'use strict';
+  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function safeWebsite(value){
+    try{const url=new URL(value);return ['https:','http:'].includes(url.protocol)&&!url.username&&!url.password?url.href:''}catch{return ''}
+  }
+  function listingLabel(profile){
+    if(profile.listing_tier==='sponsored'||profile.sponsored)return 'Publicité · Commandité';
+    if(profile.listing_tier==='partner'||profile.partner)return 'Partenaire commercial';
+    return 'Fiche non commanditée';
+  }
+  function sortRows(rows,order){return order==='alphabetical'?[...rows].sort((a,b)=>String(a.business_name).localeCompare(String(b.business_name),'fr')):[...rows]}
+  const disclosure='Les commandites et partenariats peuvent influencer l’ordre d’affichage. Ils ne garantissent ni la qualité ni la disponibilité. La vérification est distincte du statut commercial.';
+  function card(profile,canQuote=false){
+    const url=safeWebsite(profile.website),phone=String(profile.phone||'').replace(/[^+\d]/g,'');
+    return `<article class="card"><h3>${esc(profile.business_name)}</h3><div class="hp-listing-badge">${listingLabel(profile)}</div>${profile.verification_status==='verified'||profile.verified?'<p class="muted">Vérification indiquée au répertoire</p>':''}${profile.description?`<p class="muted">${esc(profile.description)}</p>`:''}<div class="hp-pro-contact">${phone?`<a href="tel:${esc(phone)}">Appeler ${esc(profile.phone)}</a>`:''}${url?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">Site du commerce</a>`:''}</div>${canQuote?`<button type="button" class="hpQuote" data-pro-id="${esc(profile.id)}">Préparer une demande</button>`:''}</article>`;
+  }
+  function validateLead(payload){
+    if(!payload.consent_to_share)return 'Ton consentement est requis pour partager cette demande avec le commerce choisi.';
+    if(!payload.contact_name||payload.contact_name.length>120)return 'Indique ton nom (120 caractères maximum).';
+    if(!root.hpAccountAccess?.validEmail(payload.contact_email))return 'Indique un courriel valide pour la réponse.';
+    if(payload.contact_phone.length>40)return 'Le numéro de téléphone est trop long.';
+    if(payload.message.length<10||payload.message.length>3000)return 'Décris ton besoin en 10 à 3 000 caractères, sans données financières ou sensibles.';
+    return null;
+  }
+  const api={esc,safeWebsite,listingLabel,sortRows,card,disclosure,validateLead};root.hpProfessionalPresentation=api;
+  if(!root.document)return;
+  let current=null;
+  function render(rows,{subtitle='',property=null,task=null,category='general',allowQuote=false}={}){
+    const body=document.getElementById('hpProBody');if(!body)return;
+    current={rows,subtitle,property,task,category,allowQuote};
+    body.innerHTML=`<p class="muted">${esc(subtitle)}</p><p class="hp-commercial-disclosure">${disclosure}</p><label for="hpProSort">Ordre des résultats</label><select id="hpProSort"><option value="directory">Ordre du répertoire, incluant les partenaires</option><option value="alphabetical">Alphabétique, sans priorité commerciale</option></select><div id="hpProResults"></div>`;
+    const draw=()=>{
+      const list=document.getElementById('hpProResults');if(!list)return;
+      list.innerHTML=sortRows(rows,document.getElementById('hpProSort').value).map(p=>card(p,allowQuote&&!!property?.id)).join('');
+      list.querySelectorAll('[data-pro-id]').forEach(button=>button.onclick=()=>quote(rows.find(p=>String(p.id)===button.dataset.proId),{property,task,category}));
+    };
+    document.getElementById('hpProSort').onchange=draw;draw();
+  }
+  function quote(profile,{property,task=null,category='general'}){
+    const body=document.getElementById('hpProBody');if(!profile||!property?.id||!body)return;
+    body.innerHTML=`<button type="button" class="alt" id="hpLeadBack">Retour aux commerces</button><h3>Demande à ${esc(profile.business_name)}</h3><p class="muted">Pour ${esc(property.name||'la propriété choisie')} · ${esc(property.city||'')}</p><p class="hp-commercial-disclosure">L’enregistrement dans HomePilot ne confirme pas la réception par le commerce. Pour un besoin urgent, contacte-le directement. N’inscris pas de renseignements bancaires ou d’assurance.</p><form id="hpLeadForm"><label for="hpLeadName">Nom</label><input id="hpLeadName" autocomplete="name" maxlength="120" required><label for="hpLeadEmail">Courriel pour la réponse</label><input id="hpLeadEmail" type="email" autocomplete="email" maxlength="254" required><label for="hpLeadPhone">Téléphone (facultatif)</label><input id="hpLeadPhone" type="tel" autocomplete="tel" maxlength="40"><label for="hpLeadMessage">Ton besoin</label><textarea id="hpLeadMessage" minlength="10" maxlength="3000" required></textarea><label class="choice"><input id="hpLeadConsent" type="checkbox" required> J’autorise le partage de ces coordonnées et de ce message avec ${esc(profile.business_name)}, uniquement pour répondre à cette demande.</label><button type="submit" id="hpLeadSend">Enregistrer ma demande</button><p id="hpLeadStatus" role="status" aria-live="polite"></p></form>`;
+    document.getElementById('hpLeadBack').onclick=()=>{if(current)render(current.rows,current)};
+    let busy=false,attempt=null;
+    document.getElementById('hpLeadForm').onsubmit=async event=>{
+      event.preventDefault();if(busy)return;
+      const field=id=>document.getElementById(id),status=field('hpLeadStatus'),button=field('hpLeadSend');
+      const data={property_id:property.id,professional_id:profile.id,task_id:task?.id||null,category,message:field('hpLeadMessage').value.trim(),contact_name:field('hpLeadName').value.trim(),contact_email:field('hpLeadEmail').value.trim().toLowerCase(),contact_phone:field('hpLeadPhone').value.trim(),consent_to_share:field('hpLeadConsent').checked,status:'new'};
+      const invalid=validateLead(data);if(invalid){status.textContent=invalid;return}
+      busy=true;button.disabled=true;status.textContent='Enregistrement…';
+      try{
+        const client=root.supabaseClient;if(!client)throw Error('offline');
+        const {data:auth,error:authError}=await client.auth.getUser();if(authError||!auth?.user)throw Error('session');
+        data.user_id=auth.user.id;
+        // Keep retries idempotent within this form; no contact details in browser storage.
+        const fingerprint=JSON.stringify(data);
+        if(!attempt||attempt.fingerprint!==fingerprint)attempt={id:root.crypto.randomUUID(),fingerprint};
+        const payload={...data,id:attempt.id};
+        const result=await client.from('professional_leads').upsert(payload,{onConflict:'id',ignoreDuplicates:true}).select('id');
+        if(result.error)throw result.error;
+        let saved=result.data?.[0];
+        if(!saved){const check=await client.from('professional_leads').select('id').eq('id',attempt.id).eq('user_id',auth.user.id).maybeSingle();if(check.error)throw check.error;saved=check.data}
+        if(!saved?.id)throw Error('unconfirmed');
+        body.innerHTML=`<h3>Demande enregistrée</h3><p class="muted">Elle est conservée dans HomePilot pour ${esc(profile.business_name)}. Sa livraison au commerce n’est pas confirmée. Aucun retour n’est garanti.</p><p class="muted">Référence : ${esc(saved.id)}</p>${card(profile,false)}`;
+      }catch(error){status.textContent=error?.message==='session'?'Reconnecte-toi avant d’enregistrer ta demande.':'L’enregistrement n’a pas pu être confirmé. Réessaie sans fermer ni modifier ce formulaire.'}
+      finally{busy=false;if(button.isConnected)button.disabled=false}
+    };
+  }
+  Object.assign(api,{render,quote});
+})(globalThis);

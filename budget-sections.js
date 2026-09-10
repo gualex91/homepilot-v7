@@ -2,7 +2,7 @@
  const $=id=>document.getElementById(id);
  const GROUPS=[
   {id:'hpBudgetGroupOverview',title:'📊 Autres indicateurs et accompagnement',open:false},
-  {id:'hpBudgetGroupMonthly',title:'🧾 Budget mensuel',open:true},
+  {id:'hpBudgetGroupMonthly',title:'🧾 Opérations enregistrées',open:false},
   {id:'hpBudgetGroupGoals',title:'🎯 Objectifs et valeur nette',open:false},
   {id:'hpBudgetGroupDebts',title:'💳 Dettes et paiements',open:false}
  ];

@@ -1,5 +1,16 @@
 # HomePilot V7 Cloud
 
+## Centre de messages — préparation du 10 septembre 2026
+
+La section admin « Messages » ajoute une boîte de réception, les brouillons à
+approuver, le classement et le bilan des retours. Son code n’est pas encore publié.
+Le stockage Supabase est créé et protégé; réception, envoi et IA restent inactifs
+par défaut. Aucun courriel réel n’a été envoyé. Voir [support-readiness.md](support-readiness.md)
+pour les vérifications et conditions d’activation; `.env.example` décrit les
+variables serveur sans contenir de secret.
+
+Tests : `node --test tests/*.test.mjs` (61 réussis, 1 navigateur non exécuté).
+
 Cette version utilise réellement Supabase pour :
 - authentification courriel + mot de passe;
 - foyers partagés;
@@ -76,7 +87,7 @@ Les avertissements Supabase préexistants sur certaines fonctions `SECURITY DEFI
 
 ## Capsule financière sur l’accueil
 
-`financial-facts.js` ajoute une carte « Le savais-tu? » sous le message de bienvenue, même sans propriété ou budget configuré. Douze capsules couvrent le budget, l’épargne, les imprévus et les dettes; deux sont des exemples de calcul clairement identifiés, pas des statistiques de population. Les sources ACFC ont été consultées le 10 septembre 2026 et sont liées directement dans chaque carte.
+`financial-facts.js` ajoute une carte « Le savais-tu? », même sans propriété ou budget configuré. Le lot de préparation bêta la place après les prochaines tâches; l’idée saisonnière reste accessible dans un volet replié. Douze capsules couvrent le budget, l’épargne, les imprévus et les dettes; deux sont des exemples de calcul clairement identifiés, pas des statistiques de population. Les sources ACFC ont été consultées le 10 septembre 2026 et sont liées directement dans chaque carte.
 
 Une nouvelle connexion ou un nouveau chargement de HomePilot avec une session existante tire la prochaine capsule d’une série mélangée. Les douze passent avant de recommencer, sans répéter la dernière au changement de série. Les événements de connexion répétés lors du retour dans un onglet, le renouvellement du jeton et la navigation interne ne changent pas le texte en cours de lecture.
 
@@ -85,3 +96,36 @@ L’ordre est une préférence locale du navigateur (`hp.home-financial-facts.v1
 ```sh
 node --test tests/financial-facts.test.mjs tests/stability.test.mjs tests/budget-plan.test.mjs
 ```
+
+## Préparation bêta et partenaires — lot 1 (non publié)
+
+La feuille de route complète est dans `launch-readiness.md`. Ce lot ne constitue pas l’exécution de toutes les étapes ni une validation du lancement public.
+
+- Navigation à quatre boutons accessibles : Accueil, Mes biens, Finances, Plus. Calendrier, foyer, équipements et loisirs restent accessibles; aucun bien, équipement ou budget n’est supprimé.
+- Guide de démarrage dérivé des données du foyer et de la propriété active, sans nouveau stockage de progression. Le budget reste accessible dès le départ, même sans propriété. Un échec de chargement initial propose de réessayer au lieu d’interpréter l’erreur comme l’absence de foyer.
+- Présentation succincte avant inscription, connexion directe, tâches avant contenus secondaires. Les opérations financières enregistrées sont repliées initialement; le bouton d’ajout ouvre toujours leur groupe.
+- `account-access.js` ajoute la demande de récupération, les formulaires de nouveau mot de passe et les états de lien expiré / réseau / limite d’envoi. Une session de récupération n’ouvre pas le tableau de bord. Les mots de passe nouvellement choisis demandent 12 caractères; la connexion ne bloque pas les anciens mots de passe plus courts.
+- Les liens de confirmation et récupération reviennent à la racine de l’origine courante. Vérifier cette origine dans les URL Supabase autorisées avant publication. La livraison de courriel et la configuration SMTP n’ont pas été testées avec des destinataires réels.
+- Après récupération, révocation des sessions via `signOut({scope:'global'})` puis reconnexion. Les JWT déjà émis peuvent rester valides jusqu’à expiration; ce lot n’ajoute pas de validation serveur de `session_id`.
+- Les fiches professionnelles et loisirs affichent leur statut commercial et proposent un tri alphabétique sans priorité commerciale. Les liens Web sont limités à HTTP(S), sans identifiants dans l’URL. La vérification n’est pas accordée en fonction du paiement.
+- Le parcours principal pour les entrepreneurs retrouve la préparation de demande avec un seul destinataire et consentement explicite. Le tableau `professional_leads` et ses RLS existantes sont conservés. Aucun partage du budget, envoi externe ni facturation n’est ajouté.
+- Une même soumission dans un formulaire ouvert réutilise son UUID après résultat réseau incertain. Aucun contact ou message n’est copié au stockage local. Fermer le formulaire ou recharger la page perd cette protection de reprise : une déduplication serveur et les contrôles anti-abus restent nécessaires avant facturation à la demande.
+- Le statut affiché est « Demande enregistrée » avec livraison non confirmée. Les changements de statut administrateur sont déclaratifs et ne constituent pas une preuve de remise au commerce.
+- Administration : encadré de préparation du pilote cinq commerces, hypothèse 79 $ CA/mois; distinction entre fiche partenaire et abonnement payé; destinataire visible pour chaque demande. Aucune statistique de clics/affichages ou de revenus n’est inventée.
+- Correction de la comparaison des régions avec tirets différents et exclusion des préfixes postaux vides pour les professionnels de propriété.
+
+### Vérification du lot
+
+```sh
+node --test tests/stability.test.mjs tests/budget-plan.test.mjs tests/financial-facts.test.mjs tests/launch-readiness.test.mjs
+```
+
+49 tests unitaires/API réussis; 1 scénario navigateur non exécuté. Les essais nouveaux sont simulés : récupération et erreurs, protection contre double soumission, reprise avec UUID, consentement, navigation, tri et rendu sécurisé des commerces. Aucune donnée réelle n’a été écrite ou supprimée, aucun courriel envoyé, aucun paiement activé. Le schéma et les politiques des demandes ont été relus via une requête de métadonnées.
+
+### Bloqueurs avant bêta externe
+
+- Contact officiel de soutien/confidentialité, politique et gouvernance à valider; suppression de compte avec traitement des propriétés partagées à implémenter.
+- Recette connectée avec deux comptes autorisés et essai iPhone; confirmation de la configuration d’authentification et de l’expéditeur de courriels.
+- Livraison effective, reprises/échecs, traçabilité et accord des commerces destinataires, puis mesures d’audience et facturation.
+- Avertissements Supabase préexistants toujours présents, pas de changement automatique des privilèges : [fonctions privilégiées accessibles sans connexion](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable), [fonctions privilégiées accessibles aux membres](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable), [protection des mots de passe compromis](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection). Leur présence n’établit pas à elle seule une fuite ou une exploitation.
+- Autorisation de publication avant d’envoyer cette version vers un environnement hébergé.

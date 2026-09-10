@@ -1,0 +1,47 @@
+/* Extend the existing seasonal identity; four readable destinations. */
+[hidden]{display:none!important}
+.app{padding-bottom:calc(110px + env(safe-area-inset-bottom))!important}
+.tabs>div{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.tabs .tab{font-size:.875rem!important;line-height:1.3!important;padding:10px 3px!important;min-height:58px;min-width:0;white-space:normal;letter-spacing:normal!important;background:transparent;box-shadow:none;border-radius:0!important;color:var(--txt)}
+.tabs .tab[aria-current="page"]{background:var(--soft);color:var(--b);box-shadow:inset 0 3px var(--b)}
+.tabs .tab span{display:block;font-size:1.1rem;margin-bottom:3px}
+button,a,input,select,textarea,summary{touch-action:manipulation}
+button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--b);outline-offset:3px}
+.hp-launch-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.hp-launch-actions>*{flex:1;min-width:125px}
+.hp-launch-copy,.hp-onboard-copy{font-size:1rem;line-height:1.55}
+.hp-launch-kicker{font-size:.875rem;color:var(--b);font-weight:750}
+.hp-more-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hp-more-grid button{text-align:left;font-size:1rem;line-height:1.4;min-height:72px}
+.hp-more-grid small{display:block;font-size:.875rem;font-weight:400;margin-top:4px}
+#home>.card:first-child{min-height:0!important;padding:18px!important}
+#home>.card:first-child h2{font-size:1.65rem;margin:5px 0 10px}
+#home>.card:first-child .muted{font-size:1rem}
+#hpGettingStarted h3{font-size:1.2rem;margin:6px 0}
+#hpGettingStarted ol{padding-left:1.4rem;font-size:.875rem;line-height:1.8}
+#hpGettingStarted li[aria-current="step"]{font-weight:750}
+#hpGettingStarted li[data-complete="true"]{color:var(--mut)}
+#hpSeasonDetails>summary{cursor:pointer;font-weight:750;padding:10px 0;font-size:1rem}
+#hpSeasonDetails>.season{margin-top:4px!important}
+.hp-auth-intro h1{font-size:1.65rem;line-height:1.2;margin:14px 0 10px}
+.hp-auth-intro p,.hp-auth-intro li{font-size:1rem;line-height:1.5}
+.hp-auth-intro summary{cursor:pointer;min-height:44px;padding:10px 0;font-size:.875rem;font-weight:700}
+#auth .authbox{margin-top:2vh!important}
+#auth label{font-size:1rem}
+#auth .hp-auth-mode{display:flex;gap:8px}
+#auth .hp-auth-mode button{flex:1;font-size:.875rem}
+#auth button[aria-pressed="true"]{outline:2px solid var(--b);outline-offset:2px}
+#auth #ab,#auth #hpSavePassword{width:100%;font-size:1rem}
+#am{min-height:1.5em;font-size:.875rem;line-height:1.5}
+#hpForgotPassword{margin-top:12px;font-size:.875rem}
+#hpAdminBtn{position:static!important;box-shadow:none!important;margin-top:12px;font-size:.875rem}
+.hp-commercial-disclosure{font-size:.875rem;line-height:1.5;padding:12px;border:1px solid var(--navborder);border-radius:12px;background:var(--soft)}
+.hp-listing-badge{display:inline-block;font-size:.875rem;line-height:1.35;margin:8px 0 4px;font-weight:750;color:var(--b)}
+.hp-pro-contact{display:flex;gap:14px;flex-wrap:wrap;margin:12px 0}
+.hp-pro-contact a{display:inline-flex;align-items:center;min-height:44px;overflow-wrap:anywhere}
+#hpProBody textarea{font:inherit;width:100%;padding:12px;min-height:100px;border:1px solid var(--navborder);border-radius:12px}
+#hpProBody label{font-size:1rem}
+#hpProBody .choice input{flex:none;width:20px;height:20px}
+#hpProBody [role="status"]{font-size:.875rem;line-height:1.5}
+@media(max-width:350px){.hp-more-grid{grid-template-columns:1fr}.hp-launch-actions>*{min-width:100%}.tabs .tab{font-size:.875rem!important}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}

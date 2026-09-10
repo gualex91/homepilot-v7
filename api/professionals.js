@@ -1,10 +1,10 @@
 const SUPABASE_URL='https://vkfvjwxajgeafzyphjvh.supabase.co';
 const SUPABASE_KEY='sb_publishable_pGyXnrUDdLiT6BAAME--VA_kLP_gEAR';
-const norm=s=>(s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+const norm=s=>(s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[–—-]+/g,'-').replace(/\s+/g,' ').trim();
 function inferredRegion(city,region){
   if(region)return region;
   const c=norm(city);
-  if(['jonquiere','chicoutimi','la baie','saguenay'].some(x=>c.includes(x)))return 'Saguenay--Lac-Saint-Jean';
+  if(['jonquiere','chicoutimi','la baie','saguenay','alma'].includes(c))return 'Saguenay-Lac-Saint-Jean';
   return '';
 }
 function cityMatch(profileCity,userCity){
@@ -15,7 +15,7 @@ function cityMatch(profileCity,userCity){
 function locationMatch(p,{city,postal,region}){
   if(p.serves_all_quebec)return true;
   const c=norm(city),pc=norm(postal).replace(/\s/g,''),r=norm(inferredRegion(city,region));
-  return (p.municipalities||[]).some(x=>cityMatch(x,c))||(p.postal_prefixes||[]).some(x=>pc&&pc.startsWith(norm(x).replace(/\s/g,'')))||(p.regions||[]).some(x=>r&&norm(x)===r);
+  return (p.municipalities||[]).some(x=>cityMatch(x,c))||(p.postal_prefixes||[]).some(x=>{const prefix=norm(x).replace(/\s/g,'');return !!pc&&!!prefix&&pc.startsWith(prefix)})||(p.regions||[]).some(x=>r&&norm(x)===r);
 }
 function tierRank(t){return t==='sponsored'?3:t==='partner'?2:1}
 export default async function handler(req,res){

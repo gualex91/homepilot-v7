@@ -1,0 +1,31 @@
+#hpSupportDialog{width:min(1060px,calc(100% - 24px));max-height:92dvh;padding:0;border:1px solid #ccd7d1;border-radius:18px;background:#f7f9f7;color:#183a2b;font:1rem/1.5 system-ui,sans-serif;box-sizing:border-box}
+#hpSupportDialog::backdrop{background:#10271ccc}
+#hpSupportDialog *{box-sizing:border-box}
+#hpSupportDialog header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px;border-bottom:1px solid #dbe4de;background:white;position:sticky;top:0;z-index:1}
+#hpSupportDialog h2{font-size:1.25rem;margin:0}
+#hpSupportDialog h3{font-size:1.08rem;margin:16px 0 10px}
+#hpSupportDialog button,#hpSupportDialog input,#hpSupportDialog textarea,#hpSupportDialog select{font:inherit;min-height:44px}
+#hpSupportDialog button{cursor:pointer;border-radius:10px;padding:9px 14px;border:1px solid #27573e;background:#27573e;color:white}
+#hpSupportDialog button.secondary{background:white;color:#254b37;border-color:#cbd9d0}
+#hpSupportDialog button:disabled{cursor:not-allowed;opacity:.55}
+#hpSupportDialog :focus-visible{outline:3px solid #327ab7;outline-offset:3px}
+#hpSupportDialog input,#hpSupportDialog select,#hpSupportDialog textarea{width:100%;border:1px solid #b8cac0;border-radius:8px;background:white;color:#183a2b;padding:10px}
+#hpSupportDialog textarea{min-height:180px;resize:vertical}
+#hpSupportDialog label{display:block;margin:10px 0 5px;font-size:1rem}
+#hpSupportDialog .hpSupportContent{padding:20px 22px}
+#hpSupportDialog .hpSupportBar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#hpSupportDialog .hpSupportBar>label{flex:1;min-width:160px}
+#hpSupportDialog .hpSupportNote{padding:12px 14px;background:#edf2ef;border-radius:10px;margin:12px 0;font-size:.9rem}
+#hpSupportDialog .hpSupportWarning{background:#fff1d6;color:#6a4405}
+#hpSupportDialog .hpSupportError{background:#ffe6e3;color:#82291c}
+#hpSupportDialog .hpSupportMeta{font-size:.9rem;color:#4c6558;overflow-wrap:anywhere}
+#hpSupportDialog .hpSupportGrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+#hpSupportDialog .hpSupportCard{background:white;border:1px solid #d5e0d9;border-radius:12px;padding:16px;margin:12px 0;min-width:0}
+#hpSupportDialog .hpSupportTicket{width:100%;text-align:left;background:white;color:#183a2b;border-color:#d5e0d9;display:block;margin:10px 0;padding:16px}
+#hpSupportDialog .hpSupportTicket strong{display:block;overflow-wrap:anywhere}
+#hpSupportDialog .hpSupportBadge{display:inline-block;font-size:.875rem;padding:3px 8px;border-radius:6px;background:#e8f0eb;margin:4px 6px 4px 0}
+#hpSupportDialog pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;margin:10px 0;max-height:430px;overflow:auto}
+#hpSupportDialog .hpSupportCheck{display:flex;align-items:flex-start;gap:10px}
+#hpSupportDialog .hpSupportCheck input{width:22px;min-height:22px;flex:none}
+#hpSupportDialog a{color:#175d91;text-decoration:underline}
+@media(max-width:720px){#hpSupportDialog .hpSupportGrid{grid-template-columns:1fr}#hpSupportDialog .hpSupportContent{padding:14px}#hpSupportDialog header{padding:14px}#hpSupportDialog .hpSupportBar>button{flex-grow:1}}
