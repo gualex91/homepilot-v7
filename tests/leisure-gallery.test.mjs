@@ -93,3 +93,13 @@ test('reclassification rejects account changes and denied writes without changin
  await assert.rejects(h.ctx.hpClassifyLeisureTrailer('trailer','another-user'),/Session expirée/);assert.equal(queries,0);
  h.render([eq('trailer','other')]);await h.click('classify-trailer','trailer');assert.match(h.nodes.hpLeisureList.innerHTML,/Classer comme remorque/);assert.doesNotMatch(h.nodes.hpLeisureList.innerHTML,/utility-trailer.webp/);assert.equal(queries,1);
 });
+
+test('visible edit and delete controls open the correct record and confirmed changes update only its card',async()=>{
+ const h=harness(),opened=[],removed=[];h.ctx.hpLeisureEditor={reset(){},open:(...args)=>opened.push(args),remove:(...args)=>removed.push(args)};
+ h.render([eq('boat','boat'),eq('rv','rv')],[{id:'t1',leisure_equipment_id:'boat',title:'Bateau',status:'done'},{id:'t2',leisure_equipment_id:'rv',title:'Toit',status:'todo'}]);
+ const first=h.nodes.hpLeisureList.innerHTML.split('<article')[1];assert.ok(first.indexOf('data-leisure-action="edit-equipment"')<first.indexOf('<details'));assert.equal((first.match(/data-leisure-action="delete-equipment"/g)||[]).length,1);
+ await h.click('edit-equipment','boat');await h.click('delete-equipment','boat');assert.equal(opened[0][0].id,'boat');assert.equal(opened[0][1],'owner');assert.equal(removed[0][0].id,'boat');assert.equal(removed[0][1],'owner');assert.equal(removed[0][2],1);
+ h.ctx.hpLeisureGallery.updated({...eq('boat','utility_trailer'),name:'Ma remorque'},'owner');assert.match(h.nodes.hpLeisureList.innerHTML,/utility-trailer.webp/);assert.match(h.nodes.hpLeisureList.innerHTML,/Ma remorque/);assert.match(h.nodes.hpLeisureList.innerHTML,/data-leisure-task="t1"/);
+ h.ctx.hpLeisureGallery.deleted('boat','wrong-owner');assert.match(h.nodes.hpLeisureList.innerHTML,/Ma remorque/);
+ h.ctx.hpLeisureGallery.deleted('boat','owner');assert.doesNotMatch(h.nodes.hpLeisureList.innerHTML,/Ma remorque|data-leisure-task="t1"/);assert.match(h.nodes.hpLeisureList.innerHTML,/Mon rv/);assert.match(h.nodes.hpLeisureList.innerHTML,/data-leisure-task="t2"/);
+});
