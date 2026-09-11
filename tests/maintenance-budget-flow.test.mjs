@@ -155,7 +155,7 @@ test('guided entry saves income, family and daily expenses; repeated category ch
   assert.equal(h.stored().incomes.length,2);assert.equal(h.stored().bills.length,1);assert.equal(h.stored().envelopes.length,1);
   assert.equal(h.stored().incomes[1].category,'Allocations familiales');
   assert.equal(h.nodes.get('hpFinanceOverview').hidden,false);
-  assert.match(h.nodes.get('hpFinanceOverview').innerHTML,/Ce qui entre/);
+  assert.match(h.nodes.get('hpFinanceMoneyHeadline').innerHTML,/Ce qui entre/);
   await h.ctx.hpLoadFinancePlan({force:true});assert.equal(h.stored().envelopes[0].amount,200);
 });
 test('annual suggestions stay separate from recurring bills and require a real due date',async()=>{
@@ -327,4 +327,15 @@ test('switching finance surfaces keeps the unfinished plan and shows only the ch
  assert.equal(h.nodes.get('hpFinanceOperations').hidden,false);assert.equal(h.nodes.get('hpFinanceEditor').hidden,true);assert.equal(h.nodes.get('hpFinanceOverview').hidden,true);
  h.ctx.hpSetFinanceView('plan');assert.equal(h.nodes.get('hpFinanceOperations').hidden,true);assert.equal(h.nodes.get('hf-bills-0-amount'),field);
  await h.click('save');assert.equal(h.stored().bills[0].amount,55);assert.equal(h.nodes.get('hpFinanceOverview').hidden,false);
+});
+
+
+test('money headline stays visible while editing and clears on sign-out',async()=>{
+ const h=harness();await h.start();await h.click('suggest-expense',{template:'tfsa'});h.input('bills.0.amount',50);
+ assert.match(h.nodes.get('hpFinanceMoneyHeadline').innerHTML,/Budget prévu/);
+ assert.match(h.nodes.get('hpFinanceMoneyHeadline').innerHTML,/Modifications non enregistrées/);
+ assert.equal(h.nodes.get('hpFinanceMoneyHeadline').hidden,false);
+ h.ctx.hpSetFinanceView('operations');assert.equal(h.nodes.get('hpFinanceMoneyHeadline').hidden,true);
+ h.ctx.hpSetFinanceView('plan');assert.equal(h.nodes.get('hpFinanceMoneyHeadline').hidden,false);
+ h.logout();assert.equal(h.nodes.get('hpFinanceMoneyHeadline').innerHTML,'');
 });

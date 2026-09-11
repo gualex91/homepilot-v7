@@ -128,3 +128,21 @@
 #budget[data-finance-view] > .row > #hpBudgetAddBtn{display:none}
 #hpBudgetTools[hidden],#hpFinanceOperations[hidden],#hpBudgetPlanner .finance-controls[hidden]{display:none!important}
 @media(max-width:600px){#hpBudgetPlanner .finance-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}#hpBudgetPlanner .finance-tabs button{font-size:.95rem}}
+
+/* Amounts lead the page; interpretation follows on demand. */
+#hpFinanceMoneyHeadline{margin:.9rem 0 1.2rem;font-variant-numeric:tabular-nums}
+#hpBudgetPlanner .finance-money-label{font-size:.875rem;font-weight:650;margin-bottom:.5rem}
+#hpFinanceMoneyHeadline .finance-stat.primary{background:#183e35;color:#fff;border:0;padding:1.35rem}
+#hpFinanceMoneyHeadline .finance-stat.primary span,#hpFinanceMoneyHeadline .finance-stat.primary .finance-note{color:#e4efeb}
+#hpFinanceMoneyHeadline .finance-stat.primary strong{font-size:clamp(2.25rem,9vw,3.5rem);font-weight:750;letter-spacing:-.04em;margin:.45rem 0}
+#hpFinanceMoneyHeadline .finance-stat.primary strong.finance-negative{color:#ffd6c8}
+#hpFinanceMoneyHeadline .finance-stat:not(.primary) strong{font-size:clamp(1.25rem,4.7vw,2rem);font-weight:750}
+#hpFinanceMoneyHeadline .finance-stat:not(.primary){padding:.8rem;box-shadow:none}
+#hpFinanceMoneyHeadline>.finance-note{font-size:.8125rem}
+#hpBudgetPlanner .finance-heading{display:none}
+#hpBudgetPlanner .finance-block>summary{font-size:1rem;font-weight:650;cursor:pointer}
+#hpFinanceOperations #hpBudgetGroupMonthly .stats{grid-template-columns:repeat(2,minmax(0,1fr));font-variant-numeric:tabular-nums}
+#hpFinanceOperations #hpBudgetGroupMonthly .stats>div:last-child{grid-column:1/-1;grid-row:1;background:#183e35;color:#fff;padding:1.25rem}
+#hpFinanceOperations #hpBudgetGroupMonthly .stats>div:last-child .muted{color:#e4efeb}
+#hpFinanceOperations #hpBudgetGroupMonthly .stats>div:last-child b{font-size:clamp(2.25rem,9vw,3.5rem)}
+#hpFinanceOperations #hpBudgetGroupMonthly .stats b{font-size:clamp(1.25rem,4.7vw,2rem)}
