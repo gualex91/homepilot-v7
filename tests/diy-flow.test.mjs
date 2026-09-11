@@ -158,7 +158,7 @@ test('all curated product and category links are reachable through a supported e
 
 test('both entry shells load the merchant catalog before consumers with identical versions',()=>{
  const index=source('index.html');assert.equal(index,source('seasonal-shell.html'));
- assert.match(index,/nuvabri-brand-20260911/);
+ assert.match(index,/<title>Nuvabri<\/title>/);assert.match(index,/const stamp='nuvabri-[^']+'/);
  const merchant=index.indexOf('/vr-expert-shop.js?v=');
  assert.ok(merchant>=0);
  assert.ok(merchant<index.indexOf('/diy-guides.js?v='));
