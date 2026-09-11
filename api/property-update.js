@@ -1,7 +1,9 @@
+import deleteProperty from '../lib/property-delete-handler.js';
 const SUPABASE_URL='https://vkfvjwxajgeafzyphjvh.supabase.co';
 const SUPABASE_KEY='sb_publishable_pGyXnrUDdLiT6BAAME--VA_kLP_gEAR';
 
 export default async function handler(req,res){
+  if(req.method==='DELETE')return deleteProperty(req,res);
   if(req.method!=='PATCH')return res.status(405).json({error:'Méthode non permise'});
   const auth=req.headers.authorization||'';
   if(!auth.startsWith('Bearer '))return res.status(401).json({error:'Session manquante'});

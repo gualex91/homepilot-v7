@@ -12,7 +12,7 @@
   if(error||!s?.user?.id||(expected&&s.user.id!==expected))throw new Error('Session expirée. Reconnecte-toi.');return s;
  }
  async function api(method,body,expected){
-  const s=await session(expected);const r=await fetch('/api/asset-payments',{method,headers:{Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,cache:'no-store',signal:AbortSignal.timeout(15000)});
+  const s=await session(expected);const r=await fetch('/api/budget-plan?resource=asset-payments',{method,headers:{Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,cache:'no-store',signal:AbortSignal.timeout(15000)});
   const data=await r.json();if(!r.ok)throw new Error(data.error||'Paiement indisponible.');
   if(data.user_id!==s.user.id||!Array.isArray(data.payments))throw new Error('Paiement non confirmé. Réessaie.');return data;
  }

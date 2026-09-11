@@ -1,3 +1,4 @@
+import assetPaymentHandler from '../lib/asset-payment-handler.js';
 import {randomUUID} from 'node:crypto';
 import {URL_BASE,PUBLIC_KEY,verifiedUser,requestId} from '../lib/safe-write.js';
 import '../budget-engine.js';
@@ -8,6 +9,7 @@ const stable=value=>Array.isArray(value)?'['+value.map(stable).join(',')+']':val
 const present=row=>row?{config:{...P.cleanPlan(row.config),projects:row.maintenance_projects||[]},revision:row.revision,updated_at:row.updated_at}:null;
 
 export default async function handler(req,res){
+  if(new URL(req.url||'/', 'https://nuvabri.invalid').searchParams.get('resource')==='asset-payments')return assetPaymentHandler(req,res);
   const started=Date.now(),trace=randomUUID();
   console.info(JSON.stringify({level:'info',msg:'start',route:'/api/budget-plan',trace,method:req.method}));
   res.once?.('finish',()=>console.info(JSON.stringify({level:'info',msg:'done',route:'/api/budget-plan',trace,status:res.statusCode,ms:Date.now()-started})));

@@ -1,9 +1,9 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
-import payments from '../api/asset-payments.js';
+import payments from '../lib/asset-payment-handler.js';
 import budget from '../api/budget-plan.js';
-import deleteProperty from '../api/property-delete.js';
+import deleteProperty from '../api/property-update.js';
 const P=globalThis.hpAssetPaymentEngine,E=globalThis.hpBudgetEngine;
 const user=randomUUID(),asset=randomUUID();
 const response=()=>({code:200,status(n){this.code=n;return this},setHeader(){},json(body){this.body=body;return this}});
@@ -82,4 +82,12 @@ test('property deletion is scoped, rejects denied deletion and accepts an alread
  d.allowDelete=true;r=await call(deleteProperty,'DELETE',null,{id:asset});assert.equal(r.code,200);assert.equal(d.property,false);
  r=await call(deleteProperty,'DELETE',null,{id:asset});assert.equal(r.code,200);
  assert.ok(d.calls.filter(x=>x.url.pathname.endsWith('/properties')).every(x=>x.url.searchParams.get('id')==='eq.'+asset));
+});
+
+
+test('existing budget route dispatches payment reads and writes without affecting normal budget handling',async t=>{
+ const d=db();t.mock.method(globalThis,'fetch',d.fetch);const body=payment();
+ const req={method:'PUT',headers:{authorization:'Bearer test'},body,url:'/api/budget-plan?resource=asset-payments'};
+ const saved=response();await budget(req,saved);assert.equal(saved.code,200);assert.equal(d.payments.length,1);assert.equal(d.plan,null);
+ const loaded=response();await budget({...req,method:'GET',body:undefined},loaded);assert.equal(loaded.code,200);assert.equal(loaded.body.payments.length,1);
 });

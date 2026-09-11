@@ -16,7 +16,7 @@
     if(busy||stamp!==version)return;busy=true;const button=$('hpPropertyDeleteConfirm');button.disabled=true;$('hpPropertyDeleteCancel').disabled=true;$('hpPropertyDeleteStatus').textContent='Suppression…';
     try{
      const s=await identity();if(s.user.id!==first.user.id)throw new Error('La session a changé. Rouvre la fiche.');
-     const r=await fetch('/api/property-delete?id='+encodeURIComponent(record.id),{method:'DELETE',headers:{Authorization:'Bearer '+s.access_token},cache:'no-store',signal:AbortSignal.timeout(15000)}),data=await r.json();
+     const r=await fetch('/api/property-update?id='+encodeURIComponent(record.id),{method:'DELETE',headers:{Authorization:'Bearer '+s.access_token},cache:'no-store',signal:AbortSignal.timeout(15000)}),data=await r.json();
      if(!r.ok||!data.ok||data.id!==record.id)throw new Error(data.error||'Suppression non confirmée. Réessaie.');
      if(stamp!==version)return;
      dialog.close();$('hpPropertyModal')?.classList.add('hidden');window.hpAssetPayments?.invalidate();
