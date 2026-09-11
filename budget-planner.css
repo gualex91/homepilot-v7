@@ -53,3 +53,38 @@
 #hpBudgetPlanner .finance-scenario-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
 #hpBudgetPlanner .finance-scenario-actions button{flex:1 1 210px}
 #hpBudgetPlanner .finance-scenario caption{text-align:left;font-weight:600;margin:.8rem 0}
+
+/* One everyday budget, with the detailed tools available on demand. */
+#budget #hpFinancialOverview[hidden]{display:none!important}
+#hpBudgetTools{margin:1.4rem 0;padding:1rem;border:1px solid var(--navborder,#ccd6cf);border-radius:16px;background:var(--card)}
+#hpBudgetTools>summary{cursor:pointer;font-weight:700;min-height:44px;align-content:center}
+#hpBudgetPlanner .finance-eyebrow{display:block;font-size:.72rem;font-weight:750;letter-spacing:.09em;color:var(--b);margin-bottom:.7rem}
+#hpBudgetPlanner .finance-welcome{padding:1.4rem;border-radius:20px;background:var(--soft);border:1px solid var(--navborder,#ccd6cf)}
+#hpBudgetPlanner .finance-welcome h3{font-size:1.7rem;letter-spacing:-.04em}
+#hpBudgetPlanner .finance-balance .primary{padding:1.4rem;border:0;background:var(--b);color:white;border-radius:20px}
+#hpBudgetPlanner .finance-balance .primary span,#hpBudgetPlanner .finance-balance .primary .finance-note{color:white}
+#hpBudgetPlanner .finance-balance .primary strong{font-size:2.4rem;color:white}
+#hpBudgetPlanner .finance-balance .primary:has(.finance-negative){background:#7f302c}
+#hpBudgetPlanner .finance-quick-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin:1rem 0}
+#hpBudgetPlanner .finance-quick-actions button{flex:1 1 160px}
+#hpBudgetPlanner .finance-advisor{border:1px solid var(--navborder,#ccd6cf);border-top:4px solid var(--b);border-radius:18px;background:var(--soft);padding:1.2rem;margin:1.3rem 0}
+#hpBudgetPlanner .finance-advisor h4{font-size:1.25rem;line-height:1.35}
+#hpBudgetPlanner .finance-advisor ul{padding-left:1.2rem;font-size:.95rem}
+#hpBudgetPlanner .finance-advisor li{margin:.65rem 0}
+#hpBudgetPlanner .finance-advisor>button{width:100%;margin:.35rem 0}
+#hpBudgetPlanner .finance-load-options{border:0;padding:0;margin:.3rem 0 .8rem;background:transparent;font-size:.85rem}
+#hpBudgetPlanner .finance-load-options summary{font-weight:400;color:var(--mut)}
+#hpBudgetPlanner .finance-section-title{display:flex;align-items:center;gap:.7rem;margin-bottom:.8rem}
+#hpBudgetPlanner .finance-section-title h4{margin:0;font-size:1.15rem}
+#hpBudgetPlanner .finance-step{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--soft);color:var(--b);font-weight:750}
+#hpBudgetPlanner details.finance-edit-row{border:1px solid var(--navborder,#ccd6cf);padding:.85rem;margin:.6rem 0;border-radius:12px}
+#hpBudgetPlanner .finance-edit-row>summary small{display:block;font-weight:400;color:var(--mut);font-size:.87rem;margin-top:.25rem}
+#hpBudgetPlanner .finance-picker{padding:1.1rem;border:2px solid var(--b);border-radius:16px;background:var(--soft);scroll-margin-top:1rem}
+#hpBudgetPlanner .finance-analysis>summary{padding:.2rem 0;min-height:44px;align-content:center}
+#hpBudgetPlanner .finance-allocation{margin:1rem 0}
+#hpBudgetPlanner .finance-allocation meter{display:block;width:100%;height:12px;margin:.45rem 0;accent-color:var(--b)}
+#hpBudgetPlanner .finance-allocation meter::-webkit-meter-bar{background:var(--soft);border:0;border-radius:8px}
+#hpBudgetPlanner .finance-allocation meter::-webkit-meter-optimum-value{background:var(--b);border-radius:8px}
+#hpBudgetPlanner .finance-allocation meter::-moz-meter-bar{background:var(--b);border-radius:8px}
+#hpBudgetPlanner button:focus-visible,#hpBudgetPlanner summary:focus-visible,#hpBudgetTools summary:focus-visible{outline:3px solid var(--b);outline-offset:3px}
+@media(max-width:480px){#hpBudgetPlanner .finance-heading h3{font-size:1.2rem}#hpBudgetPlanner .finance-tabs button{font-size:.88rem}#hpBudgetPlanner .finance-stat{padding:.85rem}#hpBudgetPlanner .finance-stat strong{font-size:1.35rem}#hpBudgetPlanner .finance-balance .primary strong{font-size:2.1rem}#hpBudgetPlanner .finance-savebar{bottom:76px}#hpBudgetTools{padding:.8rem}}

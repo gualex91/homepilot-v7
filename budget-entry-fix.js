@@ -3,8 +3,9 @@
  function openForm(){
    const budget=$('budget'), form=$('hpBudgetForm');
    if(!budget||!form)return false;
+   $('hpBudgetTools')?.setAttribute('open','');
    const group=$('hpBudgetGroupMonthly');
-   if(group)group.classList.add('open');
+   if(group){group.classList.add('open');group.querySelector('.hp-budget-group-head')?.setAttribute('aria-expanded','true')}
    form.classList.remove('hidden');
    form.style.display='block';
    const d=$('hpBudgetDate');

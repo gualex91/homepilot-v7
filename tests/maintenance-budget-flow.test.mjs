@@ -38,7 +38,7 @@ function harness({loadFailure=false}={}){
       return {ok:true,json:async()=>({config:stored,revision})};
     }
   });ctx.window=ctx;
-  for(const file of ['stability-core.js','budget-engine.js','maintenance-budget.js','budget-planner.js'])vm.runInContext(source(file),ctx,{filename:file});
+  for(const file of ['stability-core.js','budget-engine.js','maintenance-budget.js','budget-catalog.js','budget-insights.js','budget-planner.js'])vm.runInContext(source(file),ctx,{filename:file});
   const tick=()=>new Promise(resolve=>setImmediate(resolve));
   const input=(field,value,type='number',event='input')=>{const target=nodes.get('hf-'+field.replaceAll('.','-'))||{};Object.assign(target,{dataset:{field},value:String(value),type,checked:value===true});return nodes.get('hpBudgetPlanner').handlers[event]({target})};
   const click=(action,data={})=>{const b={dataset:{action,...data},closest(){return this},getAttribute(){return null}};return nodes.get('hpBudgetPlanner').handlers.click({target:b})};
@@ -133,4 +133,42 @@ test('a scenario cannot overwrite a plan changed during comparison',async()=>{
   h.stored().projects[0].totalAmount=700;await h.ctx.hpLoadFinancePlan();
   assert.equal(h.nodes.get('hpScenarioApply').disabled,true);assert.match(h.nodes.get('hpScenarioResult').innerHTML,/plan a changé/);
   await h.click('scenario-apply');assert.equal(h.stored().projects[0].totalAmount,700);
+});
+
+test('guided entry saves income, family and daily expenses; repeated category choice reopens its total',async()=>{
+  const h=harness();await h.start();
+  async function choose(kind,id){await h.click('choose',{kind});h.nodes.get('hpFinanceTemplate').value=id;await h.click('template')}
+  await choose('income','salary');h.input('incomes.0.amount',2000);
+  await choose('income','canada-child');h.input('incomes.1.amount',250);
+  await choose('expense','daycare');h.input('bills.0.amount',180);
+  await choose('expense','restaurants');h.input('envelopes.0.amount',200);
+  await choose('expense','restaurants');assert.match(h.nodes.get('hpFinanceStatus').textContent,/existe déjà/);
+  h.input('reviewed',true,'checkbox');await h.click('save');
+  assert.equal(h.stored().incomes.length,2);assert.equal(h.stored().bills.length,1);assert.equal(h.stored().envelopes.length,1);
+  assert.equal(h.stored().incomes[1].category,'Allocations familiales');
+  assert.equal(h.nodes.get('hpFinanceOverview').hidden,false);
+  assert.match(h.nodes.get('hpFinanceOverview').innerHTML,/Ce qui entre/);
+  await h.ctx.hpLoadFinancePlan({force:true});assert.equal(h.stored().envelopes[0].amount,200);
+});
+test('annual suggestions stay separate from recurring bills and require a real due date',async()=>{
+  const h=harness();await h.start();await h.click('choose',{kind:'expense'});h.nodes.get('hpFinanceTemplate').value='taxes';await h.click('template');
+  h.input('provisions.0.annualAmount',1200);await h.click('save');assert.equal(h.stored(),null);
+  h.input('provisions.0.dueDate','2026-12-01','date');await h.click('save');
+  assert.equal(h.stored().provisions.length,1);assert.equal(h.stored().bills.length,0);
+  assert.equal(h.stored().provisions[0].savedAmount,0);
+});
+test('monthly habit simulation and adviser contact cannot write or send budget data',async()=>{
+  const h=harness();await h.start();
+  await h.click('choose',{kind:'income'});h.nodes.get('hpFinanceTemplate').value='salary';await h.click('template');h.input('incomes.0.amount',2000);
+  await h.click('choose',{kind:'expense'});h.nodes.get('hpFinanceTemplate').value='restaurants';await h.click('template');h.input('envelopes.0.amount',200);
+  h.input('reviewed',true,'checkbox');await h.click('save');
+  const before=JSON.stringify(h.stored()),requestCount=h.requests.length;
+  h.nodes.get('hpBudgetPlanner').handlers.input({target:{dataset:{simulation:'amount'},value:'50.50'}});
+  assert.match(h.nodes.get('hpFinanceSimulationResult').innerHTML,/606,00/);
+  h.nodes.get('hpBudgetPlanner').handlers.input({target:{dataset:{simulation:'amount'},value:'999'}});
+  assert.match(h.nodes.get('hpFinanceSimulationResult').innerHTML,/Entre un montant/);
+  let contact;h.ctx.hpFindAdvisor=context=>contact=context;await h.click('advisor');
+  assert.equal(contact.questions.length,3);assert.deepEqual(Object.keys(contact),['questions']);
+  await h.click('summary');assert.match(h.nodes.get('hpFinanceSummaryText').value,/MES QUESTIONS POUR LE CONSEILLER NUVABRI/);
+  assert.equal(h.requests.length,requestCount);assert.equal(JSON.stringify(h.stored()),before);
 });
