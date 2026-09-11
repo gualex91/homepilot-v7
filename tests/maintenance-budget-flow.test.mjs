@@ -38,11 +38,12 @@ function harness({loadFailure=false}={}){
       return {ok:true,json:async()=>({config:stored,revision})};
     }
   });ctx.window=ctx;
-  for(const file of ['stability-core.js','budget-engine.js','maintenance-budget.js','budget-catalog.js','budget-insights.js','budget-planner.js'])vm.runInContext(source(file),ctx,{filename:file});
+  for(const file of ['stability-core.js','budget-engine.js','asset-payment-engine.js','maintenance-budget.js','budget-catalog.js','budget-insights.js','budget-planner.js'])vm.runInContext(source(file),ctx,{filename:file});
   const tick=()=>new Promise(resolve=>setImmediate(resolve));
   const input=(field,value,type='number',event='input')=>{const target=nodes.get('hf-'+field.replaceAll('.','-'))||{};Object.assign(target,{dataset:{field},value:String(value),type,checked:value===true});return nodes.get('hpBudgetPlanner').handlers[event]({target})};
   const click=(action,data={})=>{const b={dataset:{action,...data},closest(){return this},getAttribute(){return null}};return nodes.get('hpBudgetPlanner').handlers.click({target:b})};
   return {ctx,nodes,requests,navigation,input,click,tick,stored:()=>stored,
+    payments(rows,owner='owner-a'){for(const fn of events['hp-asset-payments-changed']||[])fn({detail:{owner,payments:rows}})},
     scenarioInput(key,value){const target={dataset:{scenarioField:key},value:String(value)};return nodes.get('hpBudgetPlanner').handlers.input({target})},
     async start(){for(const fn of events.DOMContentLoaded||[])fn();await tick()},
     async task(task={id:'task-a',title:'Entretien du spa',due_at:'2026-12-01'},property='Chalet',kind='property'){
@@ -200,4 +201,16 @@ test('Mes montants shows weekly CELI and REER projections immediately and retain
   await h.click('suggest-expense',{template:'tfsa'});h.input('bills.0.accountBalance','');await h.click('save');assert.equal(h.stored().bills[0].accountBalance,null);assert.match(annual().innerHTML,/Non renseigné/);
   await h.click('summary');assert.match(h.nodes.get('hpFinanceSummaryText').value,/REER ET CELI — PROJECTION SUR UN AN/);
   h.logout();assert.doesNotMatch(h.nodes.get('hpFinanceEditor').innerHTML,/3\s600,00/);
+});
+
+
+test('linked payment changes preserve an unfinished manual budget draft, stay unique, and update the calendar',async()=>{
+ const h=harness();await h.start();await h.click('add',{list:'bills'});h.input('bills.0.label','Téléphone','text');h.input('bills.0.amount',50);
+ const payment={id:'saved-payment',leisure_equipment_id:'trailer',asset_name:'remorque',amount:70,frequency:'weekly',anchor_date:'2026-09-04',second_day:null,essential:false};
+ h.payments([payment]);assert.match(h.nodes.get('hpFinanceEditor').innerHTML,/Paiement remorque/);assert.match(h.nodes.get('hpFinanceEditor').innerHTML,/303,33/);assert.match(h.nodes.get('hpFinanceEditor').innerHTML,/3[\s\u00a0]640,00/);
+ assert.match(h.nodes.get('hpFinanceEditor').innerHTML,/Téléphone/);assert.match(h.nodes.get('hpFinanceEditor').innerHTML,/4 versements/);
+ h.payments([{...payment,amount:80}]);assert.equal((h.nodes.get('hpFinanceEditor').innerHTML.match(/Paiement remorque/g)||[]).length,1);assert.match(h.nodes.get('hpFinanceEditor').innerHTML,/346,67/);assert.match(h.nodes.get('hpFinanceEditor').innerHTML,/Téléphone/);
+ h.payments([]);assert.doesNotMatch(h.nodes.get('hpFinanceEditor').innerHTML,/Paiement remorque/);assert.match(h.nodes.get('hpFinanceEditor').innerHTML,/Téléphone/);
+ h.payments([payment],'other-owner');assert.doesNotMatch(h.nodes.get('hpFinanceEditor').innerHTML,/Paiement remorque/);
+ await h.click('save');assert.equal(h.stored().bills.length,1);assert.equal(h.stored().bills[0].amount,50);
 });

@@ -1,0 +1,32 @@
+.hp-payment-card{background:var(--soft);border:1px solid var(--navborder);border-radius:14px;padding:16px;margin:16px 0;color:var(--txt)}
+.hp-payment-eyebrow{display:block;font-size:.7rem;font-weight:750;letter-spacing:.08em;color:var(--mut);margin-bottom:8px}
+.hp-payment-card>strong,.hp-payment-preview>strong{display:block;font-size:1.15rem;line-height:1.5}
+.hp-payment-card p{font-size:.9rem;line-height:1.5;margin:6px 0 12px}
+.hp-payment-card button{font-size:.9rem;min-height:44px;margin-top:8px;box-shadow:none}
+.hp-payment-totals{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:12px 0}
+.hp-payment-totals span{font-size:1.05rem;font-weight:700;min-width:0}
+.hp-payment-totals small{display:block;font-size:.75rem;font-weight:400;line-height:1.5;color:var(--mut)}
+.hp-payment-included{display:block;margin-top:8px;line-height:1.5;color:var(--mut)}
+.hp-asset-dialog{box-sizing:border-box;width:min(600px,calc(100% - 28px));max-height:calc(100dvh - 32px);padding:24px;border:1px solid var(--navborder);border-radius:22px;background:var(--card);color:var(--txt);overflow:auto;box-shadow:0 20px 70px #0004}
+.hp-asset-dialog::backdrop{background:#102c27aa}
+.hp-asset-dialog-heading{display:flex;align-items:start;justify-content:space-between;gap:12px}
+.hp-asset-dialog h2{font-size:1.4rem;line-height:1.3;margin:0;overflow-wrap:anywhere}
+.hp-asset-dialog p{line-height:1.5;font-size:1rem}
+.hp-asset-dialog .hp-payment-note{font-size:.85rem;color:var(--mut)}
+.hp-asset-dialog label{display:block;margin:16px 0 6px;font-weight:600;font-size:1rem}
+.hp-asset-dialog input,.hp-asset-dialog select{box-sizing:border-box;width:100%;font:inherit;font-size:1rem;min-height:46px;padding:10px 12px;border:1px solid var(--navborder);border-radius:10px;background:var(--card);color:var(--txt)}
+.hp-asset-dialog .hp-payment-check{display:flex;align-items:center;gap:10px;font-size:.9rem;font-weight:400}
+.hp-asset-dialog input[type=checkbox]{width:20px;min-height:20px;flex:none}
+.hp-payment-preview{background:var(--soft);border-radius:14px;padding:16px;margin-top:18px}
+.hp-asset-dialog-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.hp-asset-dialog-actions button{flex:1;min-height:48px;font-size:1rem}
+.hp-asset-danger{color:#9b3434!important}
+.hp-asset-dialog .hp-asset-confirm-delete{background:#9b3434;color:#fff}
+#hpPaymentStatus,#hpPropertyDeleteStatus{color:#9b3434;overflow-wrap:anywhere}
+.hp-property-card-tools{display:flex;gap:8px;margin:8px 0}
+.hp-property-card-tools button{min-height:44px;font-size:.875rem;box-shadow:none}
+.finance-linked-payment{padding:16px;border:1px solid var(--navborder);border-radius:12px;margin:10px 0;background:var(--soft)}
+.finance-linked-payment h5{font-size:1rem;margin:0 0 8px}
+.finance-linked-payment button{min-height:44px;font-size:.9rem}
+.finance-linked-payment p{line-height:1.5;font-size:.9rem}
+@media(max-width:420px){.hp-asset-dialog{padding:18px}.hp-payment-totals{gap:10px}.hp-payment-totals span{font-size:1rem}}

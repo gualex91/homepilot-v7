@@ -1,5 +1,6 @@
 (function(){
   'use strict';
+  const P=window.hpAssetPaymentEngine;
   const E=hpBudgetEngine,esc=hpStability.esc,$=id=>document.getElementById(id);
   const money=n=>new Intl.NumberFormat('fr-CA',{style:'currency',currency:'CAD'}).format(n/100);
   const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
@@ -7,6 +8,7 @@
   const C=hpBudgetCatalog,I=hpBudgetInsights,CATS=C.categories;
   const FREQ={once:'Une seule fois',weekly:'Chaque semaine',biweekly:'Aux deux semaines',semimonthly:'Deux fois par mois',monthly:'Chaque mois',quarterly:'Chaque trimestre',yearly:'Chaque année'};
   let owner=null,epoch=0,loading=false,saving=false,ready=false,dirty=false,revision=null,plan=E.empty(),draft=E.empty(),entries=[],entriesComplete=true,legacy=null,month=today().slice(0,7),view='overview',lastResult=null,lastLoadedMonth=null;
+  let assetPayments=[],paymentVersion=0;
   let statusMessage='',statusError=false,scenario=null,picker=null,simulationAmount=0;
   function status(message,error=false){
     statusMessage=message;statusError=error;
@@ -24,7 +26,7 @@
     box.addEventListener('keydown',event=>{const tab=event.target.closest('[role=tab]');if(!tab||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const tabs=[...box.querySelectorAll('[role=tab]')];let i=tabs.indexOf(tab);i=event.key==='Home'?0:event.key==='End'?2:(i+(event.key==='ArrowRight'?1:2))%3;setView(tabs[i].dataset.view);tabs[i].focus()});
     setView(view);
   }
-  function reset(){closeScenario();picker=null;simulationAmount=0;epoch++;owner=null;ready=false;dirty=false;revision=null;loading=false;saving=false;lastLoadedMonth=null;plan=E.empty();draft=E.empty();entries=[];legacy=null;lastResult=null;ensure();render();status('Connecte-toi pour retrouver ton budget privé.');}
+  function reset(){assetPayments=[];paymentVersion++;closeScenario();picker=null;simulationAmount=0;epoch++;owner=null;ready=false;dirty=false;revision=null;loading=false;saving=false;lastLoadedMonth=null;plan=E.empty();draft=E.empty();entries=[];legacy=null;lastResult=null;ensure();render();status('Connecte-toi pour retrouver ton budget privé.');}
   async function identity(){const {data,error}=await window.supabaseClient.auth.getSession();if(error)throw error;if(!data?.session?.user?.id)throw new Error('Connecte-toi pour accéder au budget.');return data.session}
   async function api(method,body){const session=await identity();if(owner&&session.user.id!==owner)throw new Error('La session a changé. Recharge le budget.');const r=await fetch('/api/budget-plan?month='+month,{method,headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,cache:'no-store',signal:AbortSignal.timeout(15000)});const data=await r.json();if(!r.ok)throw new Error(data.error||'Budget indisponible.');return data}
   async function load({force=false}={}){
@@ -32,13 +34,14 @@
     let session;try{session=await identity()}catch(error){status(error.message);return}
     if(owner!==session.user.id){reset();owner=session.user.id}
     if(force&&dirty&&!confirm('Recharger effacera tes modifications non enregistrées. Continuer?'))return;
-    const stamp=epoch,requestedMonth=month;loading=true;status('Chargement…');
+    const stamp=epoch,requestedMonth=month,requestedPayments=paymentVersion;loading=true;status('Chargement…');
     try{
       const data=await api('GET');if(stamp!==epoch||requestedMonth!==month)return;
-      const config=data.config?E.validate(data.config):E.empty();
-      if(!dirty||force){plan=config;draft=structuredClone(config);revision=data.revision;dirty=false}
+      if(requestedPayments===paymentVersion)assetPayments=data.asset_payments||[];
+      const config=data.config?E.validate(P?P.merge(data.config,assetPayments):data.config):P?P.merge(E.empty(),assetPayments):E.empty();
+      if(!dirty||force){plan=config;draft=structuredClone(config);revision=data.revision;dirty=false}else if(P){plan=P.merge(plan,assetPayments);draft=P.merge(draft,assetPayments)}
       entries=data.entries||[];entriesComplete=data.entries_complete!==false;legacy=data.legacy;ready=true;lastLoadedMonth=month;
-      render(!dirty);status(dirty?'Modifications non enregistrées.':data.config?'Ton budget est enregistré.':'Commence par ajouter tes revenus et tes dépenses.');
+      render();status(dirty?'Modifications non enregistrées.':data.config?'Ton budget est enregistré.':'Commence par ajouter tes revenus et tes dépenses.');
     }catch(error){if(stamp===epoch){ready=false;status(error.name==='TimeoutError'?'Le chargement prend trop de temps. Réessaie.':error.message,true);render(false)}}
     finally{if(stamp===epoch){loading=false;updateScenario();if(requestedMonth!==month)load()}}
   }
@@ -100,6 +103,7 @@
   }
   function editorRow(key,x,i){
     if(key==='projects')return projectRow(x,i);
+    if(key==='bills'&&P?.linked(x)){const total=P.totals(x.amount,x.frequency),count=E.occurrences(x,month+'-01',E.monthEnd(month)).length;return `<div class="finance-linked-payment"><h5>${esc(x.label)}</h5><b>${money(E.cents(x.amount))} ${esc(P.frequencies[x.frequency])}</b><p>${money(total.monthly)} / mois en moyenne · ${money(total.annual)} / an estimé</p><p>Ce mois : ${count} versement${count===1?'':'s'}, soit <b>${money(E.cents(x.amount)*count)}</b>.</p><p class="finance-note">Lié à ta fiche. Estimation annuelle à rythme constant (52 semaines). Inclus une seule fois dans les dépenses prévues.</p><button type="button" class="alt" data-action="asset-payment" data-payment-id="${esc(x.id)}">Modifier ou retirer le paiement</button></div>`;}
     const p=key+'.'+i,annual=key==='provisions',envelope=key==='envelopes',income=key==='incomes';
     const categories=[...new Set([...CATS,x.category])].map(c=>[c,c]);
     const amount=annual?x.annualAmount:x.amount;
@@ -154,7 +158,7 @@
     if(!ready||saving||loading)return;
     const choice=C.create(id,crypto.randomUUID(),today());if(!choice)return;
     const {key,row}=choice;
-    if(draft[key].length>=100){status('Ce groupe contient déjà 100 lignes.',true);return}
+    if(draft[key].filter(x=>key!=='bills'||!P?.linked(x)).length>=100){status('Ce groupe contient déjà 100 lignes.',true);return}
     // An envelope is a category total. Reopen it rather than duplicating it.
     const existing=key==='envelopes'?draft.envelopes.findIndex(x=>x.category===row.category):-1;
     picker=null;
@@ -180,15 +184,15 @@
   }
   function onChange(event){if(event.target.dataset.field||event.target.dataset.scenarioField||event.target.dataset.simulation)return onInput(event);if(event.target.id==='hpFinanceMonth'){if(!/^20\d{2}-(0[1-9]|1[0-2])$/.test(event.target.value)){event.target.value=month;return}month=event.target.value;lastResult=preview();renderOverview();renderCalendar();load()}}
   async function save(){
-    if(saving)return;if(!ready){saveProblem('Le budget n’est pas chargé. Utilise Recharger avant de sauvegarder.');return}if(loading){saveProblem('Attends la fin du chargement avant de sauvegarder.');return}let config;try{config=E.validate(draft)}catch(error){saveProblem(error.message);return}
-    saving=true;const stamp=epoch,key='finance-plan:'+owner;
+    if(saving)return;if(!ready){saveProblem('Le budget n’est pas chargé. Utilise Recharger avant de sauvegarder.');return}if(loading){saveProblem('Attends la fin du chargement avant de sauvegarder.');return}let config;try{config=E.validate(draft);if(P)config=P.cleanPlan(config)}catch(error){saveProblem(error.message);return}
+    saving=true;const stamp=epoch,requestedPayments=paymentVersion,key='finance-plan:'+owner;
     const body={config,expected_revision:revision};body.request_id=hpStability.operation(key,body);
     document.querySelectorAll('#hpFinanceEditor input,#hpFinanceEditor select,#hpFinanceEditor button').forEach(el=>el.disabled=true);status('Enregistrement…');
-    try{const result=await api('PUT',body);if(stamp!==epoch)return;plan=result.config;draft=structuredClone(plan);revision=result.revision;dirty=false;hpStability.complete(key);setView('overview');status('Plan enregistré dans ton compte.');}
+    try{const result=await api('PUT',body);if(stamp!==epoch)return;if(requestedPayments===paymentVersion)assetPayments=result.asset_payments||[];plan=P?P.merge(result.config,assetPayments):result.config;draft=structuredClone(plan);revision=result.revision;dirty=false;hpStability.complete(key);setView('overview');status('Plan enregistré dans ton compte.');}
     catch(error){if(stamp===epoch)status(error.name==='TimeoutError'?'Confirmation non reçue. Réessaie sans modifier le plan : la même demande sera reconnue.':error.message,true)}
     finally{if(stamp===epoch){saving=false;render();if(lastLoadedMonth!==month)load()}}
   }
-  function add(key){if(!ready||saving||loading||!Array.isArray(draft[key]))return;if(draft[key].length>=100){status('Ce groupe contient déjà 100 lignes.',true);return}picker=null;setView('plan');const x={id:crypto.randomUUID(),label:'',category:key==='incomes'?'Salaire':'Autre',essential:key!=='incomes'};if(key==='projects')Object.assign(x,{taskKey:null,propertyName:null,totalAmount:null,savedAmount:0,dueDate:'',costSource:'estimate',confirmed:false,active:true,essential:false});else if(key==='provisions')Object.assign(x,{annualAmount:null,savedAmount:null,dueDate:''});else {x.amount=null;if(key!=='envelopes')Object.assign(x,{frequency:'monthly',anchorDate:today(),secondDay:null})}draft[key].push(x);dirty=true;draft.reviewed=false;renderEditor();focusRow(key,draft[key].length-1,'label');lastResult=preview();renderOverview();renderCalendar()}
+  function add(key){if(!ready||saving||loading||!Array.isArray(draft[key]))return;if(draft[key].filter(x=>key!=='bills'||!P?.linked(x)).length>=100){status('Ce groupe contient déjà 100 lignes.',true);return}picker=null;setView('plan');const x={id:crypto.randomUUID(),label:'',category:key==='incomes'?'Salaire':'Autre',essential:key!=='incomes'};if(key==='projects')Object.assign(x,{taskKey:null,propertyName:null,totalAmount:null,savedAmount:0,dueDate:'',costSource:'estimate',confirmed:false,active:true,essential:false});else if(key==='provisions')Object.assign(x,{annualAmount:null,savedAmount:null,dueDate:''});else {x.amount=null;if(key!=='envelopes')Object.assign(x,{frequency:'monthly',anchorDate:today(),secondDay:null})}draft[key].push(x);dirty=true;draft.reviewed=false;renderEditor();focusRow(key,draft[key].length-1,'label');lastResult=preview();renderOverview();renderCalendar()}
   function importLegacy(){
     if(!legacy||!confirm('Reprendre tes anciennes cibles et tes rappels? Les lignes déjà ajoutées seront conservées. Vérifie les doublons avant d’enregistrer.'))return;
     let skipped=0;
@@ -202,6 +206,7 @@
     const b=event.target.closest('button');if(!b||!$('hpBudgetPlanner').contains(b))return;
     if(b.dataset.view){closeScenario();setView(b.dataset.view);return}
     const action=b.dataset.action;if(saving&&!['advisor','copy','summary'].includes(action))return;
+    if(action==='asset-payment')return window.hpAssetPayments?.openLinked(b.dataset.paymentId);
     if(action==='entry')return window.hpOpenBudgetEntry?.();
     if(action==='suggest-expense')return openExpenseSuggestion(b.dataset.template);
     if(action==='choose'){if(!ready||loading)return;closeScenario();picker=b.dataset.kind;setView('plan');renderEditor();$('hpFinanceTemplate')?.focus();$('hpFinancePicker')?.scrollIntoView?.({block:'start'});return}
@@ -214,7 +219,7 @@
     if(['save','add','remove','import','edit-project'].includes(action))closeScenario();
     if(action==='save')return save();if(action==='reload')return load({force:true});if(action==='add')return add(b.dataset.list);
     if(action==='edit-project')return focusProject(Number(b.dataset.index));
-    if(action==='remove'){if(!confirm('Retirer cette ligne du plan? Le retrait sera appliqué à la prochaine sauvegarde.'))return;draft[b.dataset.list].splice(Number(b.dataset.index),1);dirty=true;return render()}
+    if(action==='remove'){if(P?.linked(draft[b.dataset.list]?.[Number(b.dataset.index)]))return;if(!confirm('Retirer cette ligne du plan? Le retrait sera appliqué à la prochaine sauvegarde.'))return;draft[b.dataset.list].splice(Number(b.dataset.index),1);dirty=true;return render()}
     if(action==='import')return importLegacy();
     if(action==='previous'||action==='next'){const d=new Date(month+'-01T12:00:00Z');d.setUTCMonth(d.getUTCMonth()+(action==='next'?1:-1));month=d.toISOString().slice(0,7);$('hpFinanceMonth').value=month;lastResult=preview();renderOverview();renderCalendar();return load()}
     if(action==='advisor')return window.hpFindAdvisor?.({questions:lastResult?I.analyze(draft,lastResult).questions:[]});
@@ -265,6 +270,12 @@
       closeScenario();render();focusProject(index);status('Scénario repris, non enregistré. Vérifie le montant et la date, confirme le projet, puis enregistre ton plan.');
     }catch(error){updateScenario();status(error.message,true)}
   }
+  window.addEventListener('hp-asset-payments-changed',event=>{
+    if(!owner||event.detail?.owner!==owner||!P)return;
+    assetPayments=event.detail.payments||[];paymentVersion++;
+    plan=P.merge(plan,assetPayments);draft=P.merge(draft,assetPayments);
+    closeScenario();if(ready){render();status(dirty?'Paiements liés actualisés. Tes autres modifications restent à enregistrer.':'Paiements liés actualisés dans tes dépenses prévues.')}
+  });
   window.hpLoadFinancePlan=load;
   function focusProject(index){setView('plan');const row=$('hpFinanceProject-'+index);row?.closest('details')?.setAttribute('open','');row?.scrollIntoView?.({block:'start',behavior:'smooth'});$('hf-projects-'+index+'-totalAmount')?.focus()}
   let openingTask=false;

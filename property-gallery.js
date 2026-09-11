@@ -40,7 +40,7 @@
   return `<article class="hp-property-card${isActive?' is-active':''}" data-property-id="${esc(p.id)}">
    <div class="hp-property-picture"><img src="/assets/properties/quebec-${k.image}.webp" alt="" width="960" height="640" loading="${index?'lazy':'eager'}" decoding="async"><span class="hp-property-illustration">Illustration</span>${isActive?'<span class="hp-property-active">✓ Bien actif</span>':''}</div>
    <div class="hp-property-content"><span class="hp-property-type">${esc(k.label)}</span><h3>${esc(p.name||'Ma propriété')}</h3><p class="hp-property-city">${esc(p.city||'Ville à préciser')}${facts.length?' <span>· '+facts.map(esc).join(' · ')+'</span>':''}</p>
-   <dl class="hp-property-stats"><div><dt>Équipement${ready&&s.equipment===1?'':'s'}</dt><dd>${ready?s.equipment:'—'}</dd></div><div><dt>Tâche${ready&&s.todo===1?'':'s'} à faire</dt><dd>${ready?s.todo:'—'}</dd></div></dl>
+   <div class="hp-property-card-tools"><button type="button" class="alt hp-asset-danger" data-property-action="delete">Supprimer</button></div>${window.hpAssetPayments?.card('property',p)||''}<dl class="hp-property-stats"><div><dt>Équipement${ready&&s.equipment===1?'':'s'}</dt><dd>${ready?s.equipment:'—'}</dd></div><div><dt>Tâche${ready&&s.todo===1?'':'s'} à faire</dt><dd>${ready?s.todo:'—'}</dd></div></dl>
    ${taskMarkup(s)}<div class="hp-property-actions"><button type="button" data-property-action="details" aria-label="Voir les détails de ${esc(p.name||'la propriété')}">Voir les détails <span aria-hidden="true">↗</span></button><button type="button" class="alt" data-property-action="activate" aria-label="${isActive?'Voir les tâches de':'Utiliser'} ${esc(p.name||'la propriété')}">${isActive?'Voir mes tâches':'Utiliser ce bien'}</button></div></div></article>`;
  }
  function render(){
@@ -89,6 +89,7 @@
   if(action==='add'){$('pf')?.classList.remove('hidden');$('pname')?.focus();return;}
   if(action==='retry'){cache.delete(id);refresh(true);return;}
   if(!scope().properties.some(p=>p.id===id))return;
+  if(action==='delete'){window.hpDeleteProperty?.open(scope().properties.find(p=>p.id===id));return;}
   if(action==='details'){window.hpOpenProperty?.(id);return;}
   if(action==='activate'){
    b.disabled=true;try{await activate(id);}catch{b.textContent='Réessayer';}finally{b.disabled=false;}

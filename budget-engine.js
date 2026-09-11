@@ -21,7 +21,7 @@
     const taskKeys=new Set();
     for(const key of ['incomes','bills','envelopes','provisions','projects']){
       const list=key==='projects'&&input[key]===undefined?[]:input[key];
-      if(!Array.isArray(list)||list.length>100)fail('Trop de lignes dans le budget.');
+      if(!Array.isArray(list)||list.length>(key==='bills'?600:100)||(key==='bills'&&list.filter(x=>!String(x?.id||'').startsWith('asset-payment:')).length>100))fail('Trop de lignes dans le budget.');
       result[key]=list.map(x=>{
         if(!x||typeof x!=='object')fail('Ligne invalide.');
         const id=text(x.id,'Identifiant',100);if(ids.has(id))fail('Une ligne est présente deux fois.');ids.add(id);

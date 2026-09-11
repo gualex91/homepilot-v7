@@ -67,3 +67,12 @@ test('changing property uses its own task list and leaves calendar history intac
   assert.deepEqual(h.ids(),['new']);assert.equal(h.nodes.get('tl').dataset.taskFilter,'todo');
   h.click('done');assert.deepEqual(h.ids(),[]);assert.doesNotMatch(h.nodes.get('at').innerHTML,/data-task-id="old"/);
 });
+
+
+test('deleting the active property clears its tasks and selects the remaining property safely',async()=>{
+ const h=harness([{id:'old',title:'Ancienne tâche',status:'done'}]);h.run("u={id:'owner'};props.push({id:'p2',name:'Chalet'})");
+ await h.ctx.hpForgetProperty('p1','other');assert.equal(h.run('props.length'),2);
+ // The simulated client has no fetch method: the replacement must still never show old tasks.
+ await h.ctx.hpForgetProperty('p1','owner');assert.equal(h.run('props.length'),1);assert.equal(h.run('ap.id'),'p2');assert.equal(h.run('tasks.length'),0);assert.doesNotMatch(h.nodes.get('at').innerHTML,/Ancienne tâche/);
+ await h.ctx.hpForgetProperty('p2','owner');assert.equal(h.run('props.length'),0);assert.equal(h.run('ap'),null);assert.equal(h.nodes.get('pn').textContent,'Aucune propriété');
+});
