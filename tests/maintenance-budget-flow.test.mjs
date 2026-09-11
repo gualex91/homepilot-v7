@@ -347,7 +347,7 @@ test('budget equation separates expenses and savings without hiding entered tota
  await h.click('suggest-expense',{template:'rent'});h.input('bills.0.amount',1000);
  await h.click('suggest-expense',{template:'tfsa'});h.input('bills.1.amount',200);h.input('bills.1.frequency','monthly','select-one');
  let headline=h.nodes.get('hpFinanceMoneyHeadline').innerHTML;
- assert.match(headline,/Reste à calculer/);assert.match(headline,/5\s000,00/);assert.match(headline,/1\s000,00/);assert.match(headline,/200,00/);assert.doesNotMatch(headline,/3\s800,00/);
+ assert.match(headline,/Reste estimé/);assert.match(headline,/5\s000,00/);assert.match(headline,/1\s000,00/);assert.match(headline,/200,00/);assert.match(headline,/3\s800,00/);
  const editor=h.nodes.get('hpFinanceEditor').innerHTML;
  assert.ok(editor.indexOf('Mon épargne')<editor.indexOf('id="hf-bills-1-amount"'));
  assert.equal((editor.match(/id="hf-bills-1-amount"/g)||[]).length,1);
@@ -355,4 +355,27 @@ test('budget equation separates expenses and savings without hiding entered tota
  h.input('reviewed',true,'checkbox');await h.click('save');headline=h.nodes.get('hpFinanceMoneyHeadline').innerHTML;
  assert.match(headline,/3\s800,00/);assert.match(headline,/Budget vérifié/);assert.equal(h.stored().bills.length,2);
  h.input('bills.1.amount','');assert.equal(h.nodes.get('hpFinanceMoneyHeadline').innerHTML,'','an incomplete line must not leave stale totals visible');
+});
+
+test('green card estimates a saved unreviewed budget and updates edits without requiring confirmation',async()=>{
+ const h=harness();await h.start();await h.click('choose',{kind:'income'});h.nodes.get('hpFinanceTemplate').value='salary';await h.click('template');
+ h.input('incomes.0.amount',5000);h.input('incomes.0.frequency','monthly','select-one');
+ await h.click('suggest-expense',{template:'rent'});h.input('bills.0.amount',1000);
+ await h.click('save');assert.equal(h.stored().reviewed,false);
+ let html=h.nodes.get('hpFinanceMoneyHeadline').innerHTML;
+ assert.match(html,/Reste estimé/);assert.match(html,/4\s000,00/);assert.match(html,/Estimation à vérifier/);assert.doesNotMatch(html,/Reste à calculer/);
+ await h.ctx.hpLoadFinancePlan();assert.match(h.nodes.get('hpFinanceMoneyHeadline').innerHTML,/4\s000,00/);
+ h.input('bills.0.amount',6000);html=h.nodes.get('hpFinanceMoneyHeadline').innerHTML;
+ assert.match(html,/Manque estimé/);assert.match(html,/1\s000,00/);assert.match(html,/Modifications non enregistrées/);
+ assert.equal(h.stored().bills[0].amount,1000,'preview must not save automatically');
+ assert.equal(h.nodes.get('hpHomeBudget').hidden,true,'an estimate must not be presented as a confirmed plan elsewhere');
+ h.logout();assert.equal(h.nodes.get('hpFinanceMoneyHeadline').innerHTML,'');
+});
+
+
+test('expense-only budget asks for a planned income instead of showing a misleading deficit',async()=>{
+ const h=harness();await h.start();await h.click('suggest-expense',{template:'rent'});h.input('bills.0.amount',1000);await h.click('save');
+ const html=h.nodes.get('hpFinanceMoneyHeadline').innerHTML;
+ assert.match(html,/Ajoute tes revenus prévus/);assert.match(html,/Mes opérations/);assert.doesNotMatch(html,/Reste à calculer|Manque estimé/);
+ await h.click('review-budget');assert.equal(h.nodes.get('hpFinanceEditor').hidden,false);assert.ok(h.nodes.get('hpFinanceTemplate'));
 });
