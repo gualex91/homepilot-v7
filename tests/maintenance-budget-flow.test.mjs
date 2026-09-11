@@ -155,7 +155,7 @@ test('guided entry saves income, family and daily expenses; repeated category ch
   assert.equal(h.stored().incomes.length,2);assert.equal(h.stored().bills.length,1);assert.equal(h.stored().envelopes.length,1);
   assert.equal(h.stored().incomes[1].category,'Allocations familiales');
   assert.equal(h.nodes.get('hpFinanceOverview').hidden,false);
-  assert.match(h.nodes.get('hpFinanceMoneyHeadline').innerHTML,/Ce qui entre/);
+  assert.match(h.nodes.get('hpFinanceMoneyHeadline').innerHTML,/Revenus prévus/);
   await h.ctx.hpLoadFinancePlan({force:true});assert.equal(h.stored().envelopes[0].amount,200);
 });
 test('annual suggestions stay separate from recurring bills and require a real due date',async()=>{
@@ -338,4 +338,21 @@ test('money headline stays visible while editing and clears on sign-out',async()
  h.ctx.hpSetFinanceView('operations');assert.equal(h.nodes.get('hpFinanceMoneyHeadline').hidden,true);
  h.ctx.hpSetFinanceView('plan');assert.equal(h.nodes.get('hpFinanceMoneyHeadline').hidden,false);
  h.logout();assert.equal(h.nodes.get('hpFinanceMoneyHeadline').innerHTML,'');
+});
+
+
+test('budget equation separates expenses and savings without hiding entered totals before review',async()=>{
+ const h=harness();await h.start();await h.click('choose',{kind:'income'});h.nodes.get('hpFinanceTemplate').value='salary';await h.click('template');
+ h.input('incomes.0.amount',5000);h.input('incomes.0.frequency','monthly','select-one');
+ await h.click('suggest-expense',{template:'rent'});h.input('bills.0.amount',1000);
+ await h.click('suggest-expense',{template:'tfsa'});h.input('bills.1.amount',200);h.input('bills.1.frequency','monthly','select-one');
+ let headline=h.nodes.get('hpFinanceMoneyHeadline').innerHTML;
+ assert.match(headline,/Reste à calculer/);assert.match(headline,/5\s000,00/);assert.match(headline,/1\s000,00/);assert.match(headline,/200,00/);assert.doesNotMatch(headline,/3\s800,00/);
+ const editor=h.nodes.get('hpFinanceEditor').innerHTML;
+ assert.ok(editor.indexOf('Mon épargne')<editor.indexOf('id="hf-bills-1-amount"'));
+ assert.equal((editor.match(/id="hf-bills-1-amount"/g)||[]).length,1);
+ await h.click('review-budget');assert.equal(h.nodes.get('hf-reviewed').focused,true);assert.equal(h.stored(),null);
+ h.input('reviewed',true,'checkbox');await h.click('save');headline=h.nodes.get('hpFinanceMoneyHeadline').innerHTML;
+ assert.match(headline,/3\s800,00/);assert.match(headline,/Budget vérifié/);assert.equal(h.stored().bills.length,2);
+ h.input('bills.1.amount','');assert.equal(h.nodes.get('hpFinanceMoneyHeadline').innerHTML,'','an incomplete line must not leave stale totals visible');
 });

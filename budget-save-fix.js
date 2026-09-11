@@ -3,7 +3,7 @@
  function currentUser(){try{if(typeof u!=='undefined'&&u?.id)return u}catch(e){}return null}
  function currentHouseholdId(){try{if(typeof h!=='undefined'&&h?.id)return h.id}catch(e){}return null}
  async function localToken(){return hpStability.token()}
- function resetButton(btn){if(btn){btn.disabled=false;btn.textContent='Ajouter au budget';btn.dataset.hpSaving='0'}}
+ function resetButton(btn){if(btn){btn.disabled=false;btn.textContent='Enregistrer cette opération';btn.dataset.hpSaving='0'}}
  async function save(){
    const btn=$('hpBudgetSave'),status=$('hpBudgetStatus');
    if(status)status.textContent='';

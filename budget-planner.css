@@ -146,3 +146,24 @@
 #hpFinanceOperations #hpBudgetGroupMonthly .stats>div:last-child .muted{color:#e4efeb}
 #hpFinanceOperations #hpBudgetGroupMonthly .stats>div:last-child b{font-size:clamp(2.25rem,9vw,3.5rem)}
 #hpFinanceOperations #hpBudgetGroupMonthly .stats b{font-size:clamp(1.25rem,4.7vw,2rem)}
+
+/* A simple monthly equation and three clear input groups. */
+#hpBudgetPlanner .finance-equation{margin:0;padding:.25rem 1rem;background:var(--card);border:1px solid var(--navborder,#ccd6cf);border-radius:14px;font-variant-numeric:tabular-nums}
+#hpBudgetPlanner .finance-equation>div{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 0;border-bottom:1px solid var(--navborder,#ccd6cf)}
+#hpBudgetPlanner .finance-equation>div:last-child{border:0}
+#hpBudgetPlanner .finance-equation dt{font-size:.95rem;flex:1;min-width:0}
+#hpBudgetPlanner .finance-equation dd{font-size:clamp(1.15rem,4.6vw,1.8rem);font-weight:750;margin:0;text-align:right;min-width:0;max-width:60%;overflow-wrap:anywhere}
+#hpBudgetPlanner .finance-budget-state{display:block;color:var(--mut);font-weight:400;margin-top:.2rem}
+#hpBudgetPlanner .finance-suggestions>summary{font-weight:650;font-size:1rem;cursor:pointer;min-height:44px;padding:.5rem 0}
+#hpBudgetPlanner .finance-suggestions{border:1px dashed var(--navborder,#ccd6cf);border-radius:12px;padding:.65rem;margin:1rem 0}
+#hpBudgetPlanner .finance-edit-row>summary{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.4rem .8rem;cursor:pointer;padding:.45rem 0}
+#hpBudgetPlanner .finance-edit-row>summary>span{font-weight:600}
+#hpBudgetPlanner .finance-edit-row>summary>small{font-size:1rem;font-weight:700;color:var(--txt);font-variant-numeric:tabular-nums}
+#hpBudgetPlanner .finance-review{padding:1rem;border:1px solid var(--b);border-radius:12px;margin:1rem 0;background:var(--card)}
+#hpBudgetPlanner .finance-start{padding:1.1rem;background:var(--card);border-radius:14px}
+#hpBudgetPlanner .finance-advisor-compact{padding:1rem;margin-top:1.4rem}
+#hpBudgetPlanner .finance-advisor-compact>details{margin-top:1rem}
+#hpBudgetPlanner .finance-advisor-compact h4{font-size:1.1rem}
+
+#hpBudgetPlanner .finance-edit-row>summary::after{content:'Modifier';font-size:.875rem;font-weight:500;color:var(--b)}
+#hpBudgetPlanner .finance-edit-row[open]>summary::after{content:'Réduire'}
