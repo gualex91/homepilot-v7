@@ -19,7 +19,7 @@
      const r=await fetch('/api/property-update?id='+encodeURIComponent(record.id),{method:'DELETE',headers:{Authorization:'Bearer '+s.access_token},cache:'no-store',signal:AbortSignal.timeout(15000)}),data=await r.json();
      if(!r.ok||!data.ok||data.id!==record.id)throw new Error(data.error||'Suppression non confirmée. Réessaie.');
      if(stamp!==version)return;
-     dialog.close();$('hpPropertyModal')?.classList.add('hidden');window.hpAssetPayments?.invalidate();
+     dialog.close();window.hpCloseProperty?.();$('hpPropertyModal')?.classList.add('hidden');window.hpAssetPayments?.invalidate();
      await window.hpForgetProperty?.(record.id,first.user.id);window.show?.('properties');window.hpPropertyGallery?.refresh(true);
     }catch(e){if(stamp===version)$('hpPropertyDeleteStatus').textContent=e.message||'Suppression non confirmée. Réessaie.';}
     finally{busy=false;if(stamp===version){button.disabled=false;$('hpPropertyDeleteCancel').disabled=false;}}
