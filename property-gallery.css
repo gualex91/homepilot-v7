@@ -1,0 +1,43 @@
+/* The existing property form and navigation remain available above the gallery. */
+#properties.hp-properties> .row{align-items:center;flex-wrap:wrap;margin:8px 0 16px}
+#properties.hp-properties> .row h2{font-size:1.8rem;letter-spacing:-.045em;margin:0}
+#properties.hp-properties> .row>button{min-height:44px}
+#properties #hpPropertyShortcuts{gap:10px;margin:0 0 18px}
+#properties #hpPropertyShortcuts button{font-size:.875rem;min-height:48px;border:1px solid var(--navborder);box-shadow:none}
+.hp-property-count{color:var(--mut);font-size:.875rem;margin:0 0 12px}
+.hp-property-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:22px}
+#pl .hp-property-card{overflow:hidden;min-width:0;border:1px solid var(--navborder);border-radius:22px;background:var(--card);box-shadow:0 6px 24px #173f3a0a;display:flex;flex-direction:column}
+#pl .hp-property-card.is-active{border-color:var(--b)}
+.hp-property-picture{position:relative;aspect-ratio:3/2;overflow:hidden;background:#ece8dc}
+.hp-property-picture img{display:block;width:100%;height:100%;object-fit:cover}
+.hp-property-active{position:absolute;top:14px;left:14px;padding:7px 11px;border-radius:30px;background:#173f3a;color:#fff;font-size:.8rem;font-weight:750;box-shadow:0 2px 8px #0002}
+.hp-property-illustration{position:absolute;bottom:10px;right:12px;background:#fffdf0df;color:#45564c;font-size:.65rem;padding:3px 7px;border-radius:5px}
+.hp-property-content{padding:20px;display:flex;flex:1;flex-direction:column}
+.hp-property-type{font-size:.75rem;line-height:1.5;font-weight:750;color:var(--b);letter-spacing:.035em}
+.hp-property-content h3{font-size:1.5rem;line-height:1.2;letter-spacing:-.035em;margin:7px 0 8px;overflow-wrap:anywhere}
+.hp-property-city{font-size:.875rem;color:var(--mut);line-height:1.5;margin:0 0 18px;overflow-wrap:anywhere}
+.hp-property-city span{font-size:.8rem}
+.hp-property-stats{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:auto 0 16px;padding-top:2px}
+.hp-property-stats>div{display:flex;flex-direction:column;gap:4px}
+.hp-property-stats>div+div{padding-left:18px;border-left:1px solid var(--navborder)}
+.hp-property-stats dt{font-size:.8rem;color:var(--mut);order:1}
+.hp-property-stats dd{margin:0;font-size:1.8rem;line-height:1.1;font-weight:700;color:var(--txt);letter-spacing:-.04em}
+.hp-property-next{border-radius:12px;padding:12px 14px;background:var(--soft);min-height:70px;display:flex;flex-direction:column;justify-content:center;gap:5px;margin-bottom:18px}
+.hp-property-next>span{font-size:.75rem;color:var(--mut);line-height:1.35}
+.hp-property-next>strong{font-size:.875rem;font-weight:600;line-height:1.4;overflow-wrap:anywhere}
+.hp-property-next.is-overdue{box-shadow:inset 3px 0 #b66842}
+.hp-property-next.is-overdue>span{color:#995033}
+.hp-property-next button{align-self:flex-start;min-height:44px}
+.hp-property-actions{display:flex;flex-direction:column;gap:6px;margin-top:auto}
+.hp-property-actions button{width:100%;min-height:46px;font-size:.875rem;box-shadow:none;line-height:1.4}
+.hp-property-actions button:first-child{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left}
+.hp-property-actions button.alt{background:transparent;color:var(--b);font-size:.8125rem;min-height:44px}
+.hp-property-actions button:disabled{opacity:.6}
+.hp-property-empty{overflow:hidden;border:1px solid var(--navborder);border-radius:22px;background:var(--card)}
+.hp-property-empty img{width:100%;height:auto;display:block}
+.hp-property-empty>div{padding:24px}
+.hp-property-empty h3{font-size:1.5rem;line-height:1.25;margin:8px 0}
+.hp-property-empty p{font-size:1rem;line-height:1.5;color:var(--mut)}
+.hp-property-empty button{min-height:48px;width:100%}
+@media(min-width:720px){.app:has(#properties.on){max-width:980px}.hp-property-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hp-property-empty{display:grid;grid-template-columns:1fr 1fr;align-items:center}.hp-property-empty img{height:100%;object-fit:cover}}
+@media(max-width:350px){.hp-property-content{padding:16px}.hp-property-content h3{font-size:1.3rem}}
