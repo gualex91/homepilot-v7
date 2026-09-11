@@ -104,3 +104,13 @@
 #hpBudgetPlanner .finance-saving-account dd{font-weight:700;margin:.2rem 0 0}
 @media(min-width:700px){#hpBudgetPlanner .finance-suggestion-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:480px){#hpBudgetPlanner .finance-heading h3{font-size:1.2rem}#hpBudgetPlanner .finance-tabs button{font-size:.88rem}#hpBudgetPlanner .finance-stat{padding:.85rem}#hpBudgetPlanner .finance-stat strong{font-size:1.35rem}#hpBudgetPlanner .finance-balance .primary strong{font-size:2.1rem}#hpBudgetPlanner .finance-savebar{bottom:76px}#hpBudgetTools{padding:.8rem}}
+
+/* Keep the selected expense beside its suggestion, including on phones. */
+#hpBudgetPlanner .finance-suggestion-item{min-width:0}
+#hpBudgetPlanner .finance-suggestion-item>.finance-suggestion{width:100%;height:100%}
+#hpBudgetPlanner .finance-suggestion-item.is-editing{grid-column:1/-1;border:2px solid var(--accent,#a94320);border-radius:12px;padding:.65rem;scroll-margin-top:1rem}
+#hpBudgetPlanner .finance-suggestion-item.is-editing>.finance-suggestion{height:auto;min-height:48px;background:transparent;border:0;padding:.35rem;text-align:left}
+#hpBudgetPlanner .finance-suggestion-item.is-editing>.finance-edit-row{margin:.5rem 0;border:0;padding:.35rem}
+#hpBudgetPlanner .finance-suggestion-item.is-editing>button[data-action="save-continue"]{width:100%;min-height:44px}
+#hpBudgetPlanner .finance-savebar>button+button{margin-top:.5rem}
+#hpBudgetPlanner .finance-suggestion small{font-size:.875rem}

@@ -286,3 +286,25 @@ test('home budget preview only shows a saved complete plan and clears drafts and
  await h.click('save');assert.equal(h.nodes.get('hpHomeBudget').hidden,false);
  h.logout();assert.equal(h.nodes.get('hpHomeBudget').hidden,true);assert.equal(h.nodes.get('hpHomeBudget').innerHTML,'');
 });
+
+test('expense entry stays beside its suggestion and saves several expenses without leaving the editor',async()=>{
+  const h=harness();await h.start();await h.click('suggest-expense',{template:'phone'});
+  let html=h.nodes.get('hpFinanceEditor').innerHTML;
+  assert.match(html,/finance-suggestion-item is-editing/);
+  assert.equal((html.match(/id="hf-bills-0-amount"/g)||[]).length,1);
+  assert.ok(html.indexOf('hf-bills-0-amount')<html.indexOf('data-template="internet"'));
+  const amount=h.nodes.get('hf-bills-0-amount');h.input('bills.0.amount',45);
+  assert.equal(h.nodes.get('hf-bills-0-amount'),amount,'typing must retain the input node and keyboard focus');
+  await h.click('save-continue');assert.equal(h.nodes.get('hpFinanceEditor').hidden,false);
+  assert.equal(h.stored().bills[0].amount,45);
+  assert.match(h.nodes.get('hpExpenseSaveStatus').textContent,/Plan enregistré/);
+  await h.click('suggest-expense',{template:'internet'});h.input('bills.1.amount',70);
+  h.failSave();await h.click('save-continue');assert.match(h.nodes.get('hpExpenseSaveStatus').textContent,/Confirmation non reçue/);
+  assert.equal(h.nodes.get('hpFinanceEditor').hidden,false);
+  await h.click('save-continue');
+  const writes=h.requests.filter(r=>r.options.method==='PUT').map(r=>JSON.parse(r.options.body));
+  assert.equal(writes[1].request_id,writes[2].request_id);
+  assert.deepEqual(h.stored().bills.map(x=>x.amount),[45,70]);
+  await h.click('save');assert.equal(h.nodes.get('hpFinanceEditor').hidden,true);
+  h.logout();await h.owner('owner-b');assert.doesNotMatch(h.nodes.get('hpFinanceEditor').innerHTML,/is-editing/);
+});
