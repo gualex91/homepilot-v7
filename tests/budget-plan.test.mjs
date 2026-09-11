@@ -204,3 +204,19 @@ test('an incomplete plan has no reassuring scenario margin and a fully funded pr
   const r=E.compareProject(p,'p',{totalAmount:1200,savedAmount:1200,dueDate:'2026-12-01'},'2026-09-10');
   assert.equal(r.after.funding.monthly,0);assert.equal(r.monthlyDelta,-20000);assert.equal(r.before.margin,null);assert.equal(r.after.margin,null);assert.equal(r.marginDelta,null);
 });
+
+test('API saves account balances and preserves them for an older client while allowing explicit clearing',async()=>{
+  const db=fakeDB();await usingDB(db,async()=>{
+    const first=payload();first.config.bills=[{...row('tfsa',50,'2026-09-10','weekly','CELI'),accountBalance:1000}];
+    const saved=response();await handler(request('PUT',first),saved);assert.equal(saved.code,200);assert.equal(saved.body.config.bills[0].accountBalance,1000);
+    const old={config:structuredClone(saved.body.config),request_id:randomUUID(),expected_revision:first.request_id};delete old.config.bills[0].accountBalance;old.config.bills[0].amount=60;
+    const updated=response();await handler(request('PUT',old),updated);assert.equal(updated.code,200);assert.equal(updated.body.config.bills[0].accountBalance,1000);
+    const retry=response();await handler(request('PUT',old),retry);assert.equal(retry.code,200);assert.equal(db.writes,2);
+    const invalid={config:structuredClone(updated.body.config),request_id:randomUUID(),expected_revision:old.request_id};invalid.config.bills[0].accountBalance=-1;
+    const rejected=response();await handler(request('PUT',invalid),rejected);assert.equal(rejected.code,400);assert.equal(db.writes,2);
+    const clear={...invalid,request_id:randomUUID()};clear.config.bills[0].accountBalance=null;
+    const cleared=response();await handler(request('PUT',clear),cleared);assert.equal(cleared.code,200);assert.equal(cleared.body.config.bills[0].accountBalance,null);
+    const removed={config:{...cleared.body.config,bills:[]},request_id:randomUUID(),expected_revision:clear.request_id};
+    const deleted=response();await handler(request('PUT',removed),deleted);assert.equal(deleted.code,200);assert.equal(deleted.body.config.bills.length,0);
+  });
+});

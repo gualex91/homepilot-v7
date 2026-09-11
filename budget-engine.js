@@ -38,6 +38,7 @@
         }
         if(key==='provisions')return {...row,annualAmount:amount(x.annualAmount,'Coût annuel'),savedAmount:amount(x.savedAmount,'Déjà réservé'),dueDate:dateField(x.dueDate,'Échéance')};
         row.amount=amount(x.amount,'Montant');
+        if(['bills','envelopes'].includes(key)&&['REER','CELI'].includes(row.category))row.accountBalance=amount(x.accountBalance??null,'Solde de départ du compte',true);
         if(key!=='envelopes'){
           if(!frequencies.includes(x.frequency))fail('Fréquence invalide.');
           row.frequency=x.frequency;row.anchorDate=dateField(x.anchorDate,'Date de référence');

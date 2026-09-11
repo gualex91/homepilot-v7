@@ -27,7 +27,7 @@ function harness({loadFailure=false}={}){
   const ctx=vm.createContext({Date:FixedDate,Intl,URL,URLSearchParams,AbortSignal,structuredClone,crypto:webcrypto,console,
     confirm:()=>true,alert(){},setTimeout:fn=>{Promise.resolve().then(fn)},setInterval(){},
     sessionStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
-    document:{readyState:'loading',getElementById:id=>nodes.get(id)||null,createElement:()=>new Element(),querySelectorAll:()=>[],addEventListener:(key,fn)=>{(events[key]??=[]).push(fn)}},
+    document:{readyState:'loading',getElementById:id=>nodes.get(id)||null,createElement:()=>new Element(),querySelector:()=>null,querySelectorAll:()=>[],addEventListener:(key,fn)=>{(events[key]??=[]).push(fn)}},
     addEventListener:(key,fn)=>{(events[key]??=[]).push(fn)},show:id=>navigation.push(id),
     supabaseClient:{auth:{getSession:async()=>({data:{session}}),onAuthStateChange:fn=>authCallback=fn}},
     fetch:async(url,options)=>{
@@ -186,4 +186,18 @@ test('visible expense suggestions open amounts directly and reopen saved bills w
   await h.ctx.hpLoadFinancePlan({force:true});await h.click('suggest-expense',{template:'phone'});
   assert.match(h.nodes.get('hpFinanceStatus').textContent,/déjà prévue/);h.input('bills.0.amount',60);await h.click('save');
   assert.equal(h.stored().bills.length,2);assert.equal(h.stored().bills[0].amount,60);assert.equal(h.stored().bills[1].amount,75);
+});
+
+test('Mes montants shows weekly CELI and REER projections immediately and retains optional account balances',async()=>{
+  const h=harness();await h.start();await h.click('suggest-expense',{template:'tfsa'});h.input('bills.0.amount',50);
+  const annual=()=>h.nodes.get('hpFinanceSavingsAnnual');
+  assert.equal(annual().hidden,false);assert.match(annual().innerHTML,/2\s600,00/);assert.match(annual().innerHTML,/Non renseigné/);
+  h.input('bills.0.accountBalance',1000);assert.match(annual().innerHTML,/3\s600,00/);
+  h.input('bills.0.frequency','monthly','select');assert.match(annual().innerHTML,/600,00/);assert.match(annual().innerHTML,/1\s600,00/);
+  h.input('bills.0.frequency','weekly','select');await h.click('suggest-expense',{template:'rrsp'});h.input('bills.1.amount',25);h.input('bills.1.accountBalance',0);
+  assert.match(annual().innerHTML,/1\s300,00/);await h.click('save');assert.equal(h.stored().bills.length,2);assert.equal(h.stored().bills[0].accountBalance,1000);assert.equal(h.stored().bills[1].accountBalance,0);
+  await h.ctx.hpLoadFinancePlan({force:true});assert.match(annual().innerHTML,/3\s600,00/);
+  await h.click('suggest-expense',{template:'tfsa'});h.input('bills.0.accountBalance','');await h.click('save');assert.equal(h.stored().bills[0].accountBalance,null);assert.match(annual().innerHTML,/Non renseigné/);
+  await h.click('summary');assert.match(h.nodes.get('hpFinanceSummaryText').value,/REER ET CELI — PROJECTION SUR UN AN/);
+  h.logout();assert.doesNotMatch(h.nodes.get('hpFinanceEditor').innerHTML,/3\s600,00/);
 });

@@ -26,7 +26,17 @@ export default async function handler(req,res){
     const current=present((await query('budget_plans',[...own,['select','config,maintenance_projects,revision,updated_at']]))[0]);
     if(req.method==='PUT'){
       let config;
-      try{const input=req.body?.config;config=engine.validate({...input,projects:input&&Object.hasOwn(input,'projects')?input.projects:current?.config.projects||[]})}catch(error){return res.status(400).json({error:error.message})}
+      try{
+        const input=req.body?.config;
+        // An older client may omit the optional balance field. Preserve it
+        // on the same account; explicit null clears it and row removal wins.
+        const keepBalances=key=>Array.isArray(input?.[key])?input[key].map(row=>{
+          if(!row||Object.hasOwn(row,'accountBalance'))return row;
+          const previous=current?.config[key]?.find(x=>x.id===row.id&&x.category===row.category);
+          return previous&&Object.hasOwn(previous,'accountBalance')?{...row,accountBalance:previous.accountBalance}:row;
+        }):input?.[key];
+        config=engine.validate({...input,bills:keepBalances('bills'),envelopes:keepBalances('envelopes'),projects:input&&Object.hasOwn(input,'projects')?input.projects:current?.config.projects||[]});
+      }catch(error){return res.status(400).json({error:error.message})}
       const expected=req.body?.expected_revision??null,id=req.body?.request_id;
       if(!requestId(id)||(expected!==null&&!requestId(expected)))return res.status(400).json({error:'Identifiant de sauvegarde invalide.'});
       if(current?.revision===id&&stable(current.config)===stable(config))return res.status(200).json({ok:true,...current});

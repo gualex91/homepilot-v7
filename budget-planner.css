@@ -93,5 +93,14 @@
 #hpBudgetPlanner button.finance-suggestion{text-align:left;padding:.8rem;min-height:76px;border:1px solid var(--navborder,#ccd6cf);background:var(--soft);color:var(--txt);white-space:normal;line-height:1.35}
 #hpBudgetPlanner .finance-suggestion span{display:block;font-weight:650;font-size:.9rem}
 #hpBudgetPlanner .finance-suggestion small{display:block;font-size:.75rem;color:var(--mut);margin-top:.35rem}
+#hpBudgetPlanner .finance-saving-summary{border-top:1px solid var(--navborder,#ccd6cf);margin-top:1.2rem;padding-top:1.2rem}
+#hpBudgetPlanner .finance-saving-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.75rem;margin:1rem 0}
+#hpBudgetPlanner .finance-saving-account{padding:1rem;border-radius:14px;background:var(--soft);min-width:0}
+#hpBudgetPlanner .finance-saving-account h5{font-size:1.1rem;color:var(--b);margin:0 0 .7rem}
+#hpBudgetPlanner .finance-saving-account>span{font-size:.85rem;color:var(--mut)}
+#hpBudgetPlanner .finance-saving-account>strong{display:block;font-size:1.7rem;margin:.35rem 0 .8rem;color:var(--b)}
+#hpBudgetPlanner .finance-saving-account dl{margin:0;font-size:.9rem}
+#hpBudgetPlanner .finance-saving-account dl>div{padding:.55rem 0;border-top:1px solid var(--navborder,#ccd6cf)}
+#hpBudgetPlanner .finance-saving-account dd{font-weight:700;margin:.2rem 0 0}
 @media(min-width:700px){#hpBudgetPlanner .finance-suggestion-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:480px){#hpBudgetPlanner .finance-heading h3{font-size:1.2rem}#hpBudgetPlanner .finance-tabs button{font-size:.88rem}#hpBudgetPlanner .finance-stat{padding:.85rem}#hpBudgetPlanner .finance-stat strong{font-size:1.35rem}#hpBudgetPlanner .finance-balance .primary strong{font-size:2.1rem}#hpBudgetPlanner .finance-savebar{bottom:76px}#hpBudgetTools{padding:.8rem}}

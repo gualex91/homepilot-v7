@@ -52,3 +52,32 @@ test('analysis preserves legacy categories and incomplete actual data stays unav
   assert.equal(r.actual,null);assert.equal(i.allocations.find(x=>x.category==='Ma catégorie personnelle').amount,2345);
   assert.equal(JSON.stringify(p),before);
 });
+
+test('REER and CELI annual projections respect each frequency and keep unknown balances unknown',()=>{
+  const row={category:'CELI',amount:50,accountBalance:null};
+  for(const [frequency,dollars] of [['weekly',2600],['biweekly',1300],['semimonthly',1200],['monthly',600],['quarterly',200],['yearly',50],['once',50]]){
+    const r=I.savingProjection({...row,frequency});assert.equal(r.contributions,dollars*100);assert.equal(r.projectedBalance,null);
+  }
+  assert.equal(I.savingProjection({...row,frequency:'weekly',accountBalance:1000}).projectedBalance,360000);
+  assert.equal(I.savingProjection({...row,frequency:'weekly',accountBalance:0}).projectedBalance,260000);
+  for(const amount of [null,NaN,-1,50.001])assert.equal(I.savingProjection({...row,frequency:'weekly',amount}).contributions,null);
+  assert.equal(I.savingProjection({...row,frequency:'toString'}).contributions,null);
+});
+test('annual savings do not turn into a second budget expense or include old combined savings twice',()=>{
+  const p=fixture(),base=result(p);
+  for(const [id,balance] of [['tfsa',1000],['rrsp',5000]]){const {key,row}=C.create(id,id,day);row.amount=50;row.accountBalance=balance;p[key].push(row)}
+  p.bills.push({id:'legacy',label:'Épargne retraite / REER / CELI',category:'Épargne',amount:20,frequency:'monthly',anchorDate:day});
+  const before=JSON.stringify(p),r=result(p),i=I.analyze(p,r),annual=I.annualSavings(p);
+  assert.equal(annual.length,2);assert.equal(annual.find(x=>x.category==='CELI').contributions,260000);
+  assert.equal(annual.find(x=>x.category==='REER').projectedBalance,760000);
+  assert.equal(r.projectedMargin,base.projectedMargin-42000);assert.equal(i.savings,52000);
+  assert.equal(i.allocations.reduce((n,x)=>n+x.amount,0),i.outflow);assert.equal(JSON.stringify(p),before);
+});
+test('aggregated account balances remain incomplete if one is absent and are validated on save',()=>{
+  const p=fixture(),{row}=C.create('tfsa','a',day);row.amount=50;row.accountBalance=0;
+  p.bills.push(row,{...row,id:'b',amount:25,accountBalance:null});
+  let a=I.annualSavings(p)[0];assert.equal(a.contributions,390000);assert.equal(a.projectedBalance,null);
+  p.bills.at(-1).accountBalance=500;a=I.annualSavings(p)[0];assert.equal(a.projectedBalance,440000);
+  assert.equal(E.validate(p).bills.at(-1).accountBalance,500);
+  for(const value of [-1,'500',NaN,1.111]){p.bills.at(-1).accountBalance=value;assert.throws(()=>E.validate(p),/Solde de départ/)}
+});

@@ -60,13 +60,14 @@
     ['annual-insurance','Assurance payée une fois par année','Assurances'],['annual-membership','Cotisation annuelle','Cotisations','yearly',false]
   ]);
   group('Épargne prévue','bills',[
-    ['emergency','Mise de côté pour les imprévus','Épargne','monthly',false],['retirement-save','Épargne retraite / REER / CELI','Épargne','monthly',false],
+    ['emergency','Mise de côté pour les imprévus','Épargne','monthly',false],['rrsp','REER','REER','weekly',false],['tfsa','CELI','CELI','weekly',false],
     ['education-save','Épargne études / REEE','Épargne','monthly',false],['project-save','Épargne pour un autre objectif','Épargne','monthly',false]
   ]);
   const categories=[...new Set(['Maison','Épicerie','Transport','Loisirs','Assurances','Épargne','Salaire','Autre',...templates.map(x=>x.category)])];
   function create(id,uuid,day){
     const t=templates.find(x=>x.id===id);if(!t)return null;
     const row={id:uuid,label:t.label,category:t.category,essential:t.essential};
+    if(['REER','CELI'].includes(t.category))row.accountBalance=null;
     if(t.key==='provisions')Object.assign(row,{annualAmount:null,savedAmount:0,dueDate:''});
     else {row.amount=null;if(t.key!=='envelopes')Object.assign(row,{frequency:t.frequency,anchorDate:day,secondDay:null})}
     return {key:t.key,row};
