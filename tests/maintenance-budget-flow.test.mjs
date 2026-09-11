@@ -9,7 +9,7 @@ const decode=s=>s.replace(/&(amp|lt|gt|quot|#39);/g,(_,key)=>({amp:'&',lt:'<',gt
 // Exercise the shipped event handlers and engine with a small DOM adapter.
 // This covers UI/data behavior, not browser layout; all requests are simulated.
 function harness({loadFailure=false}={}){
-  const nodes=new Map(),events={},requests=[],storage=new Map(),navigation=[];
+  const nodes=new Map(),events={},requests=[],storage=new Map(),navigation=[],confirmations=[];
   class Element{
     constructor(){this.dataset={};this.handlers={};this.attributes={};this.hidden=false;this.value='';this.checked=false;this.textContent='';this.classList={add(){},remove(){},contains(){return false}}}
     set id(v){this._id=v;nodes.set(v,this)}get id(){return this._id}
@@ -25,7 +25,7 @@ function harness({loadFailure=false}={}){
   let authCallback,session={user:{id:'owner-a'},access_token:'test'},stored=null,revision=null,failSave=false;
   const FixedDate=class extends Date{constructor(...a){super(...(a.length?a:['2026-09-10T12:00:00Z']))}static now(){return new Date('2026-09-10T12:00:00Z').getTime()}};
   const ctx=vm.createContext({Date:FixedDate,Intl,URL,URLSearchParams,AbortSignal,structuredClone,crypto:webcrypto,console,
-    confirm:()=>true,alert(){},setTimeout:fn=>{Promise.resolve().then(fn)},setInterval(){},
+    confirm:message=>{confirmations.push(message);return true},alert(){},setTimeout:fn=>{Promise.resolve().then(fn)},setInterval(){},
     sessionStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
     document:{readyState:'loading',getElementById:id=>nodes.get(id)||null,createElement:()=>new Element(),querySelector:()=>null,querySelectorAll:()=>[],addEventListener:(key,fn)=>{(events[key]??=[]).push(fn)}},
     addEventListener:(key,fn)=>{(events[key]??=[]).push(fn)},show:id=>navigation.push(id),
@@ -33,7 +33,10 @@ function harness({loadFailure=false}={}){
     fetch:async(url,options)=>{
       requests.push({url,options});if(!session)return {ok:false,json:async()=>({error:'Session expirée.'})};
       if(options.method==='GET')return {ok:!loadFailure,json:async()=>loadFailure?{error:'Indisponible'}:{config:stored,revision,entries:[],entries_complete:true,legacy:null}};
-      const body=JSON.parse(options.body);if(!stored||revision!==body.request_id){stored=body.config;revision=body.request_id}
+      const body=JSON.parse(options.body);if(!stored||revision!==body.request_id){
+        if(body.expected_revision!==revision)return {ok:false,status:409,json:async()=>({error:'Ton budget a changé sur un autre appareil.'})};
+        stored=body.config;revision=body.request_id;
+      }
       if(failSave){failSave=false;throw Object.assign(new Error('timeout'),{name:'TimeoutError'})}
       return {ok:true,json:async()=>({config:stored,revision})};
     }
@@ -42,7 +45,10 @@ function harness({loadFailure=false}={}){
   const tick=()=>new Promise(resolve=>setImmediate(resolve));
   const input=(field,value,type='number',event='input')=>{const target=nodes.get('hf-'+field.replaceAll('.','-'))||{};Object.assign(target,{dataset:{field},value:String(value),type,checked:value===true});return nodes.get('hpBudgetPlanner').handlers[event]({target})};
   const click=(action,data={})=>{const b={dataset:{action,...data},closest(){return this},getAttribute(){return null}};return nodes.get('hpBudgetPlanner').handlers.click({target:b})};
-  return {ctx,nodes,requests,navigation,input,click,tick,stored:()=>stored,
+  return {ctx,nodes,requests,navigation,confirmations,input,click,tick,stored:()=>stored,
+    failLoad(value=true){loadFailure=value},
+    remoteSave(config){stored=structuredClone(config);revision=webcrypto.randomUUID()},
+    async refresh(){for(const fn of events['hp-budget-loaded']||[])fn();await tick()},
     payments(rows,owner='owner-a'){for(const fn of events['hp-asset-payments-changed']||[])fn({detail:{owner,payments:rows}})},
     scenarioInput(key,value){const target={dataset:{scenarioField:key},value:String(value)};return nodes.get('hpBudgetPlanner').handlers.input({target})},
     async start(){for(const fn of events.DOMContentLoaded||[])fn();await tick()},
@@ -213,4 +219,59 @@ test('linked payment changes preserve an unfinished manual budget draft, stay un
  h.payments([]);assert.doesNotMatch(h.nodes.get('hpFinanceEditor').innerHTML,/Paiement remorque/);assert.match(h.nodes.get('hpFinanceEditor').innerHTML,/Téléphone/);
  h.payments([payment],'other-owner');assert.doesNotMatch(h.nodes.get('hpFinanceEditor').innerHTML,/Paiement remorque/);
  await h.click('save');assert.equal(h.stored().bills.length,1);assert.equal(h.stored().bills[0].amount,50);
+});
+
+test('failed background refresh preserves the draft and allows adding and saving expenses',async()=>{
+  const h=harness();await h.start();await h.click('suggest-expense',{template:'phone'});h.input('bills.0.amount',65);
+  const field=h.nodes.get('hf-bills-0-amount');h.failLoad();await h.refresh();
+  assert.equal(h.nodes.get('hf-bills-0-amount'),field,'keep the current form and focus');
+  assert.match(h.nodes.get('hpFinanceSaveStatus').textContent,/conserv/);
+  await h.click('suggest-expense',{template:'internet'});
+  h.input('bills.1.amount',75);await h.click('save');
+  assert.equal(h.stored().bills.length,2);assert.equal(h.stored().bills[0].amount,65);assert.equal(h.stored().bills[1].amount,75);
+  assert.equal(h.confirmations.length,0);
+});
+test('retry after the first failed load is visible and does not authorize an empty overwrite',async()=>{
+  const h=harness({loadFailure:true});await h.start();
+  assert.match(h.nodes.get('hpFinanceOverview').innerHTML,/data-action="retry"/);
+  await h.click('save');assert.equal(h.requests.filter(x=>x.options.method==='PUT').length,0);
+  h.failLoad(false);await h.click('retry');
+  await h.click('suggest-expense',{template:'phone'});h.input('bills.0.amount',85);await h.click('save');
+  assert.equal(h.stored().bills[0].amount,85);assert.equal(h.confirmations.length,0);
+});
+test('retrying a failed refresh preserves incomplete edits without a discard confirmation',async()=>{
+  const h=harness();await h.start();await h.click('suggest-expense',{template:'phone'});h.input('bills.0.amount',60);await h.click('save');
+  h.input('bills.0.amount',65);await h.click('suggest-expense',{template:'internet'});
+  const field=h.nodes.get('hf-bills-1-amount');h.failLoad();await h.refresh();h.failLoad(false);await h.click('retry');
+  assert.equal(h.nodes.get('hf-bills-1-amount'),field,'background success must not rebuild the draft editor');
+  h.input('bills.1.amount',75);await h.click('save');
+  assert.equal(h.stored().bills.length,2);assert.equal(h.stored().bills[0].amount,65);
+  assert.equal(h.confirmations.length,0);
+});
+test('concurrent load triggers produce only one request',async()=>{
+  const h=harness();await h.start();const before=h.requests.length;
+  await Promise.all([h.ctx.hpLoadFinancePlan(),h.ctx.hpLoadFinancePlan()]);
+  assert.equal(h.requests.length-before,1);
+});
+
+test('recovery retains the original revision so an edit on another device is not overwritten',async()=>{
+  const h=harness();await h.start();await h.click('suggest-expense',{template:'phone'});h.input('bills.0.amount',60);await h.click('save');
+  h.input('bills.0.amount',65);h.failLoad();await h.refresh();
+  const remote=structuredClone(h.stored());remote.bills[0].amount=70;h.remoteSave(remote);
+  h.failLoad(false);await h.click('retry');await h.click('save');
+  assert.equal(h.stored().bills[0].amount,70);
+  assert.match(h.nodes.get('hpFinanceSaveStatus').textContent,/autre appareil/);
+  assert.match(h.nodes.get('hpFinanceEditor').innerHTML,/value="65"/);
+  assert.equal(h.confirmations.length,0);
+});
+test('a late refresh after sign-out cannot restore amounts or revive a previous account',async()=>{
+  const h=harness();await h.start();await h.click('suggest-expense',{template:'phone'});h.input('bills.0.amount',9876);await h.click('save');
+  let finish;const original=h.ctx.fetch;
+  h.ctx.fetch=async(url,options)=>options.method==='GET'?await new Promise(resolve=>finish=resolve):original(url,options);
+  const pending=h.ctx.hpLoadFinancePlan();await h.tick();h.logout();
+  finish({ok:true,json:async()=>({config:h.stored(),revision:'old-revision',entries:[]})});await pending;
+  assert.doesNotMatch(h.nodes.get('hpFinanceEditor').innerHTML,/9876/);
+  await h.click('save');assert.equal(h.requests.filter(x=>x.options.method==='PUT').length,1);
+  h.ctx.fetch=original;await h.owner('owner-b');
+  assert.doesNotMatch(h.nodes.get('hpFinanceEditor').innerHTML,/9876/);
 });
