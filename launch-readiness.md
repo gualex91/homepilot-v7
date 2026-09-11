@@ -68,6 +68,19 @@ Identité visuelle intégrée en préversion : logo Nuvabri, signature, palette 
 - Synchronisation bancaire en dernier, avec consentement et prestataire validé.
 - Les références en assurance/placement sont distinctes des demandes à des entrepreneurs; faire valider leur rémunération par la conformité. Le budget n’est pas transmis automatiquement au conseiller ou aux commerces.
 
+## 7. Nuvabri Pro — idée à reprendre dans un avenir rapproché
+
+Idée du propriétaire consignée le 11 septembre 2026, à étudier après les essais de la bêta actuelle. Il s’agit d’une piste de développement, sans date de lancement ni tarif fixés.
+
+- Public visé : travailleurs autonomes.
+- Modèle envisagé : une offre Nuvabri Pro avec abonnement mensuel.
+- Besoin principal : une gestion beaucoup plus poussée des revenus et dépenses professionnels tout en conservant une utilisation simple.
+- Résultat souhaité : préparer le bilan de fin d’année et un dossier organisé à remettre au comptable, avec les revenus, dépenses et justificatifs correspondants.
+- Fonction centrale demandée : prendre une simple photo d’un reçu ou d’une facture pour que Nuvabri lise les informations, classe la dépense et la comptabilise.
+- Points de conception à préciser : validation/correction des informations reconnues, détection des doublons, distinction des dépenses personnelles et professionnelles, et format d’export attendu par les comptables.
+
+Cette note conserve l’idée pour les prochaines discussions; elle n’active aucun abonnement, traitement de reçus ou service comptable.
+
 ## Points nécessitant une décision du propriétaire
 
 1. Courriel officiel de soutien et coordonnées du responsable de la confidentialité.
