@@ -58,7 +58,18 @@
     ensure();if(!$('hpFinanceOverview'))return;
     lastResult=preview();renderOverview();renderCalendar();if(rebuildEditor)renderEditor();setView(view);updateScenario();
   }
+  function renderHomeBudget(){
+    const home=$('home');if(!home)return;
+    let host=$('hpHomeBudget');if(!host){host=document.createElement('section');host.id='hpHomeBudget';host.className='card hp-home-budget';home.appendChild(host)}
+    let result=null;
+    if(owner&&ready&&!dirty&&!retryNeeded){try{result=E.analyze(E.validate(plan),[],today().slice(0,7),today(),false)}catch{}}
+    const visible=result?.complete===true;host.hidden=!visible;
+    const label=new Intl.DateTimeFormat('fr-CA',{month:'long'}).format(new Date(today()+'T12:00:00'));
+    const html=visible?`<p>Marge prévue · ${esc(label)} : <strong>${money(result.projectedMargin)}</strong></p><button type="button" class="alt" data-screen="budget">Voir mon bilan</button>`:'';
+    if(host.innerHTML!==html)host.innerHTML=html;
+  }
   function renderOverview(){
+    renderHomeBudget();
     const host=$('hpFinanceOverview'),r=lastResult;if(!host)return;
     if(!ready){host.innerHTML=retryNeeded?'<div class="finance-block"><p>Ton budget n’a pas pu être chargé. Réessaie pour retrouver tes montants.</p><button type="button" data-action="retry">Réessayer le chargement</button></div>':'<div class="finance-block">Chargement de ton budget personnel. Tes montants apparaîtront ici.</div>';return}
     if(!r){host.innerHTML='<div class="finance-warning">Une ligne est à compléter. <button type="button" data-view="plan">Revenir à mes montants</button></div>';return}

@@ -25,7 +25,8 @@
       visible=visible.filter(task=>task.due_at&&new Date(task.due_at+'T12:00:00')<=until);
     }
     if(selected==='done')visible.sort((a,b)=>String(b.completed_at||'').localeCompare(String(a.completed_at||'')));
-    if(selected==='todo')visible=visible.slice(0,4);
+    if(selected!=='done')visible.sort((a,b)=>String(a.due_at||'9999').localeCompare(String(b.due_at||'9999')));
+    visible=visible.slice(0,3);
     host.innerHTML=visible.length?visible.map(card).join(''):'<div class="card muted">'+empty[selected]+'</div>';
   }
 

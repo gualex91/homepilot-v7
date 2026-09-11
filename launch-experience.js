@@ -20,24 +20,28 @@
   }
   function homeLayout(){
     const home=$('home'),hello=$('hello')?.closest('.card');if(!home||!hello)return;
+    hello.classList.add('hp-home-greeting');
     if(home.firstElementChild!==hello)home.prepend(hello);
     const seasonal=home.querySelector(':scope > .season');
-    if(seasonal&&!$('hpSeasonDetails')){const details=document.createElement('details');details.id='hpSeasonDetails';details.innerHTML='<summary>Une idée de saison</summary>';home.appendChild(details);details.appendChild(seasonal)}
+    if(seasonal&&!$('hpSeasonDetails')){const details=document.createElement('details');details.id='hpSeasonDetails';details.innerHTML='<summary>Une idée de saison</summary>';$('hpHelp').appendChild(details);details.appendChild(seasonal)}
     if(!$('hpGettingStarted')){const guide=document.createElement('section');guide.id='hpGettingStarted';guide.className='card';guide.setAttribute('aria-label','Premières étapes');hello.after(guide)}
     const guide=$('hpGettingStarted');
     const setup=$('setup');if(setup&&setup.previousElementSibling!==guide)guide.after(setup);
     const hc=$('hc');if(hc&&hc.previousElementSibling!==setup)setup.after(hc);
-    const fact=$('hpHomeFinancialFact');if(fact&&hc&&fact.previousElementSibling!==hc)hc.after(fact);
-    if(hc&&!$('hpHomeCalendar')){const links=document.createElement('div');links.id='hpHomeCalendar';links.className='hp-launch-actions';links.innerHTML='<button type="button" class="alt" data-screen="tasks">Tout mon calendrier</button><button type="button" class="alt" data-screen="budget">Mon budget</button>';hc.appendChild(links)}
+    const fact=$('hpHomeFinancialFact'),budget=$('budget');if(fact&&budget&&fact.parentElement!==budget)budget.appendChild(fact);
+    const legend=$('hpPriorityLegend');if(legend&&legend.parentElement!==$('hpHelp'))$('hpHelp').appendChild(legend);
+    const summary=$('hpHomeBudget');if(summary&&hc&&summary.previousElementSibling!==hc)hc.after(summary);
+    if(hc&&!$('hpHomeCalendar')){const links=document.createElement('div');links.id='hpHomeCalendar';links.className='hp-launch-actions';links.innerHTML='<button type="button" class="alt" data-screen="tasks">Voir toutes mes tâches</button>';hc.appendChild(links)}
   }
   function state(){return {household:typeof h!=='undefined'?h:null,properties:typeof props!=='undefined'?props:[],equipment:typeof eq!=='undefined'?eq:[],tasks:typeof tasks!=='undefined'?tasks:[]}}
   function refresh(){
     homeLayout();const guide=$('hpGettingStarted');if(!guide)return;
     if(root.hpCoreDataReady!==true){guide.hidden=true;return}
     const data=state(),next=nextStep(data),key=JSON.stringify([next.step,next.target,showGuide]);
-    guide.hidden=next.step===4&&!showGuide;
+    guide.hidden=!showGuide&&next.step!==2;
     if(key===lastKey)return;lastKey=key;
     guide.innerHTML=`<div class="hp-launch-kicker">${next.step===4?'Prêt pour le suivi':'Premiers pas · '+next.step+' / 3'}</div><h3>${next.title}</h3><p class="hp-onboard-copy">${next.body}</p><ol>${['Créer mon foyer','Ajouter une propriété','Préparer mes tâches'].map((label,index)=>`<li data-complete="${index+1<next.step}" ${index+1===next.step?'aria-current="step"':''}>${label}${index+1<next.step?' · Fait':''}</li>`).join('')}</ol><div class="hp-launch-actions"><button type="button" id="hpGuideNext">${next.action}</button><button type="button" class="alt" data-screen="budget">Commencer par mon budget</button></div>${showGuide?'<button type="button" class="alt" id="hpGuideClose">Fermer le guide</button>':''}`;
+    if(!showGuide)guide.innerHTML=`<h3>${next.title}</h3><p>${next.body}</p><button type="button" id="hpGuideNext">${next.action}</button>`;
     $('hpGuideNext').onclick=()=>{
       if(next.target==='household'){ $('setup')?.classList.remove('hidden');$('hn')?.focus();return }
       root.hpOpenScreen(next.target);

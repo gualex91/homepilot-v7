@@ -35,14 +35,14 @@ function harness(rows){
 }
 const date=offset=>{const d=new Date();d.setDate(d.getDate()+offset);return d.toISOString().slice(0,10)};
 
-test('Faites opens every completed task, including duplicates by title, and toggles back',()=>{
+test('Faites previews three completed tasks and keeps the full calendar history',()=>{
   const rows=[...Array.from({length:7},(_,i)=>({id:'done-'+i,title:'Même titre',status:'done',completed_at:`2026-09-0${i+1}T12:00:00Z`})),{id:'active',title:'Même titre',status:'todo'}];
   const h=harness(rows);assert.deepEqual(h.ids(),['active']);h.click('done');
-  assert.deepEqual(h.ids(),['done-6','done-5','done-4','done-3','done-2','done-1','done-0']);
+  assert.deepEqual(h.ids(),['done-6','done-5','done-4']);
   assert.equal(h.nodes.get('hpTaskListTitle').textContent,'Tâches faites');
   assert.equal(h.buttons.find(b=>b.dataset.taskFilter==='done').attributes['aria-pressed'],'true');
   assert.equal(h.nodes.get('hpPriorityLegend').hidden,true);
-  h.run('render()');assert.equal(h.ids().length,7);
+  h.run('render()');assert.equal(h.ids().length,3);assert.equal((h.nodes.get('at').innerHTML.match(/data-task-id=/g)||[]).length,8);
   h.click('todo');assert.deepEqual(h.ids(),['active']);assert.equal(h.nodes.get('hpPriorityLegend').hidden,false);
 });
 
@@ -75,4 +75,11 @@ test('deleting the active property clears its tasks and selects the remaining pr
  // The simulated client has no fetch method: the replacement must still never show old tasks.
  await h.ctx.hpForgetProperty('p1','owner');assert.equal(h.run('props.length'),1);assert.equal(h.run('ap.id'),'p2');assert.equal(h.run('tasks.length'),0);assert.doesNotMatch(h.nodes.get('at').innerHTML,/Ancienne tâche/);
  await h.ctx.hpForgetProperty('p2','owner');assert.equal(h.run('props.length'),0);assert.equal(h.run('ap'),null);assert.equal(h.nodes.get('pn').textContent,'Aucune propriété');
+});
+
+test('home previews the three closest dates while retaining all tasks and counts',()=>{
+ const h=harness([8,2,-1,1,4].map((days,i)=>({id:'t'+i,status:'todo',due_at:date(days)})));
+ assert.deepEqual(h.ids(),['t2','t3','t1']);assert.equal(h.nodes.get('due').textContent,5);
+ assert.equal((h.nodes.get('at').innerHTML.match(/data-task-id=/g)||[]).length,5);
+ h.click('soon');assert.equal(h.ids().length,3);assert.equal(h.nodes.get('soon').textContent,4);
 });

@@ -7,3 +7,13 @@
 #hpHomeFinancialFact a{font-size:.875rem;line-height:1.45;color:var(--b);text-decoration:underline;text-underline-offset:3px;padding:.6rem 0;min-height:44px}
 #hpHomeFinancialFact a:focus-visible{outline:2px solid var(--b);outline-offset:3px;border-radius:3px}
 #hpHomeFinancialFact #hpHomeFactDate,#hpHomeFinancialFact .hp-home-fact-note{font-size:.8125rem;line-height:1.45;color:var(--mut)}
+
+/* Home keeps actionable content; full advice remains in its own section. */
+#home .hp-home-greeting{background:transparent;border:0;box-shadow:none;padding:0;margin:1rem 0}
+#home .hp-home-greeting>.muted{display:none}
+#home #hc>.row{margin:1rem 0}
+#home #hpHomeCalendar{margin:.75rem 0}
+#home .hp-home-budget{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
+#home .hp-home-budget[hidden]{display:none!important}
+#home .hp-home-budget p{margin:0;font-size:1rem;line-height:1.5}
+#home .hp-home-budget button{min-height:44px}

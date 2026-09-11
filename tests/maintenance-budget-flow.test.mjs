@@ -18,10 +18,11 @@ function harness({loadFailure=false}={}){
     setAttribute(k,v){this.attributes[k]=v}
     addEventListener(k,fn){this.handlers[k]=fn}
     querySelector(){return {after(){}}}querySelectorAll(){return []}
+    appendChild(child){child.parentElement=this;return child}
     contains(){return true}closest(){return {setAttribute(){}}}
     focus(){this.focused=true}scrollIntoView(){}
   }
-  const budget=new Element();budget.id='budget';
+  const budget=new Element();budget.id='budget';const home=new Element();home.id='home';
   let authCallback,session={user:{id:'owner-a'},access_token:'test'},stored=null,revision=null,failSave=false;
   const FixedDate=class extends Date{constructor(...a){super(...(a.length?a:['2026-09-10T12:00:00Z']))}static now(){return new Date('2026-09-10T12:00:00Z').getTime()}};
   const ctx=vm.createContext({Date:FixedDate,Intl,URL,URLSearchParams,AbortSignal,structuredClone,crypto:webcrypto,console,
@@ -274,4 +275,14 @@ test('a late refresh after sign-out cannot restore amounts or revive a previous 
   await h.click('save');assert.equal(h.requests.filter(x=>x.options.method==='PUT').length,1);
   h.ctx.fetch=original;await h.owner('owner-b');
   assert.doesNotMatch(h.nodes.get('hpFinanceEditor').innerHTML,/9876/);
+});
+
+test('home budget preview only shows a saved complete plan and clears drafts and sign-out',async()=>{
+ const h=harness();await h.start();assert.equal(h.nodes.get('hpHomeBudget').hidden,true);
+ await h.click('choose',{kind:'income'});h.nodes.get('hpFinanceTemplate').value='salary';await h.click('template');h.input('incomes.0.amount',2000);
+ h.input('reviewed',true,'checkbox');assert.equal(h.nodes.get('hpHomeBudget').hidden,true);
+ await h.click('save');assert.equal(h.nodes.get('hpHomeBudget').hidden,false);assert.match(h.nodes.get('hpHomeBudget').innerHTML,/Marge prévue.*septembre/);assert.match(h.nodes.get('hpHomeBudget').innerHTML,/Voir mon bilan/);
+ h.input('incomes.0.amount',3000);assert.equal(h.nodes.get('hpHomeBudget').hidden,true);assert.equal(h.nodes.get('hpHomeBudget').innerHTML,'');
+ await h.click('save');assert.equal(h.nodes.get('hpHomeBudget').hidden,false);
+ h.logout();assert.equal(h.nodes.get('hpHomeBudget').hidden,true);assert.equal(h.nodes.get('hpHomeBudget').innerHTML,'');
 });
