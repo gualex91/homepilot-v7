@@ -172,3 +172,18 @@ test('monthly habit simulation and adviser contact cannot write or send budget d
   await h.click('summary');assert.match(h.nodes.get('hpFinanceSummaryText').value,/MES QUESTIONS POUR LE CONSEILLER NUVABRI/);
   assert.equal(h.requests.length,requestCount);assert.equal(JSON.stringify(h.stored()),before);
 });
+
+test('visible expense suggestions open amounts directly and reopen saved bills without duplicating them',async()=>{
+  const h=harness();await h.start();
+  const editor=h.nodes.get('hpFinanceEditor').innerHTML;
+  for(const label of ['Téléphone','Internet','Électricité / chauffage','Assurance habitation','Assurance automobile'])assert.ok(editor.includes(label));
+  assert.equal(h.stored(),null);
+  await h.click('suggest-expense',{template:'phone'});
+  assert.equal(h.nodes.get('hf-bills-0-amount').focused,true);h.input('bills.0.amount',65);
+  await h.click('suggest-expense',{template:'internet'});h.input('bills.1.amount',75);
+  await h.click('suggest-expense',{template:'phone'});assert.equal(h.stored(),null);
+  await h.click('save');assert.equal(h.stored().bills.length,2);assert.equal(h.stored().bills[0].amount,65);
+  await h.ctx.hpLoadFinancePlan({force:true});await h.click('suggest-expense',{template:'phone'});
+  assert.match(h.nodes.get('hpFinanceStatus').textContent,/déjà prévue/);h.input('bills.0.amount',60);await h.click('save');
+  assert.equal(h.stored().bills.length,2);assert.equal(h.stored().bills[0].amount,60);assert.equal(h.stored().bills[1].amount,75);
+});

@@ -87,4 +87,11 @@
 #hpBudgetPlanner .finance-allocation meter::-webkit-meter-optimum-value{background:var(--b);border-radius:8px}
 #hpBudgetPlanner .finance-allocation meter::-moz-meter-bar{background:var(--b);border-radius:8px}
 #hpBudgetPlanner button:focus-visible,#hpBudgetPlanner summary:focus-visible,#hpBudgetTools summary:focus-visible{outline:3px solid var(--b);outline-offset:3px}
+#hpBudgetPlanner .finance-suggestions{margin:.8rem 0 1.2rem}
+#hpBudgetPlanner .finance-suggestions h5{font-size:1rem;margin:0}
+#hpBudgetPlanner .finance-suggestion-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem}
+#hpBudgetPlanner button.finance-suggestion{text-align:left;padding:.8rem;min-height:76px;border:1px solid var(--navborder,#ccd6cf);background:var(--soft);color:var(--txt);white-space:normal;line-height:1.35}
+#hpBudgetPlanner .finance-suggestion span{display:block;font-weight:650;font-size:.9rem}
+#hpBudgetPlanner .finance-suggestion small{display:block;font-size:.75rem;color:var(--mut);margin-top:.35rem}
+@media(min-width:700px){#hpBudgetPlanner .finance-suggestion-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:480px){#hpBudgetPlanner .finance-heading h3{font-size:1.2rem}#hpBudgetPlanner .finance-tabs button{font-size:.88rem}#hpBudgetPlanner .finance-stat{padding:.85rem}#hpBudgetPlanner .finance-stat strong{font-size:1.35rem}#hpBudgetPlanner .finance-balance .primary strong{font-size:2.1rem}#hpBudgetPlanner .finance-savebar{bottom:76px}#hpBudgetTools{padding:.8rem}}
