@@ -1,5 +1,8 @@
 /* Extend the existing seasonal identity; four readable destinations. */
 [hidden]{display:none!important}
+.stats .hp-task-filter{min-height:68px;min-width:0;padding:10px 6px!important;background:var(--card);color:var(--txt);border:2px solid transparent;box-shadow:none;font-size:.875rem;line-height:1.4;text-align:center}
+.stats .hp-task-filter[aria-pressed="true"]{background:var(--soft);border-color:var(--b)}
+.stats .hp-task-filter:focus-visible{outline:3px solid var(--b);outline-offset:3px}
 .app{padding-bottom:calc(110px + env(safe-area-inset-bottom))!important}
 .tabs>div{grid-template-columns:repeat(4,minmax(0,1fr))!important}
 .tabs .tab{font-size:.875rem!important;line-height:1.3!important;padding:10px 3px!important;min-height:58px;min-width:0;white-space:normal;letter-spacing:normal!important;background:transparent;box-shadow:none;border-radius:0!important;color:var(--txt)}
