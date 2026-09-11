@@ -308,3 +308,15 @@ test('expense entry stays beside its suggestion and saves several expenses witho
   await h.click('save');assert.equal(h.nodes.get('hpFinanceEditor').hidden,true);
   h.logout();await h.owner('owner-b');assert.doesNotMatch(h.nodes.get('hpFinanceEditor').innerHTML,/is-editing/);
 });
+
+test('registered contribution shortcuts use saved amounts, require an explicit operation and clear on logout',async()=>{
+ const h=harness(),opened=[];h.ctx.hpOpenBudgetEntry=value=>opened.push(value);await h.start();
+ await h.click('suggest-expense',{template:'tfsa'});h.input('bills.0.amount',50);
+ assert.equal(h.nodes.get('hpContributionShortcuts').hidden,true);
+ await h.click('save');const id=h.stored().bills[0].id;
+ const trigger=()=>h.nodes.get('hpContributionShortcuts').handlers.click({target:{closest:()=>({dataset:{contributionId:id}})}});
+ trigger();assert.equal(opened[0].category,'CELI');assert.equal(opened[0].amount,50);
+ assert.equal(h.requests.filter(x=>x.options.method==='PUT').length,1);
+ h.input('bills.0.amount',75);trigger();assert.equal(opened[1].amount,50,'unfinished plan changes cannot change the saved shortcut');
+ h.logout();trigger();assert.equal(opened.length,2);assert.equal(h.nodes.get('hpContributionShortcuts').innerHTML,'');
+});

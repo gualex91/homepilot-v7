@@ -68,8 +68,23 @@
     const html=visible?`<p>Marge prévue · ${esc(label)} : <strong>${money(result.projectedMargin)}</strong></p><button type="button" class="alt" data-screen="budget">Voir mon bilan</button>`:'';
     if(host.innerHTML!==html)host.innerHTML=html;
   }
+  function recordContribution(id){
+    if(!owner||!ready||saving||loading)return;
+    const row=plan.bills.concat(plan.envelopes).find(x=>x.id===id&&I.registeredCategory(x.category));
+    if(!row||!(row.amount>0))return;
+    window.hpOpenBudgetEntry?.({entry_type:'expense',category:row.category,amount:row.amount,description:'Cotisation '+row.label});
+  }
+  function renderContributionShortcuts(){
+    const budget=$('budget');if(!budget)return;
+    let host=$('hpContributionShortcuts');
+    if(!host){host=document.createElement('section');host.id='hpContributionShortcuts';host.className='card';budget.appendChild(host);host.addEventListener('click',event=>{const button=event.target.closest('button[data-contribution-id]');if(button)recordContribution(button.dataset.contributionId)})}
+    const rows=owner&&ready?plan.bills.concat(plan.envelopes).filter(x=>I.registeredCategory(x.category)&&x.amount>0):[];
+    host.hidden=!rows.length;
+    const html=rows.length?`<h4>Noter un versement CELI ou REER</h4><p class="muted">Tes cotisations prévues sont dans « Mes montants ». Pour les inclure dans les opérations, confirme chaque versement effectué.</p>${rows.map(x=>`<button type="button" class="alt" data-contribution-id="${esc(x.id)}">${esc(x.label)} · ${money(E.cents(x.amount))}</button>`).join('')}<p class="muted">Vérifie le montant et la date avant d’enregistrer. Les opérations déjà notées restent dans la liste ci-dessous.</p>`:'';
+    if(host.innerHTML!==html)host.innerHTML=html;
+  }
   function renderOverview(){
-    renderHomeBudget();
+    renderHomeBudget();renderContributionShortcuts();
     const host=$('hpFinanceOverview'),r=lastResult;if(!host)return;
     if(!ready){host.innerHTML=retryNeeded?'<div class="finance-block"><p>Ton budget n’a pas pu être chargé. Réessaie pour retrouver tes montants.</p><button type="button" data-action="retry">Réessayer le chargement</button></div>':'<div class="finance-block">Chargement de ton budget personnel. Tes montants apparaîtront ici.</div>';return}
     if(!r){host.innerHTML='<div class="finance-warning">Une ligne est à compléter. <button type="button" data-view="plan">Revenir à mes montants</button></div>';return}
