@@ -10,7 +10,8 @@
      for(const [id,value] of Object.entries({hpBudgetType:'expense',hpBudgetCategory:prefill.category,hpBudgetAmount:prefill.amount,hpBudgetDescription:prefill.description,hpBudgetProperty:'',hpBudgetDate:''})){if($(id))$(id).value=String(value??'')}
      if($('hpBudgetStatus'))$('hpBudgetStatus').textContent='Vérifie la date et le montant du versement effectué, puis enregistre.';
    }
-   $('hpBudgetTools')?.setAttribute('open','');
+   window.hpSetFinanceView?.('operations');
+   if(!$('hpFinanceOperations'))$('hpBudgetTools')?.setAttribute('open','');
    const group=$('hpBudgetGroupMonthly');
    if(group){group.classList.add('open');group.querySelector('.hp-budget-group-head')?.setAttribute('aria-expanded','true')}
    form.classList.remove('hidden');

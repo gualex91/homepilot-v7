@@ -114,3 +114,17 @@
 #hpBudgetPlanner .finance-suggestion-item.is-editing>button[data-action="save-continue"]{width:100%;min-height:44px}
 #hpBudgetPlanner .finance-savebar>button+button{margin-top:.5rem}
 #hpBudgetPlanner .finance-suggestion small{font-size:.875rem}
+
+/* Distinct working surfaces with a compact, consistent navigation. */
+#hpBudgetPlanner .finance-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.35rem;padding:.3rem;background:var(--soft);border-radius:14px}
+#hpBudgetPlanner .finance-tabs button{min-height:48px;border-radius:10px;font-size:.95rem;box-shadow:none}
+#hpBudgetPlanner .finance-heading h3{margin:0;font-size:1.3rem}
+#hpBudgetPlanner .finance-load-options{margin:.5rem 0;font-size:.875rem}
+#hpBudgetPlanner .finance-suggestion{min-height:58px;padding:.6rem}
+#hpFinanceOperations .hp-budget-group{border:0;background:transparent;box-shadow:none;margin-top:1rem}
+#hpFinanceOperations .hp-budget-group-head{display:none}
+#hpFinanceOperations .hp-budget-group-body{padding:0}
+#hpFinanceOperations .card{box-shadow:none}
+#budget[data-finance-view] > .row > #hpBudgetAddBtn{display:none}
+#hpBudgetTools[hidden],#hpFinanceOperations[hidden],#hpBudgetPlanner .finance-controls[hidden]{display:none!important}
+@media(max-width:600px){#hpBudgetPlanner .finance-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}#hpBudgetPlanner .finance-tabs button{font-size:.95rem}}

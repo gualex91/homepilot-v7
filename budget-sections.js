@@ -22,7 +22,7 @@
  function makeGroup(cfg,budget){let g=$(cfg.id);if(g)return g;g=document.createElement('div');g.id=cfg.id;g.className='hp-budget-group'+(cfg.open?' open':'');g.innerHTML=`<button class="hp-budget-group-head" type="button"><span>${cfg.title}</span><span class="hp-budget-chevron">⌄</span></button><div class="hp-budget-group-body"></div>`;const button=g.querySelector('.hp-budget-group-head');button.setAttribute('aria-expanded',String(cfg.open));button.onclick=()=>{g.classList.toggle('open');button.setAttribute('aria-expanded',String(g.classList.contains('open')))};budget.appendChild(g);return g}
  function move(el,group){if(!el||!group)return;const body=group.querySelector('.hp-budget-group-body');if(el.parentElement!==body)body.appendChild(el)}
  function directByText(budget,selector,text){return [...budget.querySelectorAll(`:scope > ${selector}`)].find(x=>(x.textContent||'').trim()===text)||null}
- function organize(){const budget=$('budget');if(!budget)return;addStyles();let tools=$('hpBudgetTools');if(!tools){tools=document.createElement('details');tools.id='hpBudgetTools';tools.innerHTML='<summary>Mes opérations et outils détaillés</summary><p class="muted">Retrouve tes opérations, tes dettes et tes objectifs. Le bilan utilise les montants de « Mes montants »; ces outils ne les additionnent pas automatiquement.</p>';budget.appendChild(tools)}const groups={};for(const cfg of GROUPS)groups[cfg.id]=makeGroup(cfg,tools);
+ function organize(){const budget=$('budget');if(!budget)return;addStyles();let tools=$('hpBudgetTools');if(!tools){tools=document.createElement('details');tools.id='hpBudgetTools';tools.innerHTML='<summary>Objectifs, dettes et ressources</summary><p class="muted">Outils complémentaires pour approfondir ton bilan.</p>';budget.appendChild(tools)}const groups={};for(const cfg of GROUPS)groups[cfg.id]=makeGroup(cfg,tools);
   // Vue d’ensemble : résumé, fait financier et accès au conseiller.
   const oldOverview=$('hpFinancialOverview');if(oldOverview){oldOverview.hidden=true;move(oldOverview,groups.hpBudgetGroupOverview)}
   const fact=[...budget.children].find(x=>x.classList?.contains('season'));move(fact,groups.hpBudgetGroupOverview);
@@ -36,7 +36,11 @@
   move($('hpSavingsGoals'),groups.hpBudgetGroupGoals);move($('hpNetWorthSection'),groups.hpBudgetGroupGoals);
   // Dettes, paiements et hypothèque.
   move($('hpMortgageCard'),groups.hpBudgetGroupDebts);move($('hpRecurringBlock'),groups.hpBudgetGroupDebts);move($('hpDebtSection'),groups.hpBudgetGroupDebts);
-  // Garde le titre + bouton Ajouter du Budget au-dessus des groupes.
+  const operations=$('hpFinanceOperations'),monthly=groups.hpBudgetGroupMonthly;
+  if(operations&&monthly.parentElement!==operations)operations.appendChild(monthly);
+  if(operations&&!monthly.classList.contains('open')){monthly.classList.add('open');monthly.querySelector('.hp-budget-group-head')?.setAttribute('aria-expanded','true')}
+  tools.hidden=!!budget.dataset.financeView&&budget.dataset.financeView!=='overview';
+  // Keep complementary tools after the active working surface.
   if(budget.lastElementChild!==tools)budget.appendChild(tools);
  }
  function init(){setTimeout(organize,2600);let timer;new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(organize,120)}).observe(document.body,{childList:true,subtree:true});setInterval(organize,5000)}

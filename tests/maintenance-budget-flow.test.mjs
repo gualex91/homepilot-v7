@@ -320,3 +320,11 @@ test('registered contribution shortcuts use saved amounts, require an explicit o
  h.input('bills.0.amount',75);trigger();assert.equal(opened[1].amount,50,'unfinished plan changes cannot change the saved shortcut');
  h.logout();trigger();assert.equal(opened.length,2);assert.equal(h.nodes.get('hpContributionShortcuts').innerHTML,'');
 });
+
+test('switching finance surfaces keeps the unfinished plan and shows only the chosen panel',async()=>{
+ const h=harness();await h.start();await h.click('suggest-expense',{template:'phone'});h.input('bills.0.amount',55);
+ const field=h.nodes.get('hf-bills-0-amount');h.ctx.hpSetFinanceView('operations');
+ assert.equal(h.nodes.get('hpFinanceOperations').hidden,false);assert.equal(h.nodes.get('hpFinanceEditor').hidden,true);assert.equal(h.nodes.get('hpFinanceOverview').hidden,true);
+ h.ctx.hpSetFinanceView('plan');assert.equal(h.nodes.get('hpFinanceOperations').hidden,true);assert.equal(h.nodes.get('hf-bills-0-amount'),field);
+ await h.click('save');assert.equal(h.stored().bills[0].amount,55);assert.equal(h.nodes.get('hpFinanceOverview').hidden,false);
+});
