@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs';
 const read=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8');
 function harness(){
  const events={},intervals=[],actions=[],nodes={};let authCallback,fetchRows;
- function node(id){return nodes[id]||= {id,innerHTML:'',textContent:'',classList:{add(){},remove(){}},querySelector(){return {textContent:''}},querySelectorAll:()=>[],insertAdjacentHTML(_where,html){this.innerHTML=html+this.innerHTML},focus(){actions.push(['focus',id])}};}
+ function node(id){return nodes[id]||= {id,dataset:{},innerHTML:'',textContent:'',classList:{add(){},remove(){}},querySelector(){return {textContent:''}},querySelectorAll:()=>[],insertAdjacentHTML(_where,html){this.innerHTML=html+this.innerHTML},focus(){actions.push(['focus',id])}};}
  ['leisure','hpLeisureList','hpLeisureForm','hpLeisureName','hpLeisureTaskModal'].forEach(node);
  const ctx={console,Date,Promise,setTimeout,clearTimeout,setInterval:fn=>{intervals.push(fn);return intervals.length},clearInterval(){},
   document:{readyState:'complete',getElementById:id=>nodes[id],addEventListener:(name,fn)=>{(events[name]||=[]).push(fn)}},
@@ -14,9 +14,10 @@ function harness(){
   supabaseClient:{auth:{getUser:async()=>({data:{user:{id:'owner'}}}),onAuthStateChange:fn=>{authCallback=fn}},from:table=>({select(){return this},eq(){return this},order(){return fetchRows(table)}})}
  };
  ctx.window=ctx;vm.createContext(ctx);vm.runInContext(read('leisure-tasks.js'),ctx);vm.runInContext(read('leisure-gallery.js'),ctx);
+ const addTask=ctx.hpAddLeisureTask;
  for(const name of ['hpAddLeisureTask','hpFindLeisurePro','hpShowLeisureDiy','hpToggleLeisureTask','hpDeleteLeisureTask','hpDeleteLeisure'])ctx[name]=(...args)=>actions.push([name,...args]);
  ctx.hpLoadLeisure=()=>{};intervals.at(-1)();
- return {ctx,actions,nodes,node,auth:(event,session)=>authCallback(event,session),data:fn=>fetchRows=fn,
+ return {ctx,actions,nodes,node,addTask,auth:(event,session)=>authCallback(event,session),data:fn=>fetchRows=fn,
   render:(eq,ts=[],owner='owner')=>ctx.hpLeisureGallery.render(eq,ts,owner),
   click:async(action,equipment,task)=>{const card={dataset:{leisureEquipment:equipment}},button={dataset:{leisureAction:action,...(task?{taskId:task}:{})},closest:s=>s==='#hpLeisureList'?nodes.hpLeisureList:s==='[data-leisure-equipment]'?card:null};const e={target:{closest:()=>button},preventDefault(){}};for(const fn of events.click||[])await fn(e);}
  };
@@ -62,4 +63,33 @@ test('signed-out users cannot regain old cards from late responses or stale butt
 test('an empty collection opens the existing add form',async()=>{
  const h=harness();h.render([]);assert.match(h.nodes.hpLeisureList.innerHTML,/Ajouter mon premier loisir/);
  await h.click('add-equipment');assert.deepEqual(h.actions,[['focus','hpLeisureName']]);
+});
+
+test('Remorque is selectable separately from Roulotte and offers four matching maintenance presets',()=>{
+ const types=vm.runInNewContext(read('leisure-budget.js').match(/const TYPES=(\[.*?\]);/)[1]);
+ assert.equal(types.filter(([key])=>key==='utility_trailer').length,1);assert.ok(types.some(([key])=>key==='travel_trailer'));
+ const h=harness();for(const id of ['hpLtmTitle','hpLtmBody','hpLtPreset','hpLtSave','hpLtTitle','hpLtDate'])h.node(id);
+ h.addTask('trailer','utility_trailer','Ma remorque');
+ const html=h.nodes.hpLtmBody.innerHTML;assert.match(html,/Inspection annuelle de la remorque/);assert.match(html,/pneus et la pression/);assert.match(html,/roulements et les moyeux/);assert.match(html,/feux et le câblage/);
+ h.nodes.hpLtPreset.value='2';h.nodes.hpLtPreset.onchange();assert.equal(h.nodes.hpLtSave.dataset.diy,'trailer_bearing_check');
+ h.nodes.hpLtPreset.value='';h.nodes.hpLtPreset.onchange();assert.equal(h.nodes.hpLtSave.dataset.diy,'');
+});
+test('reclassifying Other updates only the equipment type and retains the same tasks and image context',async()=>{
+ const h=harness(),stored={...eq('trailer','other'),user_id:'owner',notes:'Calcium',registration:'ABC'},task={id:'inspection',leisure_equipment_id:'trailer',title:'Mes roulements',status:'todo'},writes=[];
+ h.ctx.supabaseClient.from=table=>({filters:{},patch:null,update(patch){this.patch=patch;return this},select(){return this},eq(k,v){this.filters[k]=v;return this},async maybeSingle(){
+  const matches=Object.entries(this.filters).every(([k,v])=>stored[k]===v);
+  if(this.patch&&matches){writes.push({table,patch:this.patch,filters:this.filters});Object.assign(stored,this.patch);}
+  return {error:null,data:matches?{id:stored.id,equipment_type:stored.equipment_type}:null};
+ }});
+ h.render([{...stored}],[task]);await h.click('classify-trailer','trailer');
+ assert.equal(stored.id,'trailer');assert.equal(stored.equipment_type,'utility_trailer');assert.equal(stored.notes,'Calcium');assert.equal(stored.registration,'ABC');
+ assert.equal(writes.length,1);assert.equal(writes[0].table,'leisure_equipment');assert.deepEqual(Object.keys(writes[0].patch),['equipment_type']);assert.equal(writes[0].filters.user_id,'owner');assert.equal(writes[0].filters.equipment_type,'other');
+ assert.match(h.nodes.hpLeisureList.innerHTML,/utility-trailer.webp/);assert.match(h.nodes.hpLeisureList.innerHTML,/Mes roulements/);assert.doesNotMatch(h.nodes.hpLeisureList.innerHTML,/Classer comme remorque/);
+ await h.ctx.hpClassifyLeisureTrailer('trailer','owner');assert.equal(writes.length,1);
+ assert.equal(task.status,'todo');assert.equal(task.leisure_equipment_id,'trailer');
+});
+test('reclassification rejects account changes and denied writes without changing displayed equipment',async()=>{
+ const h=harness();h.data(async()=>({data:[],error:null}));await h.ctx.hpLoadLeisure();let queries=0;h.ctx.supabaseClient.from=()=>{queries++;return {update(){return this},eq(){return this},select(){return this},maybeSingle:async()=>({error:{message:'denied'},data:null})}};
+ await assert.rejects(h.ctx.hpClassifyLeisureTrailer('trailer','another-user'),/Session expirée/);assert.equal(queries,0);
+ h.render([eq('trailer','other')]);await h.click('classify-trailer','trailer');assert.match(h.nodes.hpLeisureList.innerHTML,/Classer comme remorque/);assert.doesNotMatch(h.nodes.hpLeisureList.innerHTML,/utility-trailer.webp/);assert.equal(queries,1);
 });

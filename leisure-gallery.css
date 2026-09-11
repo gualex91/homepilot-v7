@@ -60,3 +60,6 @@
 .hp-leisure-empty button{min-height:48px;width:100%}
 @media(min-width:720px){.app:has(#leisure.on){max-width:980px}.hp-leisure-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:350px){.hp-leisure-content{padding:16px}.hp-leisure-content h3{font-size:1.3rem}.hp-leisure-task-head{flex-wrap:wrap}}
+
+.hp-leisure-reclassify{font-size:.875rem;line-height:1.5;color:var(--mut);margin:0 0 10px}
+.hp-leisure-details [data-leisure-action=classify-trailer]{font-size:.875rem;min-height:44px;margin-bottom:12px}
