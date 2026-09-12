@@ -4,7 +4,7 @@ Périmètre : application personnelle, branche `preview/beta-20260910`, départ 
 
 ## Décision
 
-La revue technique disponible a été exécutée et deux défauts ont été corrigés. La validation de lancement reste ouverte : aucune restauration complète réussie, recette connectée sur appareils réels encore à terminer. Les réussites ci-dessous ne constituent pas un audit de sécurité exhaustif.
+La revue technique disponible a été exécutée et trois défauts ont été corrigés. La validation de lancement reste ouverte : aucune restauration complète réussie, recette connectée sur appareils réels encore à terminer. Les réussites ci-dessous ne constituent pas un audit de sécurité exhaustif.
 
 ## Défauts corrigés
 
@@ -30,7 +30,7 @@ Quatre tests reproduisent le démarrage déconnecté, la réponse après déconn
 
 | Contrôle | Résultat | Limite |
 |---|---|---|
-| Suite JavaScript complète | 208 réussites, 0 échec | 1 test navigateur local non exécuté; réseau simulé dans les tests JS |
+| Suite JavaScript complète | 209 réussites, 0 échec | 1 test navigateur local non exécuté; réseau simulé dans les tests JS |
 | Chiffrement des exports | 15 tests Python réussis | GPG réel; exports SQL simulés |
 | Invitations et partage de propriétés | 44 assertions SQL réussies | Identités temporaires; pas de courriel envoyé |
 | Paiements liés et suppression de biens | Suite SQL réussie | Paiement prévu retiré; opération déjà enregistrée conservée |
@@ -74,3 +74,11 @@ Utiliser un compte de test dédié, sans remplacer les montants d’un vrai util
 6. Tester la récupération du compte avec une boîte de test contrôlée, les erreurs réseau et le retour après suspension de l’application sur iPhone et Android.
 
 L’accès permanent, les coordonnées de soutien, la politique officielle et la suppression complète du compte restent des étapes de préparation du lancement; cette revue ne les déclare pas terminées.
+
+## Complément de recette connectée
+
+Une connexion autorisée a permis d’ouvrir l’accueil, le bilan, les opérations et les biens. Les boutons revenu/dépense sélectionnent le bon type et placent immédiatement le focus dans le montant. Les données existantes n’ont pas été modifiées pour ces contrôles.
+
+Cette recette a révélé que la liste des propriétés dans le formulaire d’opération n’était pas rechargée depuis le remplacement de l’ancien chargeur. Le formulaire charge maintenant les propriétés autorisées par les règles de la base, sans bloquer le montant, conserve une sélection encore valide et ignore la réponse si le compte change. La déconnexion efface aussi les options de propriétés de l’ancien compte. Un test supplémentaire couvre le chargement, les caractères HTML et le changement de compte.
+
+La recette d’enregistrement avec des données jetables, la récupération de compte par courriel et les essais physiques iPhone/Android restent distincts; une simple connexion réussie ne les valide pas.

@@ -43,3 +43,16 @@ test('quick entry selects the requested type, focuses amount and protects unfini
  assert.equal(el('hpBudgetType').value,'expense');assert.equal(el('hpBudgetCategory').value,'Autre');assert.equal(el('hpBudgetAmount').value,'450');
  el('hpBudgetSave').dataset.hpSaving='1';assert.equal(ctx.hpOpenBudgetEntry({entry_type:'income'}),false);assert.equal(el('hpBudgetType').value,'expense');
 });
+
+test('quick entry loads permitted properties without blocking amount focus or leaking across accounts',async()=>{
+ const nodes=new Map(),requests=[];let focused=false;
+ const el=id=>{if(!nodes.has(id))nodes.set(id,{value:'',dataset:{},style:{},textContent:'',options:[],classList:{add(){},remove(){}},querySelector(){return null},focus(){focused=true},scrollIntoView(){},replaceChildren(...options){this.options=options;this.value=options[0]?.value||''}});return nodes.get(id)};
+ const ctx=vm.createContext({Date,u:{id:'a'},document:{readyState:'loading',getElementById:el,addEventListener(){},createElement:()=>({})},setTimeout(){},supabaseClient:{from:table=>{assert.equal(table,'properties');return {select:()=>({order:()=>new Promise(resolve=>requests.push(resolve))})}}}});ctx.window=ctx;
+ vm.runInContext(readFileSync(new URL('../budget-entry-fix.js',import.meta.url),'utf8'),ctx);
+ el('hpBudgetType').value='expense';el('hpBudgetProperty').value='second';ctx.hpOpenBudgetEntry();assert.equal(focused,true);
+ requests[0]({data:[{id:'first',name:'Maison',city:'Saguenay'},{id:'second',name:'<img src=x>',city:null}],error:null});await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(el('hpBudgetProperty').options.length,3);assert.equal(el('hpBudgetProperty').value,'second');assert.equal(el('hpBudgetProperty').options[2].textContent,'<img src=x>');
+ ctx.hpOpenBudgetEntry();ctx.u={id:'b'};el('hpBudgetProperty').replaceChildren({value:'',textContent:'Aucune propriété'});
+ requests[1]({data:[{id:'private-a',name:'Private A'}],error:null});await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(el('hpBudgetProperty').options.length,1);
+});

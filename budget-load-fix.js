@@ -13,6 +13,7 @@
  }
  function clearEntry(){
    for(const id of ['hpBudgetAmount','hpBudgetDescription','hpBudgetProperty','hpBudgetDate'])if($(id))$(id).value='';
+   const property=$('hpBudgetProperty');if(property)property.innerHTML='<option value="">Aucune propriété</option>';
    if($('hpBudgetType'))$('hpBudgetType').value='expense';
    if($('hpBudgetCategory'))$('hpBudgetCategory').value='Autre';
    if($('hpBudgetStatus'))$('hpBudgetStatus').textContent='';
