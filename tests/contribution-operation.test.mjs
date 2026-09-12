@@ -27,3 +27,19 @@ test('prefilled contribution is confirmed before saving, refreshes operation tot
  assert.match(el('hpBudgetList').innerHTML,/Cotisation CELI/);
  allowReplace=true;await ctx.hpDeleteBudget('new');assert.match(el('hpExpense').textContent,/1\s?850,00/);
 });
+
+test('quick entry selects the requested type, focuses amount and protects unfinished entries',()=>{
+ const nodes=new Map();let allowChange=false,focused=null,view=null;
+ const el=id=>{if(!nodes.has(id))nodes.set(id,{value:'',dataset:{},style:{},classList:{add(){},remove(){}},querySelector(){return null},focus(){focused=id},scrollIntoView(){}});return nodes.get(id)};
+ const ctx=vm.createContext({Date,document:{readyState:'loading',getElementById:el,addEventListener(){}},confirm:()=>allowChange,setTimeout(){},hpSetFinanceView:v=>view=v});ctx.window=ctx;
+ vm.runInContext(readFileSync(new URL('../budget-entry-fix.js',import.meta.url),'utf8'),ctx);
+ el('hpBudgetType').value='expense';
+ assert.equal(ctx.hpOpenBudgetEntry({entry_type:'income'}),true);
+ assert.equal(el('hpBudgetType').value,'income');assert.equal(el('hpBudgetCategory').value,'Salaire');assert.equal(focused,'hpBudgetAmount');assert.equal(view,'operations');
+ el('hpBudgetAmount').value='450';el('hpBudgetDescription').value='Paie';
+ assert.equal(ctx.hpOpenBudgetEntry({entry_type:'expense'}),false);
+ assert.equal(el('hpBudgetType').value,'income');assert.equal(el('hpBudgetAmount').value,'450');assert.equal(el('hpBudgetDescription').value,'Paie');
+ allowChange=true;assert.equal(ctx.hpOpenBudgetEntry({entry_type:'expense'}),true);
+ assert.equal(el('hpBudgetType').value,'expense');assert.equal(el('hpBudgetCategory').value,'Autre');assert.equal(el('hpBudgetAmount').value,'450');
+ el('hpBudgetSave').dataset.hpSaving='1';assert.equal(ctx.hpOpenBudgetEntry({entry_type:'income'}),false);assert.equal(el('hpBudgetType').value,'expense');
+});

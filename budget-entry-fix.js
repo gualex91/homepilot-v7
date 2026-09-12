@@ -10,6 +10,14 @@
      for(const [id,value] of Object.entries({hpBudgetType:'expense',hpBudgetCategory:prefill.category,hpBudgetAmount:prefill.amount,hpBudgetDescription:prefill.description,hpBudgetProperty:'',hpBudgetDate:''})){if($(id))$(id).value=String(value??'')}
      if($('hpBudgetStatus'))$('hpBudgetStatus').textContent='Vérifie la date et le montant du versement effectué, puis enregistre.';
    }
+   if(prefill&&['income','expense'].includes(prefill.entry_type)&&!prefill.category){
+     const type=$('hpBudgetType'),hasDraft=!!($('hpBudgetAmount')?.value||$('hpBudgetDescription')?.value?.trim());
+     if(type&&type.value!==prefill.entry_type){
+       if(hasDraft&&!confirm('Changer le type de l’opération en cours pour '+(prefill.entry_type==='income'?'un revenu':'une dépense')+'? Le montant saisi sera conservé.'))return false;
+       type.value=prefill.entry_type;
+       if($('hpBudgetCategory'))$('hpBudgetCategory').value=prefill.entry_type==='income'?'Salaire':'Autre';
+     }else if(!hasDraft&&$('hpBudgetCategory'))$('hpBudgetCategory').value=prefill.entry_type==='income'?'Salaire':'Autre';
+   }
    window.hpSetFinanceView?.('operations');
    if(!$('hpFinanceOperations'))$('hpBudgetTools')?.setAttribute('open','');
    const group=$('hpBudgetGroupMonthly');
@@ -18,7 +26,8 @@
    form.style.display='block';
    const d=$('hpBudgetDate');
    if(d&&!d.value){const now=new Date(),off=now.getTimezoneOffset();d.value=new Date(now.getTime()-off*60000).toISOString().slice(0,10)}
-   setTimeout(()=>{form.scrollIntoView({behavior:'smooth',block:'start'});$('hpBudgetAmount')?.focus({preventScroll:true})},60);
+   $('hpBudgetAmount')?.focus({preventScroll:true});
+   setTimeout(()=>{form.scrollIntoView({behavior:'smooth',block:'start'})},60);
    return true;
  }
  function bind(){
