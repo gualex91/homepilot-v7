@@ -25,7 +25,9 @@
     const seasonal=home.querySelector(':scope > .season');
     if(seasonal&&!$('hpSeasonDetails')){const details=document.createElement('details');details.id='hpSeasonDetails';details.innerHTML='<summary>Une idée de saison</summary>';$('hpHelp').appendChild(details);details.appendChild(seasonal)}
     if(!$('hpGettingStarted')){const guide=document.createElement('section');guide.id='hpGettingStarted';guide.className='card';guide.setAttribute('aria-label','Premières étapes');hello.after(guide)}
-    const guide=$('hpGettingStarted');
+    const guide=$('hpGettingStarted'),thought=$('hpSeasonalThought');
+    if(thought&&thought.previousElementSibling!==hello)hello.after(thought);
+    const anchor=thought||hello;if(guide.previousElementSibling!==anchor)anchor.after(guide);
     const setup=$('setup');if(setup&&setup.previousElementSibling!==guide)guide.after(setup);
     const hc=$('hc');if(hc&&hc.previousElementSibling!==setup)setup.after(hc);
     const fact=$('hpHomeFinancialFact'),budget=$('budget');if(fact&&budget&&fact.parentElement!==budget)budget.appendChild(fact);

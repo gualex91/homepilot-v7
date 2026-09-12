@@ -17,3 +17,9 @@
 #home .hp-home-budget[hidden]{display:none!important}
 #home .hp-home-budget p{margin:0;font-size:1rem;line-height:1.5}
 #home .hp-home-budget button{min-height:44px}
+
+#home .hp-seasonal-thought{margin:.6rem 0 1rem;padding:.8rem 1rem;border-left:3px solid var(--b);border-radius:0 12px 12px 0;background:var(--card);color:var(--txt)}
+#home .hp-seasonal-thought[hidden]{display:none!important}
+#home .hp-thought-heading{font-size:.875rem;font-weight:650;color:var(--b)}
+#home #hpThoughtSeason{font-weight:400}
+#home #hpThoughtText{font-size:1rem;line-height:1.55;margin:.4rem 0 0;overflow-wrap:anywhere}
