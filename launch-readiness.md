@@ -1,3 +1,7 @@
+# Validation actuelle — 12 septembre 2026
+
+Consulter [qa-validation-20260912.md](qa-validation-20260912.md) pour les résultats et blocages actuels. Le lancement public reste à valider. Les sections ci-dessous conservent la chronologie et les décisions initiales.
+
 # Nuvabri — ordre de travail avant lancement
 
 Décision du 10 septembre 2026 : préparer une bêta ciblée, conserver le budget essentiel gratuit et financer progressivement l’application par des commerces partenaires. Ce document est une feuille de route, pas une attestation de conformité ou de disponibilité publique.

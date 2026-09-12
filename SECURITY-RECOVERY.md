@@ -1,3 +1,7 @@
+# Current verification — 12 September 2026
+
+See [qa-validation-20260912.md](qa-validation-20260912.md) for the current results. The backup workflow is configured but its latest scheduled export fails authentication. Full restoration remains unverified. The status sections below record the earlier preparation work.
+
 # Invitation permissions and recovery
 
 ## Applied invitation repair
