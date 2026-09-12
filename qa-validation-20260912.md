@@ -4,7 +4,7 @@ Périmètre : application personnelle, branche `preview/beta-20260910`, départ 
 
 ## Décision
 
-La revue technique disponible a été exécutée et trois défauts ont été corrigés. La validation de lancement reste ouverte : aucune restauration complète réussie, recette connectée sur appareils réels encore à terminer. Les réussites ci-dessous ne constituent pas un audit de sécurité exhaustif.
+La revue technique disponible a été exécutée et trois défauts ont été corrigés. La sauvegarde chiffrée et sa restauration PostgreSQL sur une copie isolée sont maintenant validées. La validation de lancement reste ouverte : recette connectée sur appareils réels encore à terminer. Les réussites ci-dessous ne constituent pas un audit de sécurité exhaustif.
 
 ## Défauts corrigés
 
@@ -44,13 +44,17 @@ Quatre tests reproduisent le démarrage déconnecté, la réponse après déconn
 Commandes : `node --test tests/*.test.mjs` et `python3 tests/backup.test.py`.
 Tests SQL : `tests/household-invitations.sql`, `tests/asset-payments-rls.sql`, `tests/private-data-rls.sql`, `tests/property-recurring-tasks.sql`. Tous utilisent des fixtures jetables et `ROLLBACK`; ne jamais remplacer par `COMMIT`.
 
-## Sauvegarde : blocage confirmé
+## Sauvegarde et restauration : validées le 12 septembre à 20:33 UTC
 
-La sauvegarde planifiée du 12 septembre à 05:32 UTC échoue à l’export : `psql failed (exit 2) [AUTHENTICATION_FAILED]; no backup was published.` Les cinq exécutions les plus récentes consultées sont en échec. Aucun nouvel export, changement de mot de passe ou relancement inutile n’a été effectué par cette revue.
+Après correction du secret par le propriétaire, la tentative 5 de l’exécution de sauvegarde `34675838628` a réussi : exports PostgreSQL, chiffrement, déchiffrement et intégrité vérifiés; artefact privé `10304897047` créé à 20:18 UTC et conservé jusqu’au 19 septembre.
 
-Une copie manuelle du 11 septembre existe, mais son manifeste la décrit comme une copie des données applicatives : elle exclut notamment les identités et sessions Auth, fichiers Storage et configuration Supabase. Sa restauration n’a pas été testée. Elle ne prouve pas la récupération complète du service.
+L’exécution de restauration `34717303834` a restauré cette archive dans un PostgreSQL 17.6.1.166 temporaire. Les versions de migration Auth et Storage concordaient avec la source. Les services applicatifs étaient arrêtés, le conteneur de base déconnecté de tous les réseaux et les tâches Cron désactivées avant le chargement des données. Le travail ne disposait pas du secret de connexion à la base source.
 
-Pour fermer ce point : corriger la connexion de sauvegarde dans le secret GitHub `SUPABASE_DB_URL` avec le véritable mot de passe PostgreSQL du projet, obtenir un export chiffré réussi, puis restaurer sur une cible isolée vide. Ne pas communiquer le mot de passe dans le chat. Le connecteur ne permet pas de lire le secret GitHub et aucun accès PostgreSQL valide ni cible de restauration locale compatible n’était disponible durant la revue. Aucun projet payant créé.
+Résultats : 63 tables exportées par COPY comparées à l’archive, avec contenu de toutes les lignes identique avant et après les essais; 33 tables applicatives retrouvées; 76 clés étrangères vérifiées; RLS présente sur les tables publiques; quatre suites SQL réussies (invitations/partage, paiements, données privées et tâches récurrentes). Conteneurs, volumes et fichiers de la copie supprimés après validation. Quatre tests locaux supplémentaires vérifient les garde-fous du programme de restauration.
+
+Preuves conservées dans le dépôt privé : [sauvegarde](https://github.com/gualex91/nuvabri-backups/actions/runs/34675838628), [restauration](https://github.com/gualex91/nuvabri-backups/actions/runs/34717303834), [rapport détaillé](https://github.com/gualex91/nuvabri-backups/blob/validation/restore-20260912/ops/backups/restore-validation-20260912.md).
+
+Ce résultat concerne PostgreSQL. Il ne valide pas un redéploiement complet de Supabase, les paramètres Auth/SMTP, les fonctions Edge, les intégrations externes ni une reconnexion réelle dans l’application restaurée. La recette Web/mobile reste ouverte. Aucun abonnement ni projet hébergé supplémentaire créé; le workflow de restauration reste un essai ponctuel dans le dépôt privé.
 
 ## Avis de sécurité à conserver au suivi
 
