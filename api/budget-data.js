@@ -12,10 +12,16 @@ export default async function handler(req,res){
   input.searchParams.delete('table');target.search=input.searchParams.toString();
   const headers={apikey:PUBLIC_KEY,Authorization:auth,'Content-Type':'application/json'};
   for(const key of ['prefer','accept','range','range-unit'])if(req.headers[key])headers[key]=req.headers[key];
+  const started=Date.now();
   try{
-    const upstream=await fetch(target,{method:req.method,headers,body:['POST','PATCH'].includes(req.method)?JSON.stringify(req.body):undefined});
+    const upstream=await fetch(target,{method:req.method,headers,body:['POST','PATCH'].includes(req.method)?JSON.stringify(req.body):undefined,signal:AbortSignal.timeout(8000)});
     res.setHeader('Cache-Control','no-store');
     for(const key of ['content-type','content-range','range-unit','preference-applied'])if(upstream.headers.has(key))res.setHeader(key,upstream.headers.get(key));
     return res.status(upstream.status).send(await upstream.text());
-  }catch{return res.status(502).json({message:'Impossible de joindre le Budget.'})}
+  }catch(error){
+    const timeout=error?.name==='TimeoutError'||error?.name==='AbortError';
+    console.error(JSON.stringify({route:'/api/budget-data',table,method:req.method,kind:timeout?'upstream_timeout':'upstream_unavailable',ms:Date.now()-started}));
+    res.setHeader('Cache-Control','no-store');
+    return res.status(timeout?504:502).json({message:timeout?'Le chargement du budget prend trop de temps. Réessaie dans un instant.':'Impossible de joindre le Budget.',code:timeout?'BUDGET_TIMEOUT':'BUDGET_UNAVAILABLE'});
+  }
 }

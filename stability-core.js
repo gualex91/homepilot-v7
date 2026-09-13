@@ -31,6 +31,29 @@
     memory.delete(key);
     try { sessionStorage.removeItem('hp-write-'+key); } catch {}
   }
+  function guardForm(formId, buttonId, action) {
+    let pending = false;
+    return async (...args) => {
+      if (pending) return;
+      const form = root.document.getElementById(formId);
+      for (const field of form?.querySelectorAll('input,select,textarea') || []) {
+        if (!field.checkValidity()) { field.reportValidity(); field.focus(); return; }
+      }
+      const button = root.document.getElementById(buttonId);
+      pending = true; if (button) button.disabled = true;
+      try { return await action(...args); }
+      catch { root.alert('Confirmation non reçue. Tes champs sont conservés : réessaie sans les modifier.'); }
+      finally { pending = false; if (button) button.disabled = false; }
+    };
+  }
+  async function insertOnce(client, table, payload) {
+    const key = 'tool:'+table+':'+payload.user_id;
+    const {updated_at, ...identityPayload} = payload;
+    const id = operation(key,identityPayload);
+    const result = await client.from(table).upsert({...payload,id},{onConflict:'id',ignoreDuplicates:true});
+    if (!result.error) complete(key);
+    return result;
+  }
   function budgetFetch(input,init){
     const url=new URL(typeof input==='string'||input instanceof URL?input:input.url);
     if(url.origin==='https://vkfvjwxajgeafzyphjvh.supabase.co'&&/^\/rest\/v1\/(budget_[a-z_]+|mortgage_renewals)$/.test(url.pathname)){
@@ -42,5 +65,5 @@
     }
     return fetch(input,init);
   }
-  root.hpStability = {esc, addMonths, token, operation, complete, budgetFetch};
+  root.hpStability = {esc, addMonths, token, operation, complete, budgetFetch, guardForm, insertOnce};
 })(globalThis);

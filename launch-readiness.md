@@ -1,6 +1,6 @@
-# Validation actuelle — 12 septembre 2026
+# Validation actuelle — 13 septembre 2026
 
-Consulter [qa-validation-20260912.md](qa-validation-20260912.md) pour les résultats et blocages actuels. Le lancement public reste à valider. Les sections ci-dessous conservent la chronologie et les décisions initiales.
+Consulter l’[audit du 13 septembre](audit-20260913.md), sa [matrice des champs](audit-champs-20260913.csv) et le [protocole de cinq jours](protocole-testeurs-5-jours.md) pour les résultats et blocages actuels. La [validation précédente](qa-validation-20260912.md) conserve les preuves de sauvegarde et de restauration. La recette exhaustive sur téléphone et le lancement public restent à valider. Les sections ci-dessous conservent la chronologie et les décisions initiales.
 
 # Nuvabri — ordre de travail avant lancement
 
