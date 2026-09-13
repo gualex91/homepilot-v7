@@ -9,6 +9,7 @@
  let loadVersion=0,authOwner=currentUserId();
  function clearOperations(message='Connecte-toi pour retrouver tes opérations.'){
    for(const id of ['hpIncome','hpExpense','hpBalance'])if($(id))$(id).textContent='—';
+   const card=$('hpBalance')?.parentElement;if(card)card.dataset.balance='neutral';
    if($('hpBudgetList'))$('hpBudgetList').textContent=message;
  }
  function clearEntry(){
@@ -40,6 +41,7 @@
      if($('hpIncome'))$('hpIncome').textContent=money(inc);
      if($('hpExpense'))$('hpExpense').textContent=money(exp);
      if($('hpBalance'))$('hpBalance').textContent=money(inc-exp);
+     const card=$('hpBalance')?.parentElement;if(card)card.dataset.balance=inc>exp?'positive':inc<exp?'negative':'neutral';
      if($('hpBudgetList'))$('hpBudgetList').innerHTML=rows.length?rows.map(x=>`<div class="card row"><div><b>${x.entry_type==='income'?'＋':'−'} ${money(Number(x.amount||0))}</b><div class="muted">${esc(x.category)}${x.description?' • '+esc(x.description):''}${x.properties?.name?' • 🏠 '+esc(x.properties.name):''}<br>${new Intl.DateTimeFormat('fr-CA',{day:'numeric',month:'long'}).format(new Date(x.entry_date+'T12:00:00'))}</div></div><button class="alt" onclick="hpDeleteBudget('${x.id}')">×</button></div>`).join(''):'<div class="card muted">Aucune entrée pour ce mois.</div>';
      window.dispatchEvent(new CustomEvent('hp-budget-loaded',{detail:{rows,income:inc,expense:exp,balance:inc-exp}}));
    }catch(e){if(!current())return;console.error('Nuvabri budget load proxy error',e);clearOperations('Impossible de rafraîchir les opérations. Réessaie dans un instant.')}

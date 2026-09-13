@@ -88,6 +88,7 @@
     const r=lastResult;host.hidden=view==='operations';
     if(!ready||!r){host.innerHTML='';return}
     const info=I.analyze(draft,r),complete=r.complete,canEstimate=draft.incomes.length>0;
+    host.dataset.balance=canEstimate&&r.projectedMargin!==0?(r.projectedMargin>0?'positive':'negative'):'neutral';
     const reserve=info.savings+r.totals.provisions+r.totals.projects;
     const expenses=info.outflow-reserve;
     const period=new Intl.DateTimeFormat('fr-CA',{month:'long',year:'numeric'}).format(new Date(month+'-01T12:00:00'));
