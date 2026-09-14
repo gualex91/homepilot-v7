@@ -4,6 +4,21 @@ Application personnelle · Branche `preview/beta-20260910` · Complément à l�
 
 ## État de préparation
 
+### Reprise autorisée — vidéo avec voix et contrôle connecté
+
+Après l’autorisation explicite du propriétaire, la connexion sécurisée a réussi dans le navigateur de contrôle, sur la préversion `11bfaf49126d4aa218c3c9ba194455a3214a46e1` / `dpl_Bkgs1EKc9v3qVN4TxYCoUiDAPaLt`. Les commandes de l’espace connecté, l’accueil, le budget et les opérations ont été observés. Le budget prévu a fini son chargement et affichait « Ton budget est enregistré ». Cette reprise lève le blocage de connexion décrit historiquement plus bas.
+
+Un essai de montant nul, avec la description fictive `TEST CODEX 14SEP dépense`, a déclenché une alerte native. Le navigateur de contrôle a ensuite renvoyé des délais d’attente sur l’inspection et la fermeture de cette alerte. L’ouverture d’un nouvel onglet et la demande de contrôle manuel n’ont pas rétabli l’inspection. Aucune autre méthode d’accès, lecture de jeton ou automatisation externe n’a été employée. Aucun nouveau montant valide n’a été soumis et aucune donnée existante n’a été modifiée. Le parcours connecté complet reste **partiel**, et non validé champ par champ.
+
+Le correctif de ce lot remplace l’alerte native d’échec d’enregistrement par un message visible et focalisé dans le formulaire. Les six champs d’une opération ont maintenant des libellés associés; le montant présente un clavier décimal et un minimum de 0,01 $. Les valeurs restent disponibles en cas d’erreur. Quatre essais de comportement supplémentaires vérifient : montant nul puis correction, date manquante, deux clics concurrents et réponse serveur sans confirmation. La suite complète donne **271 réussites, 0 échec, 1 test navigateur non exécuté** (272 au total). Ces essais utilisent des composants simulés et ne valident pas la nouvelle interface sur un téléphone.
+
+Le relevé Vercel de 00 h 20 à 01 h 20 UTC, le 14 septembre, montre **quatre GET `/api/budget-data` en 504 vers 01 h 10** sur la préversion testée. La cause n’est pas établie. Le chargement réussi du budget principal ne permet donc pas de déclarer les outils secondaires fiables dans toutes les conditions. Les journaux d’erreur consultés séparément n’apportent pas de diagnostic pour ces quatre réponses. Ce point reste ouvert avant le pilote.
+
+La vidéo est maintenant **narrée en français**, avec la mission en première scène, dix écrans, des sous-titres français et une durée vérifiée de **2 min 09 s**. Elle présente le parcours, les exemples budgétaires, cinq jours d’essai et les retours attendus. Format : 720 × 1280, H.264 / AAC, environ 3 Mo. Le décodage du fichier complet a réussi; le niveau sonore mesuré ne présente pas d’écrêtage. Les dix écrans ont été inspectés. Il s’agit d’une voix de synthèse générique et d’illustrations, sans imitation du fondateur ni données personnelles. Le guide PDF de deux pages reste inchangé. Les sources, le scénario et la transcription accompagnent la vidéo.
+
+**Aucun lien de campagne de cinq jours créé, aucune invitation envoyée et aucun lancement public.** La durée commencera après résolution des blocages et validation du déploiement retenu.
+
+
 ### Reprise après les confirmations du propriétaire
 
 Le propriétaire a confirmé que la connexion et le parcours d’une dépense de test fonctionnent sur son appareil : ajout de 12,50 $, modification à 15 $, suppression, conservation du résultat après réouverture et ajustements correspondants du solde. Ce sont des **essais rapportés par le propriétaire**, pas des observations directes du navigateur de validation. L’essai de revenu de 100 $ a été proposé, mais n’a pas été confirmé dans la conversation.

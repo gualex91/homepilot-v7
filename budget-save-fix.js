@@ -46,8 +46,13 @@
      resetButton(btn);
      console.error('Nuvabri budget save error',e);
      const msg=e?.name==='AbortError'?'Le serveur Nuvabri ne répond pas. Réessaie.':(e?.message||'Erreur inconnue');
-     if(status)status.textContent='Erreur : '+msg;
-     alert(msg);
+     if(status){
+       status.textContent='Erreur : '+msg;
+       status.setAttribute('role','alert');
+       status.setAttribute('tabindex','-1');
+       status.focus({preventScroll:true});
+       status.scrollIntoView({behavior:'smooth',block:'nearest'});
+     }
    }
  }
  window.hpSaveBudgetEntry=save;
