@@ -151,14 +151,31 @@
     // Two monthly dates cannot be deduced from a single due date.
     return months ? addMonths(date,months) : null;
   }
+  const pendingBudgetReads = new Map();
   function budgetFetch(input,init){
     const url=new URL(typeof input==='string'||input instanceof URL?input:input.url);
     if(url.origin==='https://vkfvjwxajgeafzyphjvh.supabase.co'&&/^\/rest\/v1\/(budget_[a-z_]+|mortgage_renewals)$/.test(url.pathname)){
       const params=new URLSearchParams(url.search);params.set('table',url.pathname.split('/').pop());
       const path='/api/budget-data?'+params.toString();
-      return typeof Request!=='undefined'&&input instanceof Request
-        ? fetch(new Request(new URL(path,root.location.origin),input),init)
-        : fetch(path,init);
+      const request=typeof Request!=='undefined'&&input instanceof Request;
+      const target=request?new Request(new URL(path,root.location.origin),input):path;
+      const method=String(init?.method||(request?input.method:'GET')).toUpperCase();
+      if(method!=='GET'){
+        // A post-write refresh must never reuse a pre-write response, even for another table.
+        pendingBudgetReads.clear();
+        return Promise.resolve(fetch(target,init)).finally(()=>pendingBudgetReads.clear());
+      }
+      // An explicitly abortable request owns its cancellation; do not share it.
+      if(request||init?.signal||typeof Headers==='undefined')return fetch(target,init);
+      const headers=Array.from(new Headers(init?.headers).entries()).sort(([a],[b])=>a.localeCompare(b));
+      const key=JSON.stringify([path,headers,init?.credentials,init?.cache,init?.mode]);
+      let pending=pendingBudgetReads.get(key);
+      if(!pending){
+        pending=Promise.resolve(fetch(target,init));pendingBudgetReads.set(key,pending);
+        const clear=()=>{if(pendingBudgetReads.get(key)===pending)pendingBudgetReads.delete(key)};
+        pending.then(clear,clear);
+      }
+      return pending.then(response=>response.clone());
     }
     return fetch(input,init);
   }

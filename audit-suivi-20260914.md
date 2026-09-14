@@ -4,6 +4,28 @@ Application personnelle · Branche `preview/beta-20260910` · Complément à l�
 
 ## État de préparation
 
+### Correctifs de reprise réseau — demande de sortir le pilote de cinq jours
+
+Le 14 septembre, la reprise du navigateur de contrôle échoue toujours sur `refresh tabs`, y compris la lecture de l’alerte déjà ouverte. La découverte documentée ne propose qu’un navigateur Chrome. Aucune nouvelle tentative de connexion ni autre surface de contrôle n’a été utilisée. Le contrôle visuel connecté demeure bloqué par cet outil.
+
+Le diagnostic distingue la base et le transport : les dix requêtes budgétaires les plus lentes encore présentes dans `pg_stat_statements` ont un maximum inférieur à 246 ms. Ce relevé ne couvre pas les demandes qui ne sont pas parvenues à PostgreSQL et ne prouve pas la cause historique des quatre 504. Le nouvel endpoint répond correctement 401 sans session. La dernière préversion ne présente pas de trafic connecté suffisant pour conclure que les erreurs ont disparu.
+
+Correctifs préparés :
+- Deux tentatives maximum pour les lectures GET/HEAD du relais financier en cas de 502/503/504 ou d’interruption réseau. Chaque tentative couvre le téléchargement complet et est bornée à six secondes. Un délai demandé par le fournisseur supérieur à une seconde n’est pas ignoré.
+- Aucun réessai automatique pour POST/PATCH/DELETE, ni pour une erreur de session, de permission ou de quota. Les identifiants de reprise et les versions restent contrôlés par les formulaires.
+- Les lectures identiques simultanées partagent un appel côté client. Les comptes et en-têtes distincts ne sont jamais regroupés, aucun résultat terminé n’est conservé, et toute écriture invalide les lectures en cours pour le rafraîchissement suivant.
+- Réponses du relais non mises en cache, y compris les refus de session; journaux techniques limités à la route, table, méthode, statut, durée et nombre de tentatives.
+- Durée maximale explicite de vingt secondes pour `api/budget-data.js`, sans changement d’offre ou ajout de fonction.
+
+Vérification : **279 tests JavaScript réussis, zéro échec, un test navigateur non exécuté**. Les huit nouveaux essais couvrent récupération, corps de réponse interrompu, limite des reprises, absence de reprise des écritures, séparation des comptes, invalidation après écriture et reprise manuelle. Les vérifications SQL des six outils financiers ont de nouveau réussi, toutes les données fictives étant annulées par ROLLBACK.
+
+Ces résultats démontrent la résistance aux erreurs simulées et l’isolation dans la base; ils ne constituent pas une observation connectée de la correction sur téléphone. Le propriétaire a confirmé la lecture sonore de la vidéo; la version MP4 avec son stéréo est retenue.
+
+Accès pilote : l’outil Vercel disponible fixe ses liens à 23 heures. L’API officielle permet `ttl: 432000`, mais aucune authentification Vercel de terminal n’est configurée ici. L’accès connecté existant ne fournit pas l’opération avec cette durée. Le navigateur bloqué empêche également une configuration par le tableau de bord. **Le lien de cinq jours n’est pas créé, la campagne n’est pas lancée.** Le propriétaire a déjà autorisé ce travail; le blocage est technique et non un manque d’autorisation.
+
+Sources techniques consultées : [durée des fonctions Vercel](https://vercel.com/docs/functions/configuring-functions/duration), [diagnostic HTTP Supabase](https://supabase.com/docs/guides/troubleshooting/http-api-issues), [durée du lien de partage Vercel](https://vercel.com/docs/rest-api/aliases/update-the-protection-bypass-for-a-url).
+
+
 ### Reprise autorisée — vidéo avec voix et contrôle connecté
 
 Après l’autorisation explicite du propriétaire, la connexion sécurisée a réussi dans le navigateur de contrôle, sur la préversion `11bfaf49126d4aa218c3c9ba194455a3214a46e1` / `dpl_Bkgs1EKc9v3qVN4TxYCoUiDAPaLt`. Les commandes de l’espace connecté, l’accueil, le budget et les opérations ont été observés. Le budget prévu a fini son chargement et affichait « Ton budget est enregistré ». Cette reprise lève le blocage de connexion décrit historiquement plus bas.
