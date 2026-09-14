@@ -4,7 +4,7 @@ Application personnelle · Branche `preview/beta-20260910` · Complément à l�
 
 ## État de préparation
 
-Les correctifs des outils financiers détaillés sont prêts pour une recette connectée. **Le lancement public et la recette exhaustive sur téléphone ne sont pas validés.** Le navigateur de contrôle est de nouveau fonctionnel et l’écran de connexion Nuvabri s’ouvre. Un compte de test doit encore être connecté par le mécanisme sécurisé pour poursuivre les essais visuels.
+Les correctifs des outils financiers détaillés sont publiés en préversion au commit `2413899b705c8b2d302b8bdbac9ec3c2451ce3b0`, déploiement `dpl_97suCzuxx2AKNUi4W5diMASJKziP` confirmé `READY`. **Le lancement public et la recette exhaustive sur téléphone ne sont pas validés.** Le navigateur de contrôle est de nouveau fonctionnel et l’écran de connexion Nuvabri s’ouvre. La connexion sécurisée a été soumise, puis Nuvabri a affiché « Impossible de terminer pour le moment. Vérifie ta connexion puis réessaie. » Aucun signal positif de connexion n’a été observé. La cause reste inconnue; cet écran ne démontre pas un mauvais mot de passe. La recette connectée est donc bloquée à cet endroit, sans répétition automatique des tentatives.
 
 La comparaison avec HomeZada, YNAB, Monarch et Neontra reste celle du rapport précédent : Nuvabri propose une combinaison intéressante pour les ménages québécois, mais les preuves ne justifient pas une avance globale ou une exclusivité commerciale. Ce lot améliore la fiabilité avant l’ajout de fonctions.
 
@@ -29,6 +29,7 @@ Ces outils ne créent pas implicitement une opération budgétaire. Le versement
 - `tests/budget-tools-rls.sql`, exécuté dans Supabase : **réussite sur six tables**. Insertion répétée sans doublon, lecture propriétaire, modification avec version courante, rejet des modifications/suppressions avec ancienne version, refus de transfert de propriété et d’accès par un autre compte, suppression par le propriétaire. Données fictives et transaction annulée par `ROLLBACK`.
 - Aucun changement de schéma ou de permissions dans ce lot. Aucun compte réel ni montant réel modifié par les essais SQL.
 - Le relevé des erreurs 5xx sur la préversion `304035e`, fenêtre de 24 h consultée le 14 septembre, n’a renvoyé aucun journal. **Cela ne prouve pas que les 504 observées le 13 septembre sont résolues** : aucun trafic connecté représentatif n’a encore été reproduit dans cette recette.
+- Le relevé 5xx sur `dpl_97suCzuxx2AKNUi4W5diMASJKziP`, de 23 h 31 UTC le 13 septembre à 0 h 31 UTC le 14 septembre, ne renvoie aucun journal non plus. Les appels d’authentification du client vont directement à Supabase; les journaux Vercel seuls ne permettent pas d’expliquer l’échec de connexion.
 - Les preuves de sauvegarde/restauration du 12 septembre restent dans [la validation précédente](qa-validation-20260912.md); ce lot n’a pas relancé une restauration sans nécessité.
 
 ## Complément à la matrice des champs
@@ -44,7 +45,7 @@ La [matrice du 13 septembre](audit-champs-20260913.csv) reste un inventaire de d
 
 ## Ce qui reste avant le pilote
 
-1. Connecter un compte de test dans le navigateur sécurisé, puis vérifier les créations, modifications, suppressions, reconnexions et relectures sur la nouvelle préversion. Reproduire les chargements budgétaires et examiner les journaux correspondants.
+1. Comprendre l’erreur générique de connexion rencontrée, puis reprendre avec un compte de test dans le navigateur sécurisé. Vérifier les créations, modifications, suppressions, reconnexions et relectures sur la nouvelle préversion. Reproduire les chargements budgétaires et examiner les journaux correspondants. Ne pas tenter de contourner un éventuel blocage de connexion par le site; [aide sur les blocages du navigateur cloud](https://help.openai.com/articles/20001280-using-cloud-browser-in-chatgpt#when-a-website-blocks-the-task).
 2. Compléter la recette physique iPhone et Android, y compris clavier décimal, grands caractères, navigation arrière, réseau interrompu et reprise de session. Ne pas cocher ces cases sur la seule base des tests de code.
 3. Préparer un lien bêta stable pendant toute la campagne, vérifié sans compte Vercel. Les liens temporaires de partage générés ici expirent après 23 h et ne conviennent pas seuls aux cinq jours.
 4. Achever les contrôles des autres chargeurs secondaires et fiches équipement signalés dans l’audit précédent. Les protections nouvelles des cinq outils ne ferment pas automatiquement les points des autres modules.
