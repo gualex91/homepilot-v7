@@ -6,7 +6,7 @@ set local lock_timeout='5s';
 do $$
 declare
   a uuid:=gen_random_uuid(); b uuid:=gen_random_uuid(); item uuid:=gen_random_uuid();
-  table_name text; n integer; changed integer;
+  table_name text; n integer; changed integer; original_version timestamptz; new_version timestamptz;
 begin
   insert into auth.users(id,email) values(a,a::text||'@nuvabri-validation.invalid'),(b,b::text||'@nuvabri-validation.invalid');
   perform set_config('request.jwt.claims',json_build_object('sub',a,'role','authenticated')::text,true);
@@ -29,6 +29,17 @@ begin
   foreach table_name in array array['budget_assets','budget_debts','budget_savings_goals','budget_recurring_payments','mortgage_renewals','budget_category_targets'] loop
     execute format('select count(*) from public.%I where id=$1',table_name) into n using item;
     if n<>1 then raise exception 'Owner read or duplicate protection failed: %',table_name; end if;
+    execute format('select updated_at from public.%I where id=$1',table_name) into original_version using item;
+    new_version:=original_version+interval '1 second';
+    execute format('update public.%I set updated_at=$1 where id=$2 and updated_at=$3',table_name) using new_version,item,original_version;
+    get diagnostics changed=row_count;
+    if changed<>1 then raise exception 'Versioned owner update failed: %',table_name; end if;
+    execute format('update public.%I set updated_at=$1 where id=$2 and updated_at=$3',table_name) using new_version+interval '1 second',item,original_version;
+    get diagnostics changed=row_count;
+    if changed<>0 then raise exception 'Stale update accepted: %',table_name; end if;
+    execute format('delete from public.%I where id=$1 and updated_at=$2',table_name) using item,original_version;
+    get diagnostics changed=row_count;
+    if changed<>0 then raise exception 'Stale delete accepted: %',table_name; end if;
     begin
       execute format('update public.%I set user_id=$1 where id=$2',table_name) using b,item;
       raise exception 'Ownership transfer allowed: %',table_name;
@@ -50,4 +61,4 @@ begin
   execute 'reset role';
 end $$;
 rollback;
-select 'PASS: six financial forms, one row per repeated insert, ownership transfer denied, cross-owner reads/updates/deletes denied, owner deletion; fixtures rolled back' as result;
+select 'PASS: six financial forms, repeated insert retained once, versioned owner update, stale update/delete rejected, ownership transfer and cross-owner access denied, owner deletion; fixtures rolled back' as result;

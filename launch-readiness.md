@@ -1,6 +1,6 @@
-# Validation actuelle — 13 septembre 2026
+# Validation actuelle — 14 septembre 2026
 
-Consulter l’[audit du 13 septembre](audit-20260913.md), sa [matrice des champs](audit-champs-20260913.csv) et le [protocole de cinq jours](protocole-testeurs-5-jours.md) pour les résultats et blocages actuels. La [validation précédente](qa-validation-20260912.md) conserve les preuves de sauvegarde et de restauration. La recette exhaustive sur téléphone et le lancement public restent à valider. Les sections ci-dessous conservent la chronologie et les décisions initiales.
+Consulter le [suivi du 14 septembre](audit-suivi-20260914.md), l’[audit du 13 septembre](audit-20260913.md), sa [matrice des champs](audit-champs-20260913.csv) et le [protocole de cinq jours](protocole-testeurs-5-jours.md). Le lot courant obtient 259 tests JavaScript réussis, aucun échec et un test navigateur non exécuté; le contrôle SQL des versions et de l’isolation réussit. La recette connectée exhaustive et les appareils physiques restent à valider. La [validation précédente](qa-validation-20260912.md) conserve les preuves de sauvegarde et de restauration. Aucun lancement public n’est validé. Les sections ci-dessous conservent la chronologie et les décisions initiales.
 
 # Nuvabri — ordre de travail avant lancement
 

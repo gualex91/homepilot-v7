@@ -1,10 +1,10 @@
 # Nuvabri — protocole de test sur cinq jours
 
-Version préparée le 13 septembre 2026. **Document prêt à adapter; campagne non envoyée et date de départ non fixée.** Le responsable remplit le lien stable, la version retenue et le contact avant diffusion.
+Version préparée le 13 septembre 2026; suivi technique actualisé le 14 septembre. **Document prêt à adapter; campagne non envoyée et date de départ non fixée.** Le responsable remplit le lien stable, la version retenue et le contact avant diffusion.
 
 ## Préparation par le responsable
 
-- Fermer les points « avant le pilote » de l’[audit](audit-20260913.md), dont les lenteurs inexpliquées et la recette des outils détaillés. Ce protocole ne les déclare pas corrigés.
+- Fermer les points « avant le pilote » du [suivi courant](audit-suivi-20260914.md), dont la vérification des lenteurs et la recette connectée des outils détaillés. L’[audit initial](audit-20260913.md) conserve les constats d’origine. Ce protocole ne déclare pas la recette terminée.
 - Choisir quatre à six personnes, dont au moins deux sur iPhone et deux sur Android. Inclure une personne peu à l’aise avec les applications, un propriétaire avec plusieurs biens et une personne sans propriété. Si possible, inclure un couple pour le partage volontaire.
 - Fournir un compte ou une inscription de test distincte par personne. Utiliser des montants fictifs et des biens nommés « TEST ». Ne jamais échanger les mots de passe.
 - Remplir : **lien bêta stable : à fournir**; **version testée : à figer**; **dates : à fixer**; **contact privé de soutien : à confirmer**. Le lien doit durer au moins cinq jours et fonctionner sans compte Vercel.
