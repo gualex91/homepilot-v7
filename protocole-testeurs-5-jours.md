@@ -5,7 +5,7 @@ Version préparée le 13 septembre 2026; suivi technique actualisé le 14 septem
 ## Préparation par le responsable
 
 - Fermer les points « avant le pilote » du [suivi courant](audit-suivi-20260914.md), dont la vérification des lenteurs et la recette connectée des outils détaillés. L’[audit initial](audit-20260913.md) conserve les constats d’origine. Ce protocole ne déclare pas la recette terminée.
-- Choisir quatre à six personnes, dont au moins deux sur iPhone et deux sur Android. Inclure une personne peu à l’aise avec les applications, un propriétaire avec plusieurs biens et une personne sans propriété. Si possible, inclure un couple pour le partage volontaire.
+- Choisir quatre à cinq personnes, selon la demande du propriétaire, idéalement deux sur iPhone et deux sur Android. Inclure une personne peu à l’aise avec les applications, un propriétaire avec plusieurs biens et une personne sans propriété. Si possible, inclure un couple pour le partage volontaire.
 - Fournir un compte ou une inscription de test distincte par personne. Utiliser des montants fictifs et des biens nommés « TEST ». Ne jamais échanger les mots de passe.
 - Remplir : **lien bêta stable : à fournir**; **version testée : à figer**; **dates : à fixer**; **contact privé de soutien : à confirmer**. Le lien doit durer au moins cinq jours et fonctionner sans compte Vercel.
 - Faire le passage préparatoire de la matrice des champs : chaque option de liste, champ facultatif vide, champ obligatoire vide, date impossible, montant négatif, zéro permis/interdit, cents, texte long et annulation. Rejouer toute anomalie corrigée.

@@ -4,6 +4,24 @@ Application personnelle · Branche `preview/beta-20260910` · Complément à l�
 
 ## État de préparation
 
+### Reprise après les confirmations du propriétaire
+
+Le propriétaire a confirmé que la connexion et le parcours d’une dépense de test fonctionnent sur son appareil : ajout de 12,50 $, modification à 15 $, suppression, conservation du résultat après réouverture et ajustements correspondants du solde. Ce sont des **essais rapportés par le propriétaire**, pas des observations directes du navigateur de validation. L’essai de revenu de 100 $ a été proposé, mais n’a pas été confirmé dans la conversation.
+
+À la reprise demandée, le contrôle automatique a refusé une nouvelle requête de connexion sécurisée. Motif annoncé : la précédente erreur générique de connexion impose l’arrêt des tentatives en l’absence d’une résolution explicitement dirigée par l’utilisateur. Il ne s’agissait pas d’un refus manuel du propriétaire. Aucun autre moyen de connexion, jeton ou session n’a été utilisé pour contourner ce refus. **L’audit complet champ par champ reste bloqué.**
+
+Le complément sur les fiches équipement ajoute huit tests : tous les champs du détecteur, dates et liens invalides, double clic, réponse perdue, édition concurrente, ouverture d’une autre fiche pendant l’enregistrement, déconnexion et changement de propriété. Les fiches utilisent maintenant une version conditionnelle, conservent les champs en cas d’erreur et ignorent une réponse destinée à une fiche fermée. La date, le fournisseur, la garantie, l’entretien et les notes sont synchronisés avec les colonnes correspondantes. Le texte relatif aux documents décrit les liens utilisables et l’indisponibilité actuelle du téléversement.
+
+La suite complète donne désormais **267 réussites, 0 échec, 1 test navigateur non exécuté**. `tests/equipment-profile-rls.sql` a également réussi dans Supabase : conservation des champs, mise à jour du propriétaire avec version, rejet d’une version périmée, refus de lecture/modification par un autre propriétaire. Toutes les données fictives ont été annulées par `ROLLBACK`. Cette preuve ne remplace pas la recette de partage entre membres ni les essais visuels.
+
+Une vidéo de présentation verticale de 2 min 10 s, sans voix off, et une fiche PDF de deux pages sont préparées pour **4 à 5 testeurs**. La vidéo est composée de textes et schémas illustratifs; ce n’est pas un enregistrement de parcours connectés validés. Elle reprend la signature de marque approuvée et présente la mission, les onglets, les exemples budgétaires et les retours attendus.
+
+### Accès de cinq jours, à créer après validation
+
+La limite de 23 h concerne l’outil de partage utilisé précédemment. La [documentation officielle Vercel](https://vercel.com/docs/rest-api/aliases/update-the-protection-bypass-for-a-url), consultée à cette reprise, décrit un paramètre `ttl` en secondes pour un lien de partage d’une URL ou d’un déploiement. Cinq jours correspondent à `432000` secondes. La préparation retient un déploiement figé, une création au début du pilote et la vérification de l’expiration retournée, avec un essai sans compte Vercel. La connexion Nuvabri restera nécessaire. L’accès API authentifié permettant cette durée reste à vérifier; aucun lien de cinq jours n’a été créé et aucune protection globale n’a été désactivée. Aucun départ ni invitation n’est lancé avant la validation.
+
+### État documenté avant cette reprise
+
 Les correctifs des outils financiers détaillés sont publiés en préversion au commit `2413899b705c8b2d302b8bdbac9ec3c2451ce3b0`, déploiement `dpl_97suCzuxx2AKNUi4W5diMASJKziP` confirmé `READY`. **Le lancement public et la recette exhaustive sur téléphone ne sont pas validés.** Le navigateur de contrôle est de nouveau fonctionnel et l’écran de connexion Nuvabri s’ouvre. La connexion sécurisée a été soumise, puis Nuvabri a affiché « Impossible de terminer pour le moment. Vérifie ta connexion puis réessaie. » Aucun signal positif de connexion n’a été observé. La cause reste inconnue; cet écran ne démontre pas un mauvais mot de passe. La recette connectée est donc bloquée à cet endroit, sans répétition automatique des tentatives.
 
 La comparaison avec HomeZada, YNAB, Monarch et Neontra reste celle du rapport précédent : Nuvabri propose une combinaison intéressante pour les ménages québécois, mais les preuves ne justifient pas une avance globale ou une exclusivité commerciale. Ce lot améliore la fiabilité avant l’ajout de fonctions.
