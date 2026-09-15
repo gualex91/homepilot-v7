@@ -2,7 +2,7 @@
  // professional-task-router owns every search; this module only adds entry buttons.
  function enhance(){
   document.querySelectorAll('#tl > *, #at > *, #tasklist > *').forEach(card=>{
-   if(card.nodeType!==1||card.querySelector('.hpFindPro'))return;
+   if(card.nodeType!==1||!card.dataset.taskId||card.querySelector('.hpFindPro'))return;
    const button=document.createElement('button');button.type='button';button.className='alt hpFindPro';
    button.textContent='👷 Trouver un professionnel';button.style.marginTop='8px';card.appendChild(button);
   });

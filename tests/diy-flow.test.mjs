@@ -39,6 +39,7 @@ function harness(){
  const tasks=titles.map((title,i)=>({id:'task-'+i,title,property_id:'house',equipment_id:'equipment-'+i}));
  const cards=tasks.map(task=>{const card=home.appendChild(new Element());card.className='card';card.setAttribute('data-task-id',task.id);const title=card.appendChild(new Element('b'));title.textContent=task.title;return card});
  const calendarCard=calendar.appendChild(new Element());calendarCard.className='card';calendarCard.setAttribute('data-task-id','task-0');calendarCard.appendChild(new Element('b')).textContent=titles[0];
+ const emptyCards=[home,calendar].flatMap(host=>['Aucune tâche à faire pour cette propriété.','Chargement des tâches de la thermopompe…'].map(text=>{const card=host.appendChild(new Element());card.className='card';card.textContent=text;return card}));
  const props=[{id:'house',name:'Maison',city:'Jonquière',postal_code:'G7X1A1',address:'Adresse privée'},{id:'chalet',name:'Chalet',city:'Québec',postal_code:'G1R1A1'}];
  const document={readyState:'complete',body,createElement:tag=>new Element(tag),getElementById:id=>body.querySelector('#'+id),addEventListener:(event,callback)=>{if(event==='click')listeners.push(callback)},querySelectorAll:s=>s.includes(' > *')?s.split(',').flatMap(selector=>document.getElementById(selector.trim().split(' ')[0].slice(1))?.children||[]):body.querySelectorAll(s)};
  const context={document,props,tasks,ap:props[0],eq:tasks.map((t,i)=>({id:t.equipment_id,property_id:'house',brand:'Marque'+i,model:'Modèle'+i,serial_number:'SERIAL-SECRET'})),URL,URLSearchParams,AbortController,Date,console,setTimeout:()=>0,clearTimeout(){},setInterval:callback=>intervals.push(callback),clearInterval(){},MutationObserver:class{observe(){}},hpStability:{token:async()=> 'session-fixture'},fetch:async(url)=>{
@@ -47,8 +48,18 @@ function harness(){
  }};context.window=context;const ctx=vm.createContext(context);
  for(const file of ['professional-presentation.js','vr-expert-shop.js','diy-guides.js','professional-directory-cloud.js','leisure-tasks.js','professional-task-router.js'])vm.runInContext(source(file),ctx,{filename:file});
  const click=async button=>{assert.ok(button,'button exists');const event={target:button,stopped:false,preventDefault(){},stopImmediatePropagation(){this.stopped=true}};for(const listener of listeners){await listener(event);if(event.stopped)return}await button.onclick?.(event)};
- return {ctx,cards,calendarCard,requests,intervals,get:document.getElementById,click};
+ return {ctx,cards,calendarCard,emptyCards,requests,intervals,get:document.getElementById,click};
 }
+
+test('empty and loading task lists never offer task-specific professional or DIY actions',()=>{
+ const h=harness();
+ for(const card of h.emptyCards){
+  assert.equal(card.querySelector('.hpFindPro'),null,'placeholder must not offer a professional search');
+  assert.equal(card.querySelector('.hpDiyBtn'),null,'placeholder must not offer a DIY guide');
+ }
+ assert.ok(h.cards[0].querySelector('.hpFindPro'));
+ assert.ok(h.cards[0].querySelector('.hpDiyBtn'));
+});
 
 test('home and DIY clicks send exactly the same professional search and render the result',async()=>{
  const h=harness();
