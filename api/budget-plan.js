@@ -6,7 +6,7 @@ import {paymentsFor,paymentEngine as P} from '../lib/asset-payments.js';
 const engine=globalThis.hpBudgetEngine;
 const stable=value=>Array.isArray(value)?'['+value.map(stable).join(',')+']':value&&typeof value==='object'?'{'+Object.keys(value).sort().map(k=>JSON.stringify(k)+':'+stable(value[k])).join(',')+'}':JSON.stringify(value);
 // Store the addition separately: an older client updating config cannot erase it.
-const present=row=>row?{config:{...P.cleanPlan(row.config),projects:row.maintenance_projects||[]},revision:row.revision,updated_at:row.updated_at}:null;
+const present=row=>row?{config:{...P.cleanPlan(row.config),...(row.config?.rolloverStartMonth?{}:row.updated_at?{rolloverStartMonth:row.updated_at.slice(0,7)}:{}),projects:row.maintenance_projects||[]},revision:row.revision,updated_at:row.updated_at}:null;
 
 export default async function handler(req,res){
   if(new URL(req.url||'/', 'https://nuvabri.invalid').searchParams.get('resource')==='asset-payments')return assetPaymentHandler(req,res);
