@@ -8,7 +8,7 @@
   const plan=structuredClone(config||E.empty()),key=entry.entry_type==='income'?'incomes':'bills';
   const prefix='entry-repeat:'+(entry.property_id||'personal')+':';
   const row={id:prefix+entry.request_id,label:(entry.description||entry.category).slice(0,120),category:entry.category,amount:entry.amount,frequency,anchorDate:entry.entry_date,secondDay:null,essential:entry.entry_type!=='income'&&!root.hpBudgetInsights.savingsCategory(entry.category)};
-  if(root.hpBudgetInsights.savingsCategory(row.category)&&key==='bills')row.accountBalance=null;
+  if(root.hpBudgetInsights.savingsCategory(row.category)&&key==='bills'){row.accountBalance=entry.accountBalance??null;if(entry.accountBalanceAsOf)row.accountBalanceAsOf=entry.accountBalanceAsOf;}
   const previous=plan[key].find(x=>x.id===row.id);
   if(previous){if(['label','category','amount','frequency','anchorDate'].some(k=>previous[k]!==row[k]))throw new Error('Cette récurrence a changé. Vérifie tes montants avant de réessayer.');return {config:plan,unchanged:true}}
   // Recording the next actual payment must not create the same schedule again.
@@ -41,11 +41,14 @@
    const box=document.createElement('div');box.id='hpBudgetRepeatOptions';box.innerHTML='<label class="finance-check" for="hpBudgetRepeat"><input id="hpBudgetRepeat" type="checkbox" role="switch"><span id="hpBudgetRepeatLabel">Cette dépense revient</span></label><div id="hpBudgetRepeatFields" hidden><label for="hpBudgetFrequency">Fréquence</label><select id="hpBudgetFrequency">'+Object.entries(frequencies).map(([v,l])=>'<option value="'+v+'">'+l+'</option>').join('')+'</select><p class="muted">Cette opération est enregistrée une fois. Les prochaines dates seront ajoutées au budget prévu; confirme les futurs paiements lorsqu’ils auront eu lieu.</p></div>';
    $('hpBudgetSave').before(box);$('hpBudgetFrequency').value='monthly';
   }
-  $('hpBudgetRepeatLabel').textContent=income?'Ce revenu revient (paie, prestations…)':'Cette dépense revient';
+  const savings=!income&&root.hpBudgetInsights.savingsCategory(select.value);
+  if(!$('hpBudgetSavingsBalance')){const box=document.createElement('div');box.id='hpBudgetSavingsFields';box.innerHTML='<label for="hpBudgetSavingsBalance">Solde déjà accumulé dans ce compte ($)</label><input id="hpBudgetSavingsBalance" type="number" min="0" step="0.01" inputmode="decimal"><label for="hpBudgetSavingsAsOf">Solde vérifié le</label><input id="hpBudgetSavingsAsOf" type="date"><p class="muted">Inclus le versement saisi s’il est déjà dans ce solde. Les versements suivants s’ajouteront automatiquement à l’estimation selon la fréquence choisie, sans modifier ton solde bancaire réel.</p>';$('hpBudgetSave').before(box)}
+  $('hpBudgetSavingsFields').hidden=!savings||!$('hpBudgetRepeat').checked;
+  $('hpBudgetRepeatLabel').textContent=savings?'Je mets ce montant de côté régulièrement':income?'Ce revenu revient (paie, prestations…)':'Cette dépense revient';
   $('hpBudgetRepeatFields').hidden=!$('hpBudgetRepeat').checked;
  }
  root.hpSyncBudgetEntryOptions=sync;
- root.hpResetBudgetEntryOptions=()=>{if($('hpBudgetRepeat'))$('hpBudgetRepeat').checked=false;sync()};
- function init(){sync();document.addEventListener('change',e=>{if(['hpBudgetType','hpBudgetRepeat'].includes(e.target.id))sync()});new MutationObserver(()=>{if(!$('hpBudgetRepeat')&&$('hpBudgetForm'))sync()}).observe(document.body,{childList:true,subtree:true})}
+ root.hpResetBudgetEntryOptions=()=>{if($('hpBudgetRepeat'))$('hpBudgetRepeat').checked=false;for(const id of ['hpBudgetSavingsBalance','hpBudgetSavingsAsOf'])if($(id))$(id).value='';sync()};
+ function init(){sync();document.addEventListener('change',e=>{if(['hpBudgetType','hpBudgetCategory','hpBudgetRepeat'].includes(e.target.id))sync()});new MutationObserver(()=>{if(!$('hpBudgetRepeat')&&$('hpBudgetForm'))sync()}).observe(document.body,{childList:true,subtree:true})}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })(window);

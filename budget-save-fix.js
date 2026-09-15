@@ -23,6 +23,7 @@
      const payload={user_id:user.id,household_id:currentHouseholdId(),property_id:$('hpBudgetProperty')?.value||null,entry_type:$('hpBudgetType')?.value||'expense',category:$('hpBudgetCategory')?.value||'Autre',amount,entry_date:entryDate,description:$('hpBudgetDescription')?.value?.trim()||null};
      const operationKey='budget:'+user.id;
      const repeat=$('hpBudgetRepeat')?.checked===true,frequency=repeat?$('hpBudgetFrequency')?.value:null;
+     if(repeat&&window.hpBudgetInsights?.savingsCategory(payload.category)){const balance=$('hpBudgetSavingsBalance')?.value;if(balance!==undefined&&balance!==''){payload.accountBalance=Number(balance);payload.accountBalanceAsOf=$('hpBudgetSavingsAsOf')?.value;if(!payload.accountBalanceAsOf)throw new Error('Indique la date du solde de ton épargne.')}}
      payload.request_id=hpStability.operation(operationKey,{...payload,frequency});
      const saveRecurrence=repeat?await window.hpPrepareEntryRecurrence(payload,frequency,token):null;
      const controller=new AbortController();
