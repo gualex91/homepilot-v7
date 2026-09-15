@@ -42,3 +42,11 @@ test('an unconfirmed response preserves the draft and displays an inline error',
  const h=setup();h.ctx.fetch=async()=>({ok:true,json:async()=>({ok:true})});h.el('hpBudgetAmount').value='12.50';await h.ctx.hpSaveBudgetEntry();
  assert.equal(h.alerts.length,0);assert.match(h.el('hpBudgetStatus').textContent,/confirmé/);assert.equal(h.el('hpBudgetAmount').value,'12.50');assert.equal(h.el('hpBudgetDescription').value,'TEST saisie');
 });
+test('a partial recurrence save preserves the same operation for a safe retry',async()=>{
+ const h=setup();h.el('hpBudgetAmount').value='50';h.el('hpBudgetRepeat').checked=true;h.el('hpBudgetFrequency').value='weekly';let fail=true,completed=0;
+ h.ctx.hpStability.complete=()=>completed++;
+ h.ctx.hpPrepareEntryRecurrence=async()=>async()=>{if(fail)throw new Error('Confirmation perdue')};
+ await h.ctx.hpSaveBudgetEntry();assert.equal(h.requests.length,1);assert.equal(completed,0);assert.equal(h.el('hpBudgetAmount').value,'50');assert.match(h.el('hpBudgetStatus').textContent,/récurrence non confirmée/);
+ fail=false;await h.ctx.hpSaveBudgetEntry();assert.equal(h.requests[0].request_id,h.requests[1].request_id);assert.equal(completed,1);assert.equal(h.el('hpBudgetAmount').value,'');
+});
+test('failed recurrence preflight makes no operation write',async()=>{const h=setup();h.el('hpBudgetAmount').value='50';h.el('hpBudgetRepeat').checked=true;h.ctx.hpPrepareEntryRecurrence=async()=>{throw new Error('Budget indisponible')};await h.ctx.hpSaveBudgetEntry();assert.equal(h.requests.length,0);assert.equal(h.el('hpBudgetAmount').value,'50')});

@@ -67,10 +67,13 @@
   function create(id,uuid,day){
     const t=templates.find(x=>x.id===id);if(!t)return null;
     const row={id:uuid,label:t.label,category:t.category,essential:t.essential};
-    if(['REER','CELI'].includes(t.category))row.accountBalance=null;
+    if(['REER','CELI','Épargne'].includes(t.category))row.accountBalance=null;
     if(t.key==='provisions')Object.assign(row,{annualAmount:null,savedAmount:0,dueDate:''});
     else {row.amount=null;if(t.key!=='envelopes')Object.assign(row,{frequency:t.frequency,anchorDate:day,secondDay:null})}
     return {key:t.key,row};
   }
-  root.hpBudgetCatalog={templates,categories,create};
+  const alphabetical=(a,b)=>a.localeCompare(b,'fr-CA',{sensitivity:'base'});
+  categories.sort(alphabetical);
+  const categoriesFor=kind=>[...new Set(templates.filter(t=>kind==='income'?t.key==='incomes':t.key!=='incomes').map(t=>t.category).concat('Autre'))].sort(alphabetical);
+  root.hpBudgetCatalog={templates,categories,create,categoriesFor,alphabetical};
 })(typeof globalThis!=='undefined'?globalThis:window);

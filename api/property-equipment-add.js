@@ -3,6 +3,7 @@ const SUPABASE_URL='https://vkfvjwxajgeafzyphjvh.supabase.co';
 const SUPABASE_KEY='sb_publishable_pGyXnrUDdLiT6BAAME--VA_kLP_gEAR';
 
 const TASK_RULES={
+  plinthe:[['Vérifier les dégagements et l’entretien des plinthes électriques selon le manuel',180,14]],
   thermopompe:[['Nettoyer les filtres de la thermopompe',30,0],['Vérifier l’entretien de la thermopompe',365,30]],
   fournaise:[['Vérifier ou remplacer le filtre de la fournaise',90,0],['Faire vérifier la fournaise',365,30]],
   echangeur:[['Nettoyer les filtres de l’échangeur d’air',90,0],['Nettoyer le noyau de l’échangeur d’air',180,14]],

@@ -167,3 +167,10 @@ test('browser: dashboard stability and budget save-to-summary flow',{skip:proces
   assert.deepEqual(errors,[]);
  }finally{if(browser)await browser.close();await new Promise(r=>server.close(r))}
 });
+test('electric baseboard equipment creates one maintenance task even after retry',async()=>{
+ const real=global.fetch,fake=fakeDB();global.fetch=fake.fetch;
+ try{const req={method:'POST',headers:{authorization:'Bearer example'},body:{request_id:request,property_id:property,equipment_type:'plinthe',name:'Plinthe électrique'}};
+ for(let i=0;i<2;i++){const res=response();await addEquipment(req,res);assert.equal(res.code,200)}
+ assert.equal(fake.db.equipment.size,1);assert.equal(fake.db.tasks.size,1);assert.match(JSON.stringify([...fake.db.tasks.values()]),/plinthes électriques/);
+ }finally{global.fetch=real}
+});

@@ -36,6 +36,7 @@
        if($('hpBudgetCategory'))$('hpBudgetCategory').value=prefill.entry_type==='income'?'Salaire':'Autre';
      }else if(!hasDraft&&$('hpBudgetCategory'))$('hpBudgetCategory').value=prefill.entry_type==='income'?'Salaire':'Autre';
    }
+   window.hpSyncBudgetEntryOptions?.();
    window.hpSetFinanceView?.('operations');
    if(!$('hpFinanceOperations'))$('hpBudgetTools')?.setAttribute('open','');
    const group=$('hpBudgetGroupMonthly');

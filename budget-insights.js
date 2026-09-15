@@ -20,6 +20,28 @@
       return [{category,accounts:rows.length,contributions:total('contributions'),startingBalance:total('startingBalance'),projectedBalance:total('projectedBalance')}];
     });
   }
+  function monthlySavings(plan,referenceDate){
+    const E=root.hpBudgetEngine;if(!E.validDate(referenceDate))return [];
+    return ['bills','envelopes'].flatMap(key=>(plan[key]||[]).filter(x=>savingsCategory(x.category)&&Object.hasOwn(x,'accountBalance')).map(row=>{
+      const asOf=E.validDate(row.accountBalanceAsOf)?row.accountBalanceAsOf:null,start=validAmount(row.accountBalance)?Math.round(row.accountBalance*100):null;
+      if(!asOf)return {id:row.id,label:row.label,category:row.category,asOf:null,startingBalance:start,currentEstimate:null,points:[]};
+      const first=E.addDays(asOf,1),y=Number(asOf.slice(0,4)),m=Number(asOf.slice(5,7))-1,day=Number(asOf.slice(-2));
+      const anniversary=n=>new Date(Date.UTC(y,m+n,Math.min(day,new Date(Date.UTC(y,m+n+1,0)).getUTCDate()))).toISOString().slice(0,10);
+      function countUntil(end){
+        if(end<first)return 0;
+        if(key==='envelopes'){
+          let months=(Number(end.slice(0,4))-y)*12+Number(end.slice(5,7))-1-m;
+          if(anniversary(months)>end)months--;return Math.max(0,months);
+        }
+        let count=0;
+        for(let from=first;from<=end;){const stop=[E.addDays(from,365),end].sort()[0];count+=E.occurrences(row,from,stop).length;from=E.addDays(stop,1)}
+        return count;
+      }
+      const balance=end=>start===null||!validAmount(row.amount)?null:start+Math.round(row.amount*100)*countUntil(end);
+      const points=Array.from({length:12},(_,i)=>{const date=anniversary(i+1);return {date,balance:balance(date)}});
+      return {id:row.id,label:row.label,category:row.category,asOf,startingBalance:start,currentEstimate:referenceDate<asOf?null:balance(referenceDate),points};
+    }));
+  }
   // Every insight is derived from declared amounts. No credit/health score,
   // market return, inferred insurance need or third-party data transfer.
   function analyze(plan,result){
@@ -44,5 +66,5 @@
     if(!result.complete||!Number.isFinite(amount)||amount<0||!Number.isInteger(amount)||amount>insights.adjustable)return null;
     return {monthly:amount,yearly:amount*12,margin:result.projectedMargin+amount};
   }
-  root.hpBudgetInsights={analyze,simulate,savingsCategory,registeredCategory,savingProjection,annualSavings};
+  root.hpBudgetInsights={monthlySavings,analyze,simulate,savingsCategory,registeredCategory,savingProjection,annualSavings};
 })(typeof globalThis!=='undefined'?globalThis:window);

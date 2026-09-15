@@ -38,9 +38,9 @@ export default async function handler(req,res){
         // An older client may omit the optional balance field. Preserve it
         // on the same account; explicit null clears it and row removal wins.
         const keepBalances=key=>Array.isArray(input?.[key])?input[key].map(row=>{
-          if(!row||Object.hasOwn(row,'accountBalance'))return row;
+          if(!row)return row;
           const previous=current?.config[key]?.find(x=>x.id===row.id&&x.category===row.category);
-          return previous&&Object.hasOwn(previous,'accountBalance')?{...row,accountBalance:previous.accountBalance}:row;
+          return {...row,...(!Object.hasOwn(row,'accountBalance')&&previous&&Object.hasOwn(previous,'accountBalance')?{accountBalance:previous.accountBalance}:{}),...(!Object.hasOwn(row,'accountBalanceAsOf')&&previous?.accountBalanceAsOf?{accountBalanceAsOf:previous.accountBalanceAsOf}:{})};
         }):input?.[key];
         config=engine.validate({...input,bills:keepBalances('bills'),envelopes:keepBalances('envelopes'),projects:input&&Object.hasOwn(input,'projects')?input.projects:current?.config.projects||[]});
       }catch(error){return res.status(400).json({error:error.message})}

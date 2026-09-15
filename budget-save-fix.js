@@ -22,7 +22,9 @@
      if(!entryDate)throw new Error('Choisis une date.');
      const payload={user_id:user.id,household_id:currentHouseholdId(),property_id:$('hpBudgetProperty')?.value||null,entry_type:$('hpBudgetType')?.value||'expense',category:$('hpBudgetCategory')?.value||'Autre',amount,entry_date:entryDate,description:$('hpBudgetDescription')?.value?.trim()||null};
      const operationKey='budget:'+user.id;
-     payload.request_id=hpStability.operation(operationKey,payload);
+     const repeat=$('hpBudgetRepeat')?.checked===true,frequency=repeat?$('hpBudgetFrequency')?.value:null;
+     payload.request_id=hpStability.operation(operationKey,{...payload,frequency});
+     const saveRecurrence=repeat?await window.hpPrepareEntryRecurrence(payload,frequency,token):null;
      const controller=new AbortController();
      const abortTimer=setTimeout(()=>controller.abort(),10000);
      let r;
@@ -32,7 +34,9 @@
      let body=null;try{body=await r.json()}catch{}
      if(!r.ok)throw new Error(body?.error||('Erreur serveur '+r.status));
      if(!body?.ok||!body?.id)throw new Error('Nuvabri n’a pas confirmé la sauvegarde dans la base de données.');
+     if(saveRecurrence){try{await saveRecurrence()}catch(error){throw new Error('Opération enregistrée, mais récurrence non confirmée. Réessaie sans changer les champs. '+error.message)}}
      hpStability.complete(operationKey);
+     window.hpResetBudgetEntryOptions?.();
      clearTimeout(watchdog);watchdog=null;
      resetButton(btn);
      if($('hpBudgetAmount'))$('hpBudgetAmount').value='';

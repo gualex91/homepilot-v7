@@ -292,7 +292,8 @@ test('expense entry stays beside its suggestion and saves several expenses witho
   let html=h.nodes.get('hpFinanceEditor').innerHTML;
   assert.match(html,/finance-suggestion-item is-editing/);
   assert.equal((html.match(/id="hf-bills-0-amount"/g)||[]).length,1);
-  assert.ok(html.indexOf('hf-bills-0-amount')<html.indexOf('data-template="internet"'));
+  assert.ok(html.indexOf('data-template="internet"')<html.indexOf('data-template="phone"'));
+  assert.ok(html.indexOf('data-template="phone"')<html.indexOf('hf-bills-0-amount'));
   const amount=h.nodes.get('hf-bills-0-amount');h.input('bills.0.amount',45);
   assert.equal(h.nodes.get('hf-bills-0-amount'),amount,'typing must retain the input node and keyboard focus');
   await h.click('save-continue');assert.equal(h.nodes.get('hpFinanceEditor').hidden,false);
