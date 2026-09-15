@@ -38,7 +38,7 @@
         return count;
       }
       const balance=end=>start===null||!validAmount(row.amount)?null:start+Math.round(row.amount*100)*countUntil(end);
-      const points=Array.from({length:12},(_,i)=>{const date=anniversary(i+1);return {date,balance:balance(date)}});
+      const points=Array.from({length:12},(_,i)=>{const date=anniversary(i+1);const annualCount={weekly:52,biweekly:26}[row.frequency];return {date,balance:annualCount&&start!==null&&validAmount(row.amount)?start+Math.round(Math.round(row.amount*100)*annualCount*(i+1)/12):balance(date)}});
       return {id:row.id,label:row.label,category:row.category,asOf,startingBalance:start,currentEstimate:referenceDate<asOf?null:balance(referenceDate),points};
     }));
   }
@@ -48,8 +48,8 @@
     const E=root.hpBudgetEngine,r=result,t=r.totals;
     const allocations=r.categories.map(x=>({category:x.category,amount:(x.planned||0)+(x.provision||0)})).filter(x=>x.amount>0).sort((a,b)=>b.amount-a.amount);
     const outflow=t.bills+t.flexible+t.provisions+t.projects;
-    const savings=r.calendar.filter(x=>x.kind==='expense'&&savingsCategory(x.category)).reduce((n,x)=>n+x.amount,0)+plan.envelopes.filter(x=>savingsCategory(x.category)).reduce((n,x)=>n+E.cents(x.amount),0);
-    const debts=r.calendar.filter(x=>x.kind==='expense'&&x.category==='Remboursement de dettes').reduce((n,x)=>n+x.amount,0);
+    const savings=plan.bills.filter(x=>savingsCategory(x.category)).reduce((n,x)=>n+E.monthlyAmount(x,r.month),0)+plan.envelopes.filter(x=>savingsCategory(x.category)).reduce((n,x)=>n+E.cents(x.amount),0);
+    const debts=plan.bills.filter(x=>x.category==='Remboursement de dettes').reduce((n,x)=>n+E.monthlyAmount(x,r.month),0);
     const adjustable=plan.envelopes.filter(x=>!x.essential&&!savingsCategory(x.category)).reduce((n,x)=>n+E.cents(x.amount),0);
     const questions=[];
     if(!r.complete)questions.push('Quels revenus et dépenses dois-je vérifier pour compléter mon portrait?');

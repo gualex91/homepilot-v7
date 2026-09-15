@@ -83,3 +83,9 @@ test('home previews the three closest dates while retaining all tasks and counts
  assert.equal((h.nodes.get('at').innerHTML.match(/data-task-id=/g)||[]).length,5);
  h.click('soon');assert.equal(h.ids().length,3);assert.equal(h.nodes.get('soon').textContent,4);
 });
+test('the next pool recurrence leaves home until due, but remains in upcoming and calendar history',()=>{
+ const common={title:'Vérifier l’eau de la piscine',property_id:'p1',equipment_id:'pool',recurrence:{unit:'week',interval:1}};
+ const h=harness([{...common,id:'completed',status:'done',due_at:date(0)},{...common,id:'next',status:'todo',due_at:date(7)}]);
+ assert.deepEqual(h.ids(),[]);assert.equal(h.nodes.get('due').textContent,0);h.click('soon');assert.deepEqual(h.ids(),['next']);h.click('done');assert.deepEqual(h.ids(),['completed']);assert.match(h.nodes.get('at').innerHTML,/data-task-id="next"/);
+ h.run("tasks.find(x=>x.id==='next').due_at=new Date().toISOString().slice(0,10)");h.click('todo');assert.deepEqual(h.ids(),['next']);
+});

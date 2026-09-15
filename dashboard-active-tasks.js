@@ -18,7 +18,11 @@
     const legend=document.getElementById('hpPriorityLegend');
     if(legend)legend.hidden=selected==='done';
 
+    const local=new Date();const today=new Date(local.getTime()-local.getTimezoneOffset()*60000).toISOString().slice(0,10);
+    const renewed=task=>task.status!=='done'&&task.due_at>today&&tasks.some(old=>old.status==='done'&&old.property_id===task.property_id&&old.equipment_id===task.equipment_id&&old.title===task.title&&Object.keys(old.recurrence||{}).length);
+    const due=document.getElementById('due');if(due)due.textContent=tasks.filter(t=>t.status!=='done'&&!renewed(t)).length;
     let visible=tasks.filter(task=>selected==='done'?task.status==='done':task.status!=='done');
+    if(selected==='todo')visible=visible.filter(t=>!renewed(t));
     if(selected==='soon'){
       // Match the existing Bientôt counter: overdue tasks and the next seven days.
       const until=new Date(Date.now()+7*864e5);

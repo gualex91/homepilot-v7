@@ -42,7 +42,7 @@ export default async function handler(req,res){
           const previous=current?.config[key]?.find(x=>x.id===row.id&&x.category===row.category);
           return {...row,...(!Object.hasOwn(row,'accountBalance')&&previous&&Object.hasOwn(previous,'accountBalance')?{accountBalance:previous.accountBalance}:{}),...(!Object.hasOwn(row,'accountBalanceAsOf')&&previous?.accountBalanceAsOf?{accountBalanceAsOf:previous.accountBalanceAsOf}:{})};
         }):input?.[key];
-        config=engine.validate({...input,bills:keepBalances('bills'),envelopes:keepBalances('envelopes'),projects:input&&Object.hasOwn(input,'projects')?input.projects:current?.config.projects||[]});
+        config=engine.validate({...input,rolloverStartMonth:current?.config.rolloverStartMonth||input?.rolloverStartMonth||new Date().toISOString().slice(0,7),bills:keepBalances('bills'),envelopes:keepBalances('envelopes'),projects:input&&Object.hasOwn(input,'projects')?input.projects:current?.config.projects||[]});
       }catch(error){return res.status(400).json({error:error.message})}
       const expected=req.body?.expected_revision??null,id=req.body?.request_id;
       if(!requestId(id)||(expected!==null&&!requestId(expected)))return res.status(400).json({error:'Identifiant de sauvegarde invalide.'});

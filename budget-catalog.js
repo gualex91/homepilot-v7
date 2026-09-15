@@ -49,6 +49,7 @@
   group('Loisirs et abonnements','envelopes',[
     ['leisure','Sorties, loisirs et passe-temps','Loisirs','monthly',false],['recreation','Utilisation des véhicules de loisir','Loisirs motorisés','monthly',false]
   ]);
+  group('Dépenses imprévues','bills',[['unexpected','Imprévu','Imprévu','once',false]]);
   group('Dettes et frais','bills',[
     ['credit','Remboursement d’une ancienne dette de carte','Remboursement de dettes'],['loan','Prêt personnel / marge de crédit','Remboursement de dettes'],
     ['student-loan','Prêt étudiant','Remboursement de dettes'],['bank-fees','Frais bancaires','Frais bancaires']

@@ -220,3 +220,14 @@ test('API saves account balances and preserves them for an older client while al
     const deleted=response();await handler(request('PUT',removed),deleted);assert.equal(deleted.code,200);assert.equal(deleted.body.config.bills.length,0);
   });
 });
+test('weekly and biweekly averages are stable while calendar dates remain exact',()=>{
+ const p=E.empty();p.incomes=[row('pay',1000,'2026-09-04','biweekly')];p.bills=[row('save',50,'2026-09-04','weekly','CELI')];
+ for(const month of ['2026-09','2026-10']){const r=E.analyze(p,[],month,month+'-01');assert.equal(r.totals.income,216667);assert.equal(r.totals.bills,21667);assert.equal(r.monthlyMargin,195000)}
+ assert.equal(E.analyze(p,[],'2026-09','2026-09-01').calendar.filter(x=>x.kind==='expense').length,4);assert.equal(E.analyze(p,[],'2026-10','2026-10-01').calendar.filter(x=>x.kind==='expense').length,5);
+});
+test('surpluses and deficits roll forward once without creating income or actual transactions',()=>{
+ const p=E.empty();p.rolloverStartMonth='2026-09';p.incomes=[row('pay',1000,'2026-09-01')];p.bills=[row('rent',800,'2026-09-01')];
+ const oct=E.analyze(E.validate(p),[],'2026-10','2026-10-01');assert.equal(oct.carryIn,20000);assert.equal(oct.totals.income,100000);assert.equal(oct.projectedMargin,40000);assert.equal(oct.actual.income,0);
+ assert.equal(E.analyze(p,[],'2026-11','2026-11-01').projectedMargin,60000);assert.equal(E.analyze(p,[],'2026-08','2026-08-01').carryIn,0);
+ p.bills[0].amount=1100;const deficit=E.analyze(p,[],'2026-10','2026-10-01');assert.equal(deficit.carryIn,-10000);assert.equal(deficit.projectedMargin,-20000);
+});

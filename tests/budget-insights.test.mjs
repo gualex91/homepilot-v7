@@ -29,7 +29,7 @@ test('expense allocation accounts for every cent, including savings and reserves
   const r=result(p),i=I.analyze(p,r);
   assert.equal(i.outflow,225000);assert.equal(i.allocations.reduce((n,x)=>n+x.amount,0),i.outflow);
   assert.equal(i.savings,10000);assert.equal(i.debts,15000);assert.equal(i.adjustable,20000);
-  assert.equal(i.allocations[0].category,'Maison');assert.equal(r.projectedMargin,175000);
+  assert.equal(i.allocations[0].category,'Maison');assert.equal(r.projectedMargin,208333);
 });
 test('simulation releases only declared nonessential daily spending and does not alter the plan',()=>{
   const p=fixture(),before=JSON.stringify(p),r=result(p),i=I.analyze(p,r);
@@ -70,7 +70,7 @@ test('annual savings do not turn into a second budget expense or include old com
   const before=JSON.stringify(p),r=result(p),i=I.analyze(p,r),annual=I.annualSavings(p);
   assert.equal(annual.length,2);assert.equal(annual.find(x=>x.category==='CELI').contributions,260000);
   assert.equal(annual.find(x=>x.category==='REER').projectedBalance,760000);
-  assert.equal(r.projectedMargin,base.projectedMargin-42000);assert.equal(i.savings,52000);
+  assert.equal(r.projectedMargin,base.projectedMargin-45334);assert.equal(i.savings,55334);
   assert.equal(i.allocations.reduce((n,x)=>n+x.amount,0),i.outflow);assert.equal(JSON.stringify(p),before);
 });
 test('aggregated account balances remain incomplete if one is absent and are validated on save',()=>{

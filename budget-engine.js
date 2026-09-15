@@ -60,6 +60,7 @@
       if(typeof cash.balance!=='number'||!Number.isFinite(cash.balance)||Math.abs(cash.balance)>100000000||Math.abs(cash.balance*100-Math.round(cash.balance*100))>0.0001)fail('Solde invalide.');
       result.cash={balance:cash.balance,asOf:dateField(cash.asOf,'Date du solde'),todaySettled:cash.todaySettled===true};
     }
+    if(input.rolloverStartMonth!==undefined){if(!/^20\d{2}-(0[1-9]|1[0-2])$/.test(input.rolloverStartMonth))fail('Mois de départ du report invalide.');result.rolloverStartMonth=input.rolloverStartMonth}
     return result;
   }
   // The anchor is a known occurrence, not a start date. Keep the original day
@@ -92,12 +93,13 @@
     for(const item of plan.projects||[])if(item.active!==false&&item.dueDate>=start&&item.dueDate<=end)all.push({id:item.id,date:item.dueDate,label:item.label,category:item.category,kind:'project',amount:cents(item.totalAmount),unfunded:Math.max(0,cents(item.totalAmount)-cents(item.savedAmount))});
     return all.sort((a,b)=>a.date.localeCompare(b.date)||Number(a.kind==='income')-Number(b.kind==='income'));
   }
-  function analyze(plan,entries,month,today,entriesComplete=true){
+  function monthlyAmount(item,month){const count={weekly:52,biweekly:26}[item.frequency];return count?Math.round(cents(item.amount)*count/12):occurrences(item,month+'-01',monthEnd(month)).length*cents(item.amount)}
+  function analyze(plan,entries,month,today,entriesComplete=true,withoutCarry=false){
     const start=month+'-01',end=monthEnd(month),calendar=events(plan,start,end),totals={income:0,bills:0,flexible:0,provisions:0,projects:0,essential:0};
     const categories=new Map();
     const category=name=>{if(!categories.has(name))categories.set(name,{category:name,planned:null,actual:0,provision:0});return categories.get(name)};
-    for(const event of calendar){if(event.kind==='income')totals.income+=event.amount;else if(event.kind==='expense'){totals.bills+=event.amount;const row=category(event.category);row.planned=(row.planned??0)+event.amount}}
-    for(const item of plan.bills)if(item.essential)totals.essential+=occurrences(item,start,end).length*cents(item.amount);
+    for(const item of plan.incomes)totals.income+=monthlyAmount(item,month);
+    for(const item of plan.bills){const value=monthlyAmount(item,month);totals.bills+=value;if(item.essential)totals.essential+=value;const row=category(item.category);row.planned=(row.planned??0)+value}
     for(const item of plan.envelopes){const value=cents(item.amount);totals.flexible+=value;if(item.essential)totals.essential+=value;const row=category(item.category);row.planned=(row.planned??0)+value}
     const provisions=plan.provisions.map(item=>{
       const monthly=Math.round(cents(item.annualAmount)/12),remaining=Math.max(0,cents(item.annualAmount)-cents(item.savedAmount));
@@ -118,7 +120,10 @@
       if(entry.entry_type==='income')actual.income+=cents(entry.amount);
       else if(entry.entry_type==='expense'){actual.expense+=cents(entry.amount);category(entry.category||'Autre').actual+=cents(entry.amount)}
     }
-    const projectedMargin=totals.income-totals.bills-totals.flexible-totals.provisions-totals.projects;
+    const monthlyMargin=totals.income-totals.bills-totals.flexible-totals.provisions-totals.projects;
+    let carryIn=0;const rolloverStartMonth=plan.rolloverStartMonth||today.slice(0,7);
+    if(!withoutCarry&&plan.incomes.length){for(let m=rolloverStartMonth;m<month;){carryIn+=analyze(plan,[],m,m+'-01',false,true).monthlyMargin;const d=new Date(m+'-01T00:00:00Z');d.setUTCMonth(d.getUTCMonth()+1);m=d.toISOString().slice(0,7)}}
+    const projectedMargin=monthlyMargin+carryIn;
     const nextEvents=events(plan,addDays(today,1),addDays(today,370));
     const nextPay=nextEvents.find(x=>x.kind==='income'&&x.amount>0)||null;
     let cash=null;
@@ -143,7 +148,7 @@
     if(entriesComplete&&[...categories.values()].some(x=>x.planned!==null&&x.provision===0&&x.actual>x.planned))actions.push({title:'Revoir un écart de dépenses',body:'Une catégorie dépasse le prévu. Vérifie les opérations et ajuste ton plan si cet écart se répète.'});
     if(!cash&&plan.reviewed)actions.push({title:'Actualiser mon disponible',body:'Un solde vérifié aujourd’hui, une prochaine rentrée d’argent positive et des échéances à jour sont nécessaires pour cette estimation.'});
     if(!actions.length)actions.push({title:'Faire mon point mensuel',body:'Compare tes dépenses enregistrées à ton plan et vérifie les opérations manquantes. Aucun compte bancaire n’est synchronisé.'});
-    return {month,totals,actual:entriesComplete?actual:null,projectedMargin,complete:plan.reviewed&&plan.incomes.length>0,categories:[...categories.values()],provisions,projects,calendar,cash,emergencyMonths:plan.emergencySavings!==null&&totals.essential>0?cents(plan.emergencySavings)/totals.essential:null,actions:actions.slice(0,3)};
+    return {month,totals,carryIn,monthlyMargin,rolloverStartMonth,actual:entriesComplete?actual:null,projectedMargin,complete:plan.reviewed&&plan.incomes.length>0,categories:[...categories.values()],provisions,projects,calendar,cash,emergencyMonths:plan.emergencySavings!==null&&totals.essential>0?cents(plan.emergencySavings)/totals.essential:null,actions:actions.slice(0,3)};
   }
   function projectFunding(item,today){
     const remaining=Math.max(0,cents(item.totalAmount)-cents(item.savedAmount));
@@ -163,5 +168,5 @@
     const a=describe(before),b=describe(after);
     return {month,before:a,after:b,monthlyDelta:b.funding.monthly-a.funding.monthly,marginDelta:a.margin===null||b.margin===null?null:b.margin-a.margin};
   }
-  root.hpBudgetEngine={empty,validate,occurrences,events,analyze,validDate,monthEnd,addDays,cents,projectFunding,compareProject};
+  root.hpBudgetEngine={empty,validate,occurrences,events,monthlyAmount,analyze,validDate,monthEnd,addDays,cents,projectFunding,compareProject};
 })(globalThis);

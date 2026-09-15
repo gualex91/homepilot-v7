@@ -42,8 +42,8 @@ test('weekly payment has an annual estimate and average monthly value, with actu
  assert.deepEqual(P.totals(70,'semimonthly'),{annual:168000,monthly:14000});
  const row={id:'p',amount:70,frequency:'weekly',anchor_date:'2026-09-04',asset_name:'remorque',leisure_equipment_id:asset};
  const p=P.merge(E.empty(),[row]);assert.equal(p.bills[0].label,'Paiement remorque');
- assert.equal(E.analyze(p,[],'2026-09','2026-09-11').totals.bills,28000);
- assert.equal(E.analyze(p,[],'2026-10','2026-09-11').totals.bills,35000);
+ assert.equal(E.analyze(p,[],'2026-09','2026-09-11').totals.bills,30333);
+ assert.equal(E.analyze(p,[],'2026-10','2026-09-11').totals.bills,30333);
  assert.equal(P.merge(p,[{...row,amount:80}]).bills.length,1);
  assert.equal(P.merge(p,[]).bills.length,0);
 });
